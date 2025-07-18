@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef } from "react";
 import type { ConsentForm } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { FileText, Printer } from "lucide-react";
+import config from "@/config/app.json";
 
 interface ConsentFormViewerProps {
   form: ConsentForm | null;
@@ -12,7 +12,8 @@ interface ConsentFormViewerProps {
 export function ConsentFormViewer({ form }: ConsentFormViewerProps) {
   const handlePrintOrSave = () => {
     if (form) {
-      window.open(form.url, '_blank');
+      const fullUrl = `${config.rcrBaseUrl}${form.url}`;
+      window.open(fullUrl, '_blank');
     }
   };
 
