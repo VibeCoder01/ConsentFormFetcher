@@ -12,6 +12,7 @@ interface ConsentFormViewerProps {
 export function ConsentFormViewer({ form }: ConsentFormViewerProps) {
   const handlePrintOrSave = () => {
     if (form) {
+      // The form.url is a relative path, combine it with the base URL.
       const fullUrl = `${config.rcrBaseUrl}${form.url}`;
       window.open(fullUrl, '_blank');
     }
@@ -26,7 +27,7 @@ export function ConsentFormViewer({ form }: ConsentFormViewerProps) {
             Select a Consent Form
           </h3>
           <p className="mt-2 text-base text-muted-foreground">
-            Choose a form from the list to view.
+            Choose a form from the list to view its details.
           </p>
         </div>
       </div>
@@ -42,7 +43,7 @@ export function ConsentFormViewer({ form }: ConsentFormViewerProps) {
         <div className="flex gap-2">
           <Button onClick={handlePrintOrSave} size="sm" variant="outline">
             <Printer className="mr-2 h-4 w-4" />
-            Open to Print/Save
+            Print / Save
           </Button>
         </div>
       </div>
@@ -54,7 +55,7 @@ export function ConsentFormViewer({ form }: ConsentFormViewerProps) {
               PDF Viewing Is Handled in a New Tab
             </h3>
             <p className="mt-2 text-base text-muted-foreground">
-              Click the "Open to Print/Save" button above to view the PDF.
+              Click the "Print / Save" button above to view the PDF.
             </p>
         </div>
       </div>
