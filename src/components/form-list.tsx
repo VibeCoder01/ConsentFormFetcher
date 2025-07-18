@@ -8,7 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import config from "@/config/app.json";
 
 interface FormListProps {
   formCategories: ConsentFormCategory[];
@@ -30,18 +30,21 @@ export function FormList({ formCategories, onSelectForm, selectedFormUrl }: Form
               </AccordionTrigger>
               <AccordionContent className="pb-1">
                 <div className="flex flex-col gap-1 pl-2">
-                  {category.forms.map((form) => (
-                    <Button
-                      key={form.url}
-                      variant={
-                        selectedFormUrl === form.url ? "secondary" : "ghost"
-                      }
-                      className="h-auto w-full justify-start text-left whitespace-normal"
-                      onClick={() => onSelectForm(form)}
-                    >
-                      {form.title}
-                    </Button>
-                  ))}
+                  {category.forms.map((form) => {
+                    const fullUrl = `${config.rcrBaseUrl}${form.url}`;
+                    return (
+                      <Button
+                        key={form.url}
+                        variant={
+                          selectedFormUrl === fullUrl ? "secondary" : "ghost"
+                        }
+                        className="h-auto w-full justify-start text-left whitespace-normal"
+                        onClick={() => onSelectForm(form)}
+                      >
+                        {form.title}
+                      </Button>
+                    );
+                  })}
                 </div>
               </AccordionContent>
             </AccordionItem>

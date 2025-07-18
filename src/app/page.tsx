@@ -8,6 +8,7 @@ import { FormList } from "@/components/form-list";
 import { ConsentFormViewer } from "@/components/consent-form-viewer";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import config from "@/config/app.json";
 
 export default function Home() {
   const [formCategories, setFormCategories] = useState<ConsentFormCategory[]>([]);
@@ -41,7 +42,7 @@ export default function Home() {
     <FormList
       formCategories={formCategories}
       onSelectForm={handleSelectForm}
-      selectedFormUrl={selectedForm?.url}
+      selectedFormUrl={selectedForm ? `${config.rcrBaseUrl}${selectedForm.url}` : undefined}
     />
   );
   
