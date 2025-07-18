@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import config from "@/config/app.json";
@@ -13,16 +14,39 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ArrowLeft, RefreshCw } from "lucide-react";
+import { scrapeRcrForms } from "@/ai/flows/scrape-forms-flow";
 
 export default function ConfigPage() {
   const { toast } = useToast();
+  const [isScraping, setIsScraping] = useState(false);
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
+    setIsScraping(true);
     toast({
-      title: "Update Not Implemented",
-      description: "This feature is for demonstration purposes only.",
-      duration: 3000,
+      title: "Scraping in Progress",
+      description: "Fetching the latest consent forms from the RCR website...",
     });
+
+    try {
+      const result = await scrapeRcrForms(config.rcrConsentFormsUrl);
+      if (result.success) {
+        toast({
+          title: "Update Successful",
+          description: `Successfully scraped ${result.formCount} forms. The form list is now up-to-date. Please navigate back to the home page to see the changes.`,
+        });
+      } else {
+        throw new Error(result.error || "An unknown error occurred.");
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: `Could not update the form list. ${errorMessage}`,
+      });
+    } finally {
+      setIsScraping(false);
+    }
   };
 
   return (
@@ -51,9 +75,9 @@ export default function ConfigPage() {
               </p>
             </CardContent>
             <CardFooter>
-              <Button onClick={handleUpdate}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Update Form List
+              <Button onClick={handleUpdate} disabled={isScraping}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${isScraping ? 'animate-spin' : ''}`} />
+                Check for Updated Forms
               </Button>
             </CardFooter>
           </Card>
