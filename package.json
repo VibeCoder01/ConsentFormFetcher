@@ -44,22 +44,23 @@
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
-    "react-hook-form": "^7.54.2",
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "cheerio": "^1.0.0-rc.12",
     "genkit": "^1.0.0",
     "zod": "^3.23.8",
-    "@google-ai/genkit": "^1.0.0",
+    "google-ai": "^1.0.0",
     "@genkit-ai/firebase": "^1.0.0",
-    "@genkit-ai/google-cloud": "^1.0.0"
+    "@genkit-ai/google-cloud": "^1.0.0",
+    "node-cache": "^5.1.2"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/cheerio": "^0.22.35",
+    "@types/node-cache": "^4.2.5",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
