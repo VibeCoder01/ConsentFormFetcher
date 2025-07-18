@@ -48,11 +48,7 @@
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "cheerio": "^1.0.0-rc.12",
-    "genkit": "^1.0.0",
     "zod": "^3.23.8",
-    "google-ai": "^1.0.0",
-    "@genkit-ai/firebase": "^1.0.0",
-    "@genkit-ai/google-cloud": "^1.0.0",
     "node-cache": "^5.1.2"
   },
   "devDependencies": {
