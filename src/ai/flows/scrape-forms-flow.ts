@@ -26,52 +26,57 @@ export async function scrapeRcrForms(url: string): Promise<ScrapeRcrFormsOutput>
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    const formCategories: ConsentFormCategory[] = [];
+    const categories: { [key: string]: ConsentForm[] } = {};
 
-    $('#main-content h2').each((_, h2) => {
-      const categoryTitle = $(h2).text().trim();
-      const forms: ConsentForm[] = [];
+    // Find all links that point to a PDF file.
+    $('#main-content a[href$=".pdf"]').each((_, element) => {
+      const anchor = $(element);
+      const title = anchor.text().trim();
+      let href = anchor.attr('href') || '';
+
+      if (!title || !href) return;
+
+      if (!href.startsWith('http')) {
+        href = new URL(href, config.rcrBaseUrl).toString();
+      }
       
-      // Find the parent or a container that holds both h2 and the links.
-      // Then find all 'a' tags that are likely download links.
-      // This is a common pattern for content blocks.
-      const contentBlock = $(h2).nextUntil('h2');
+      const form: ConsentForm = { title, url: href };
       
-      contentBlock.find('a').each((_, link) => {
-        const anchor = $(link);
-        const title = anchor.text().trim();
-        let href = anchor.attr('href') || '';
-        
-        if (title && href && (href.endsWith('.pdf') || href.includes('download'))) {
-          if (!href.startsWith('http')) {
-            href = new URL(href, config.rcrBaseUrl).toString();
-          }
-          forms.push({ title, url: href });
-        }
-      });
+      // Find the nearest preceding h2 to determine the category.
+      // This is more robust than assuming a specific container structure.
+      let heading = anchor.closest('div, section, article').prevAll('h2').first();
+      if(!heading.length) {
+         heading = anchor.prevAll('h2').first();
+      }
+      if(!heading.length) {
+         heading = anchor.parent().prevAll('h2').first();
+      }
+       if(!heading.length) {
+         heading = anchor.closest('main, #main-content').find('h2').first();
+      }
+
+
+      const categoryTitle = heading.text().trim() || 'General';
+
+      if (!categories[categoryTitle]) {
+        categories[categoryTitle] = [];
+      }
       
-      // Also check links immediately after the h2, not in a block
-      $(h2).find('a').add($(h2).next('p').find('a')).each((_,link) => {
-         const anchor = $(link);
-         const title = anchor.text().trim();
-         let href = anchor.attr('href') || '';
-         if (title && href && (href.endsWith('.pdf') || href.includes('download')) && !forms.find(f => f.title === title)) {
-            if (!href.startsWith('http')) {
-                href = new URL(href, config.rcrBaseUrl).toString();
-            }
-            forms.push({ title, url: href });
-        }
-      });
-      
-      if (forms.length > 0) {
-        formCategories.push({ category: categoryTitle, forms });
+      // Avoid adding duplicate URLs for the same category
+      if (!categories[categoryTitle].some(f => f.url === href)) {
+          categories[categoryTitle].push(form);
       }
     });
+    
+    const formCategories: ConsentFormCategory[] = Object.keys(categories).map(category => ({
+      category: category,
+      forms: categories[category],
+    }));
 
     const totalForms = formCategories.reduce((sum, cat) => sum + cat.forms.length, 0);
 
     if (totalForms === 0) {
-      throw new Error('No forms were extracted. The page structure may have changed.');
+      throw new Error('No forms were extracted. The page structure may have changed, or there are no PDF links.');
     }
 
     updateCache(formCategories);
