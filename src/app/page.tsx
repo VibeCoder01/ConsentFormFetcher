@@ -22,6 +22,10 @@ export default function Home() {
       .then((data: ConsentFormCategory[]) => {
         setFormCategories(data);
         setIsLoading(false);
+        if (data.length > 0 && data[0].forms.length > 0) {
+          // Pre-select the first form
+          setSelectedForm(data[0].forms[0]);
+        }
       })
       .catch(console.error);
   }, []);
