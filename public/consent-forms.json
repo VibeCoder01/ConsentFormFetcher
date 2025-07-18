@@ -1,0 +1,84 @@
+[
+  {
+    "category": "Breast",
+    "forms": [
+      {
+        "title": "RT for breast cancer",
+        "url": "https://www.rcr.ac.uk/system/files/publication/field_publication_file/consent-form-rt-breast-cancer-2023.pdf"
+      },
+      {
+        "title": "RT for breast cancer following previous RT to the same breast",
+        "url": "https://www.rcr.ac.uk/system/files/publication/field_publication_file/consent-form-rt-breast-cancer-following-previous-rt-same-breast-2023.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Central nervous system",
+    "forms": [
+      {
+        "title": "Radical RT to the brain",
+        "url": "https://www.rcr.ac.uk/system/files/publication/field_publication_file/consent-form-radical-rt-brain-2023.pdf"
+      },
+      {
+        "title": "Palliative RT to the brain",
+        "url": "https://www.rcr.ac.uk/system/files/publication/field_publication_file/consent-form-palliative-rt-brain-2023.pdf"
+      },
+      {
+        "title": "Stereotactic radiosurgery (SRS) or radiotherapy (SRT) to the brain",
+        "url": "https://www.rcr.ac.uk/system/files/publication/field_publication_file/consent-form-srs-srt-brain-2023.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Gastrointestinal - lower",
+    "forms": [
+      {
+        "title": "RT to the anus (chemo-radiotherapy)",
+        "url": "https://www.rcr.ac.uk/system/files/publication/field_publication_file/consent-form-rt-anus-chemo-radiotherapy-2023.pdf"
+      },
+      {
+        "title": "RT to the rectum (short course)",
+        "url": "https://www.rcr.ac.uk/system/files/publication/field_publication_file/consent-form-rt-rectum-short-course-2023.pdf"
+      },
+      {
+        "title": "RT to the rectum (long course)",
+        "url": "https://www.rcr.ac.uk/system/files/publication/field_publication_file/consent-form-rt-rectum-long-course-2023.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Gastrointestinal - upper",
+    "forms": [
+      {
+        "title": "RT to the oesophagus (radical)",
+        "url": "https://www.rcr.ac.uk/system/files/publication/field_publication_file/consent-form-rt-oesophagus-radical-2023.pdf"
+      },
+      {
+        "title": "RT to the oesophagus (palliative)",
+        "url": "https://www.rcr.ac.uk/system/files/publication/field_publication_file/consent-form-rt-oesophagus-palliative-2023.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Haematology",
+    "forms": [
+      {
+        "title": "Total body irradiation (TBI)",
+        "url": "https://www.rcr.ac.uk/system/files/publication/field_publication_file/consent-form-total-body-irradiation-tbi-2023.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Head and neck",
+    "forms": [
+      {
+        "title": "RT to the head and neck",
+        "url": "https://www.rcr.ac.uk/system/files/publication/field_publication_file/consent-form-rt-head-and-neck-2023.pdf"
+      },
+      {
+        "title": "RT to the thyroid gland (using radioactive iodine)",
+        "url": "https://www.rcr.ac.uk/system/files/publication/field_publication_file/consent-form-rt-thyroid-gland-using-radioactive-iodine-2023.pdf"
+      }
+    ]
+  }
+]
