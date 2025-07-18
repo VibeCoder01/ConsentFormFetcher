@@ -28,13 +28,17 @@ export async function scrapeRcrForms(url: string): Promise<ScrapeRcrFormsOutput>
 
     const categories: { [key: string]: ConsentForm[] } = {};
 
-    // Find all links that point to a PDF file.
-    $('#main-content a[href$=".pdf"]').each((_, element) => {
+    // Find all links that point to a PDF file within the main content area.
+    $('body a[href$=".pdf"]').each((_, element) => {
       const anchor = $(element);
       const title = anchor.text().trim();
       let href = anchor.attr('href') || '';
 
+      // Skip links without a title or href
       if (!title || !href) return;
+      
+      // Skip links that are likely part of site furniture rather than content
+      if (title.toLowerCase().includes('download') && anchor.find('svg').length > 0) return;
 
       if (!href.startsWith('http')) {
         href = new URL(href, config.rcrBaseUrl).toString();
@@ -42,19 +46,23 @@ export async function scrapeRcrForms(url: string): Promise<ScrapeRcrFormsOutput>
       
       const form: ConsentForm = { title, url: href };
       
-      // Find the nearest preceding h2 to determine the category.
-      // This is more robust than assuming a specific container structure.
-      let heading = anchor.closest('div, section, article').prevAll('h2').first();
-      if(!heading.length) {
-         heading = anchor.prevAll('h2').first();
+      // Resiliently find the nearest preceding h2 to determine the category.
+      // This checks multiple common DOM patterns.
+      let heading = anchor.closest('div, section, article, li').prevAll('h2').first();
+      if (!heading.length) {
+        heading = anchor.prevAll('h2').first();
       }
-      if(!heading.length) {
-         heading = anchor.parent().prevAll('h2').first();
+      if (!heading.length) {
+        heading = anchor.parent().prevAll('h2').first();
       }
-       if(!heading.length) {
-         heading = anchor.closest('main, #main-content').find('h2').first();
+      if (!heading.length) {
+        heading = anchor.parentsUntil('main, body').last().prevAll('h2').first();
       }
-
+      if (!heading.length) {
+        // Fallback to searching within the closest major content block
+        const contentBlock = anchor.closest('main, #main-content, #main, .main-content, .content, article');
+        heading = contentBlock.find('h2').first();
+      }
 
       const categoryTitle = heading.text().trim() || 'General';
 
