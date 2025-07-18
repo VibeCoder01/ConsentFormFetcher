@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow for scraping RCR consent forms from their website.
@@ -17,6 +18,7 @@ export interface ScrapeRcrFormsOutput {
   success: boolean;
   formCount?: number;
   error?: string;
+  newData?: ConsentFormCategory[];
 }
 
 async function saveFormsToJson(data: ConsentFormCategory[]): Promise<void> {
@@ -95,12 +97,13 @@ export async function scrapeRcrForms(url: string): Promise<ScrapeRcrFormsOutput>
     if (totalForms === 0) {
       throw new Error('No forms were extracted. The page structure may have changed, or there are no PDF links.');
     }
-
-    // Update both the persistent JSON file and the in-memory cache
-    await saveFormsToJson(formCategories);
+    
+    // We no longer automatically save to JSON here. That's handled by a separate flow.
+    // await saveFormsToJson(formCategories);
+    
     updateCache(formCategories);
 
-    return { success: true, formCount: totalForms };
+    return { success: true, formCount: totalForms, newData: formCategories };
   } catch (error) {
     console.error('Scraping failed:', error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred during scraping.';
