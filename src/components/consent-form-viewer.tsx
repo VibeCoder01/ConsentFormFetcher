@@ -47,6 +47,8 @@ export function ConsentFormViewer({ form }: ConsentFormViewerProps) {
     );
   }
 
+  const proxiedPdfUrl = `/pdf-proxy?url=${encodeURIComponent(form.url)}`;
+
   return (
     <div className="flex h-full flex-col bg-background">
       <div className="flex items-center justify-between gap-4 border-b p-3 md:p-4">
@@ -64,7 +66,7 @@ export function ConsentFormViewer({ form }: ConsentFormViewerProps) {
       <div className="flex-1 bg-muted/20">
           <iframe
               ref={iframeRef}
-              src={`${form.url}#view=fitH`}
+              src={proxiedPdfUrl}
               title={form.title}
               className="h-full w-full border-0"
               aria-label={`PDF viewer for ${form.title}`}
