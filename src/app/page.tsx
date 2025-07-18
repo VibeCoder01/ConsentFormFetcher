@@ -5,13 +5,11 @@ import type { ConsentForm, ConsentFormCategory } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AppHeader } from "@/components/app-header";
 import { FormList } from "@/components/form-list";
-import { ConsentFormViewer } from "@/components/consent-form-viewer";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
   const [formCategories, setFormCategories] = useState<ConsentFormCategory[]>([]);
-  const [selectedForm, setSelectedForm] = useState<ConsentForm | null>(null);
   const [isSheetOpen, setSheetOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const isMobile = useIsMobile();
@@ -22,21 +20,13 @@ export default function Home() {
       .then((data: ConsentFormCategory[]) => {
         setFormCategories(data);
         setIsLoading(false);
-        if (data.length > 0 && data[0].forms.length > 0) {
-          // Pre-select the first form that doesn't have a bad URL
-           const firstGoodForm = data.flatMap(d => d.forms).find(f => !f.url.includes('/system/files/publication/field_publication_file/'));
-           if (firstGoodForm) {
-            setSelectedForm(firstGoodForm);
-           } else if(data[0].forms.length > 0) {
-            setSelectedForm(data[0].forms[0]);
-           }
-        }
       })
       .catch(console.error);
   }, []);
 
   const handleSelectForm = (form: ConsentForm) => {
-    setSelectedForm(form);
+    // Open the form URL in a new tab when a form is clicked
+    window.open(form.url, '_blank');
     if (isMobile) {
       setSheetOpen(false);
     }
@@ -46,7 +36,6 @@ export default function Home() {
     <FormList
       formCategories={formCategories}
       onSelectForm={handleSelectForm}
-      selectedFormUrl={selectedForm ? selectedForm.url : undefined}
     />
   );
   
@@ -72,8 +61,8 @@ export default function Home() {
         onMenuClick={() => setSheetOpen(true)}
       />
       <main className="flex flex-1 overflow-hidden">
-        {/* Desktop Sidebar */}
-        <aside className="hidden md:flex md:w-1/3 md:max-w-sm flex-col border-r bg-card">
+        {/* Desktop Sidebar taking full width */}
+        <aside className="hidden md:flex flex-1 flex-col border-r bg-card">
           <div className="flex-1 overflow-y-auto">
             {isLoading ? loadingComponent : formListComponent}
           </div>
@@ -88,9 +77,11 @@ export default function Home() {
           </SheetContent>
         </Sheet>
         
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          <ConsentFormViewer form={selectedForm} />
+        {/* Mobile View taking full width */}
+        <div className="flex-1 overflow-y-auto md:hidden">
+          <div className="h-full">
+            {isLoading ? loadingComponent : formListComponent}
+          </div>
         </div>
       </main>
     </div>
