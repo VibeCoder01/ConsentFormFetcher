@@ -27,33 +27,46 @@ export async function scrapeRcrForms(url: string): Promise<ScrapeRcrFormsOutput>
     const $ = cheerio.load(html);
 
     const formCategories: ConsentFormCategory[] = [];
-    let currentCategory: string | null = null;
-    let currentForms: ConsentForm[] = [];
 
-    $('#main-content').children().each((_, el) => {
-      const element = $(el);
-      if (element.is('h2')) {
-        if (currentCategory && currentForms.length) {
-          formCategories.push({ category: currentCategory, forms: currentForms });
-        }
-        currentCategory = element.text().trim();
-        currentForms = [];
-      }
-
-      element.find('a.download-link').each((_, link) => {
+    $('#main-content h2').each((_, h2) => {
+      const categoryTitle = $(h2).text().trim();
+      const forms: ConsentForm[] = [];
+      
+      // Find the parent or a container that holds both h2 and the links.
+      // Then find all 'a' tags that are likely download links.
+      // This is a common pattern for content blocks.
+      const contentBlock = $(h2).nextUntil('h2');
+      
+      contentBlock.find('a').each((_, link) => {
         const anchor = $(link);
         const title = anchor.text().trim();
         let href = anchor.attr('href') || '';
-        if (!href.startsWith('http')) {
-          href = `${config.rcrBaseUrl}${href}`;
+        
+        if (title && href && (href.endsWith('.pdf') || href.includes('download'))) {
+          if (!href.startsWith('http')) {
+            href = new URL(href, config.rcrBaseUrl).toString();
+          }
+          forms.push({ title, url: href });
         }
-        currentForms.push({ title, url: href });
       });
+      
+      // Also check links immediately after the h2, not in a block
+      $(h2).find('a').add($(h2).next('p').find('a')).each((_,link) => {
+         const anchor = $(link);
+         const title = anchor.text().trim();
+         let href = anchor.attr('href') || '';
+         if (title && href && (href.endsWith('.pdf') || href.includes('download')) && !forms.find(f => f.title === title)) {
+            if (!href.startsWith('http')) {
+                href = new URL(href, config.rcrBaseUrl).toString();
+            }
+            forms.push({ title, url: href });
+        }
+      });
+      
+      if (forms.length > 0) {
+        formCategories.push({ category: categoryTitle, forms });
+      }
     });
-
-    if (currentCategory && currentForms.length) {
-      formCategories.push({ category: currentCategory, forms: currentForms });
-    }
 
     const totalForms = formCategories.reduce((sum, cat) => sum + cat.forms.length, 0);
 
