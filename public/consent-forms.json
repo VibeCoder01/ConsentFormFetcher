@@ -1,40 +1,323 @@
-
 [
   {
-    "category": "Radiotherapy",
+    "category": "Anal",
     "forms": [
       {
-        "title": "RT for breast cancer",
-        "url": "https://www.rcr.ac.uk/media/b1n2d0b3/consent-form-rt-breast-cancer-2023.pdf"
+        "title": "RCR Anal Cancer Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/2opc0exy/250116_dc23013c-rcr-anal-cancer-consent-form-5.pdf"
       },
       {
-        "title": "RT for lung cancer (radical)",
-        "url": "https://www.rcr.ac.uk/media/a2c3e4f5/consent-form-rt-lung-cancer-radical-2023.pdf"
-      },
-      {
-        "title": "RT for prostate cancer (radical)",
-        "url": "https://www.rcr.ac.uk/media/g6h7i8j9/consent-form-rt-prostate-cancer-radical-2023.pdf"
-      },
-      {
-        "title": "RT for bladder cancer (radical)",
-        "url": "https://www.rcr.ac.uk/media/k1l2m3n4/consent-form-rt-bladder-cancer-radical-2023.pdf"
-      },
-      {
-        "title": "RT for head and neck cancer",
-        "url": "https://www.rcr.ac.uk/media/o5p6q7r8/consent-form-rt-head-and-neck-cancer-2023.pdf"
+        "title": "RCR Anal Cancer Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/x0lpfjcy/231110_dc23138c-rcr-anal-cancer-consent-form-welsh-v2.pdf"
       }
     ]
   },
   {
-    "category": "Chemotherapy",
+    "category": "Bladder",
     "forms": [
       {
-        "title": "Chemotherapy for breast cancer",
-        "url": "https://www.rcr.ac.uk/media/s9t1u2v3/consent-form-chemo-breast-cancer-2023.pdf"
+        "title": "RCR Bladder Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/lgbmmgbo/250116_dc24114a1-bladder-consent-form_v3.pdf"
       },
       {
-        "title": "Chemotherapy for lung cancer",
-        "url": "https://www.rcr.ac.uk/media/w4x5y6z7/consent-form-chemo-lung-cancer-2023.pdf"
+        "title": "RCR Bladder Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/cgmfwhe3/250128_rcr-bladder-consent-form_welsh_v2.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Breast",
+    "forms": [
+      {
+        "title": "RCR Breast Cancer Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/ajnh3df2/250116_dc23013b-rcr-breast-cancer-consent-form-5.pdf"
+      },
+      {
+        "title": "RCR Breast Cancer Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/zwfbv0bt/250128_dc23138b-rcr-breast-cancer-consent-form-welsh-v2.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Central Nervous System (CNS)",
+    "forms": [
+      {
+        "title": "RCR Radiotherapy Consent for Brain Tumours",
+        "url": "https://www.rcr.ac.uk/media/a5mducl3/dc23180a1-rcr-brain-tumours-consent-form_03.pdf"
+      },
+      {
+        "title": "RCR Radiotherapy Consent for Brain Tumours (Welsh language)",
+        "url": "https://www.rcr.ac.uk/media/y2hjiwd0/dc23180a2-rcr-brain-tumours-consent-form_welsh_01.pdf"
+      },
+      {
+        "title": "RCR Radiotherapy Consent form: Stereotactic Radiosurgery (SRS) or Stereotactic Radiotherapy (SRT) for brain tumours",
+        "url": "https://www.rcr.ac.uk/media/xv3fct0f/dc23180b1-rcr-srssrt-brain-tumours-consent-form_03-1.pdf"
+      },
+      {
+        "title": "RCR Radiotherapy Consent form: Stereotactic Radiosurgery (SRS) or Stereotactic Radiotherapy (SRT) for brain tumours (Welsh language)",
+        "url": "https://www.rcr.ac.uk/media/vxnjj45j/dc23180c2-rcr-srssrt-vestibular-schwannoma-consent-form_welsh_02.pdf"
+      },
+      {
+        "title": "RCR Radiotherapy consent form: Stereotactic Radiosurgery (SRS) or Stereotactic radiotherapy (SRT) for vestibular schwannoma",
+        "url": "https://www.rcr.ac.uk/media/im2ogrta/dc23180c1-rcr-srssrt-vestibular-schwannoma-consent-form_03.pdf"
+      },
+      {
+        "title": "RCR Radiotherapy consent form: Stereotactic Radiosurgery (SRS) or Stereotactic radiotherapy (SRT) for vestibular schwannoma (Welsh language)",
+        "url": "https://www.rcr.ac.uk/media/xcqp4uon/dc23180c2-rcr-srssrt-vestibular-schwannoma-consent-form_welsh_02-1.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Generic",
+    "forms": [
+      {
+        "title": "RCR Generic Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/qlhhj2ou/250128_dc23013l-rcr-generic-consent-form-v3.pdf"
+      },
+      {
+        "title": "RCR Generic Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/muuciupr/250128_dc23138l-rcr-generic-consent-form-welsh-v2.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Gynaecologic",
+    "forms": [
+      {
+        "title": "RCR Gynaecologic Brachytherapy Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/5kij420o/250116_rcr-brachytherapy-_gynae-5.pdf"
+      },
+      {
+        "title": "RCR Gynaecologic Brachytherapy Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/fwinnzhh/250128-gynae-brachytherapy-welsh.pdf"
+      },
+      {
+        "title": "RCR Gynaecologic EBRT Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/1omnmtyl/250116_dc23013p-rcr-gynaecologic-ebrt-consent-form-5.pdf"
+      },
+      {
+        "title": "RCR Gynaecologic EBRT Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/ri0e1asa/250128_dc23138p-rcr-gynaecologic-ebrt-consent-form-welsh-v2.pdf"
+      },
+      {
+        "title": "RCR Gynaecologic Vaginal Vault Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/5ikfnozb/250106_dc23013q-rcr-gynaecologic-vaginal-vault-consent-form-2.pdf"
+      },
+      {
+        "title": "RCR Gynaecologic Vaginal Vault Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/tfal5c0l/250128_dc23138q-rcr-gynaecologic-vaginal-vault-consent-form-welsh-v2.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Head and neck",
+    "forms": [
+      {
+        "title": "RCR Lower Head And Neck Cancer Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/mogbnvsr/250116_dc23013f-rcr-hn-lower-consent-form-v6.pdf"
+      },
+      {
+        "title": "RCR Lower Head And Neck Cancer Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/ejzezsgj/rcr-lower-head-and-neck-cancer-radiotherapy-consent-form-welsh-language.pdf"
+      },
+      {
+        "title": "RCR Upper Head And Neck Cancer Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/nw0pywhr/250116_dc23013e-rcr-hn-upper-consent-form-5.pdf"
+      },
+      {
+        "title": "RCR Upper Head And Neck Cancer Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/nx5ba034/250128_dc23138e-rcr-hn-upper-consent-form-welsh-v2.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Lung",
+    "forms": [
+      {
+        "title": "RCR Lung Cancer External Beam (EBRT) Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/o4ffyi1e/250116_dc23013j-rcr-lung-factioned-consent-form-5.pdf"
+      },
+      {
+        "title": "RCR Lung Cancer External Beam (EBRT) Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/22xmllpo/250128_dc23138j-rcr-lung-factioned-consent-form-welsh-v2.pdf"
+      },
+      {
+        "title": "RCR Lung Cancer Stereotactic Ablative Body (SABR) Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/4lpakzxf/250116_dc23013i-rcr-lung-sabr-consent-form-5.pdf"
+      },
+      {
+        "title": "RCR Lung Cancer Stereotactic Ablative Body (SABR) Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/0ctl13tg/250128_dc23138i-rcr-lung-sabr-consent-form-welsh-v2.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Lymphoma",
+    "forms": [
+      {
+        "title": "RCR Lymphoma Cancer Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/2eaddu5q/250116_dc23013m-rcr-lymphoma-cancer-consent-form-5.pdf"
+      },
+      {
+        "title": "RCR Lymphoma Cancer Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/l4spz2vy/250128_dc23138m-rcr-lymphoma-cancer-consent-form-welsh-v2.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Oesophageal",
+    "forms": [
+      {
+        "title": "RCR Oesophageal Cancer Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/ux2ev3kx/250116_dc23013g-rcr-oesophageal-cancer-consent-form-5.pdf"
+      },
+      {
+        "title": "RCR Oesophageal Cancer Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/ca4jtwq2/250128_dc23138g-rcr-oesophageal-cancer-consent-form-welsh-v2.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Palliative",
+    "forms": [
+      {
+        "title": "RCR Palliative Cancer Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/yr2emj5n/250116_dc23013o-rcr-palliative-cancer-consent-form-5.pdf"
+      },
+      {
+        "title": "RCR Palliative Cancer Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/ufti14p0/250128_dc23138o-rcr-palliative-cancer-consent-form-welsh-v2.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Pancreatic",
+    "forms": [
+      {
+        "title": "RCR Pancreatic Cancer Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/vsanuob4/250116_dc23013n-rcr-pancreatic-cancer-consent-form-5.pdf"
+      },
+      {
+        "title": "RCR Pancreatic Cancer Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/5e1kjjtn/250128_dc23138n-rcr-pancreatic-cancer-consent-form-welsh-v2.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Prostate",
+    "forms": [
+      {
+        "title": "RCR Prostate Cancer Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/jyxjxy10/250116_dc23013a-rcr-prostate-cancer-consent-form-5.pdf"
+      },
+      {
+        "title": "RCR Prostate Cancer Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/uc5gmajt/250128_dc23138a-rcr-prostate-cancer-consent-form-welsh-v2.pdf"
+      },
+      {
+        "title": "RCR Radiotherapy Consent Form – Low Dose Rate Brachytherapy (Combined With External Beam Radiotherapy) For Prostate Cancer",
+        "url": "https://www.rcr.ac.uk/media/okhlwevn/250116_dc24114b1-low-dose-rate-brachytherapy-consent-form_v3.pdf"
+      },
+      {
+        "title": "RCR Radiotherapy Consent Form – Low Dose Rate Brachytherapy (Combined With External Beam Radiotherapy) For Prostate Cancer (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/pkbnggez/dc24114b1-rcr-ldr-brachytherapy-consent-form_welsh_16092024.pdf"
+      },
+      {
+        "title": "RCR Radiotherapy Consent Form – High Dose Rate Brachytherapy (Combined With External Beam Radiotherapy) For Prostate Cancer",
+        "url": "https://www.rcr.ac.uk/media/zdgpve1j/250116_dc24114c1-high-dose-rate-brachytherapy-consent-form_v3.pdf"
+      },
+      {
+        "title": "RCR Radiotherapy Consent Form – High Dose Rate Brachytherapy (Combined With External Beam Radiotherapy) For Prostate Cancer (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/5rbcvxvw/250128_rcr-high-dose-rate-brachytherapy-consent-form_welsh_v2.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Rectal",
+    "forms": [
+      {
+        "title": "RCR Rectal Cancer Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/3h1fet4v/250116_dc23013d-rcr-rectal-cancer-consent-form-5.pdf"
+      },
+      {
+        "title": "RCR Rectal Cancer Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/c2afpnmk/250128_dc23138d-rcr-rectal-cancer-consent-form-welsh-v2.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Sarcoma",
+    "forms": [
+      {
+        "title": "RCR radiotherapy consent form for sarcomas - bone and soft tissue tumours (extremity)",
+        "url": "https://www.rcr.ac.uk/media/odulng4f/250128_rcr-sarcoma-extremity-consent-form_v3.pdf"
+      },
+      {
+        "title": "RCR radiotherapy consent form for sarcomas - bone and soft tissue tumours (extremity) - Welsh language",
+        "url": "https://www.rcr.ac.uk/media/qw1gewrm/250128_rcr-sarcoma-extremity-consent-form_welsh-v3.pdf"
+      },
+      {
+        "title": "RCR radiotherapy consent form for sarcomas - bone and soft tissue (trunk, chest, abdomen and pelvis)",
+        "url": "https://www.rcr.ac.uk/media/gc5lbcv1/250128_rcr-sarcoma-cap-consent-form_v3.pdf"
+      },
+      {
+        "title": "RCR radiotherapy consent form for sarcomas - bone and soft tissue (trunk, chest, abdomen and pelvis) - Welsh language",
+        "url": "https://www.rcr.ac.uk/media/mg4bsf3n/250128_rcr-sarcoma-cap-consent-form_welsh-v3.pdf"
+      },
+      {
+        "title": "RCR radiotherapy consent form for head and neck sarcomas",
+        "url": "https://www.rcr.ac.uk/media/3fqny1ru/250131_sarcoma-hn-consent-form_v4_final.pdf"
+      },
+      {
+        "title": "RCR radiotherapy consent form for head and neck sarcomas (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/u2ehepaw/250131_sarcoma_hn_consent_welsh-v4_final.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Skin",
+    "forms": [
+      {
+        "title": "RCR Skin Cancer Radiotherapy Consent Form",
+        "url": "https://www.rcr.ac.uk/media/w50ncuec/250116_dc23013h-rcr-skin-cancer-consent-form-5.pdf"
+      },
+      {
+        "title": "RCR Skin Cancer Radiotherapy Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/bmkfxhcb/250128_dc23138h-rcr-skin-cancer-consent-form-welsh-v2.pdf"
+      },
+      {
+        "title": "RCR Benign Skin Radiotherapy Cancer Consent Form",
+        "url": "https://www.rcr.ac.uk/media/oyvb3rme/250116_dc23013s-rcr-benign-skin-cancer-consent-form-4.pdf"
+      },
+      {
+        "title": "RCR Benign Skin Radiotherapy Cancer Consent Form (Welsh Language)",
+        "url": "https://www.rcr.ac.uk/media/cn0n0y5y/250128_dc23138s-rcr-benign-skin-cancer-consent-form-welsh-v2.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Supporting documents",
+    "forms": [
+      {
+        "title": "Implementation Of The National Site Specific Radiotherapy Consent Forms",
+        "url": "https://www.rcr.ac.uk/media/1econldf/implementation-of-the-national-site-specific-radiotherapy-consent-forms.pdf"
+      },
+      {
+        "title": "Development Of The National Site Specific Radiotherapy Consent Forms",
+        "url": "https://www.rcr.ac.uk/media/45jjjpaj/development-of-the-national-site-specific-radiotherapy-consent-forms.pdf"
+      },
+      {
+        "title": "National Site Specific Radiotherapy Consent Form Template Summary Letter",
+        "url": "https://www.rcr.ac.uk/media/1i5nyk3i/national-site-specific-radiotherapy-consent-form-template-summary-letter.pdf"
+      }
+    ]
+  },
+  {
+    "category": "Project acknowledgements",
+    "forms": [
+      {
+        "title": "Radiotherapy Consent Forms Project Acknowledgements",
+        "url": "https://www.rcr.ac.uk/media/szjkwagp/rt_consent_forms_project_acknowledgements.pdf"
       }
     ]
   }

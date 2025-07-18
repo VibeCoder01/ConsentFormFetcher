@@ -8,15 +8,13 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import config from "@/config/app.json";
 
 interface FormListProps {
   formCategories: ConsentFormCategory[];
   onSelectForm: (form: ConsentForm) => void;
-  selectedFormUrl?: string;
 }
 
-export function FormList({ formCategories, onSelectForm, selectedFormUrl }: FormListProps) {
+export function FormList({ formCategories, onSelectForm }: FormListProps) {
   return (
       <div className="p-2 md:p-4 h-full">
         <h2 className="px-2 text-lg font-semibold tracking-tight mb-2">
@@ -34,9 +32,7 @@ export function FormList({ formCategories, onSelectForm, selectedFormUrl }: Form
                     return (
                       <Button
                         key={form.url}
-                        variant={
-                          selectedFormUrl === form.url ? "secondary" : "ghost"
-                        }
+                        variant={"ghost"}
                         className="h-auto w-full justify-start text-left whitespace-normal"
                         onClick={() => onSelectForm(form)}
                       >
