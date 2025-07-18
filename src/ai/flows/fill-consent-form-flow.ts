@@ -3,37 +3,19 @@
  * @fileOverview A flow for extracting fields from and filling a PDF consent form.
  *
  * - fillConsentForm - The primary function to interact with the flow.
- * - FillParams - The input type for the fillConsentForm function.
- * - FillResult - The return type for the fillConsentForm function.
- * - FormField - The type representing a single field in the PDF form.
  */
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
+import {
+  FillParams,
+  FillParamsSchema,
+  FillResult,
+  FillResultSchema,
+  FormField,
+  FormFieldSchema,
+} from '@/lib/types';
 import { PDFDocument, rgb } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
-
-// Define the schema for a single form field
-export const FormFieldSchema = z.object({
-  name: z.string().describe('A unique identifier for the form field, e.g., "patientName"'),
-  description: z.string().describe('A user-friendly label for the form field, e.g., "Patient Name"'),
-  type: z.enum(['string', 'date', 'number']).describe('The data type of the field.'),
-  value: z.string().optional().describe('The value to fill into the field.'),
-});
-export type FormField = z.infer<typeof FormFieldSchema>;
-
-// Define the input schema for the flow
-const FillParamsSchema = z.object({
-  pdfUrl: z.string().url().describe('The public URL of the PDF consent form.'),
-  fields: z.array(FormFieldSchema).optional().describe('An array of form fields to be filled. If not provided, fields will be extracted.'),
-});
-export type FillParams = z.infer<typeof FillParamsSchema>;
-
-// Define the output schema for the flow
-const FillResultSchema = z.object({
-  fields: z.array(FormFieldSchema).optional().describe('The extracted form fields if no input fields were provided.'),
-  filledPdfDataUri: z.string().optional().describe("The filled PDF as a base64 data URI. Provided only when input fields are passed."),
-});
-export type FillResult = z.infer<typeof FillResultSchema>;
 
 // The main exported function that clients will call
 export async function fillConsentForm(params: FillParams): Promise<FillResult> {
@@ -59,7 +41,7 @@ PDF Document:
 `,
   config: {
     // A larger model is better for this kind of complex document analysis
-    model: 'googleai/gemini-1.5-pro', 
+    model: 'googleai/gemini-1.5-pro',
   },
 });
 
@@ -79,11 +61,11 @@ const fillConsentFormFlow = ai.defineFlow(
 
     // If fields are provided, fetch the PDF and fill them
     const pdfBytes = await fetch(params.pdfUrl).then((res) => res.arrayBuffer());
-    const pdfDoc = await PDFDocument.load(pdfBytes, { 
+    const pdfDoc = await PDFDocument.load(pdfBytes, {
       // This is important for some PDFs that might not be perfectly standard
-      ignoreEncryption: true 
+      ignoreEncryption: true,
     });
-    
+
     // Register fontkit to handle custom fonts potentially embedded in the PDF
     pdfDoc.registerFontkit(fontkit);
 
@@ -94,16 +76,25 @@ const fillConsentFormFlow = ai.defineFlow(
 
     // Define the prompt for finding field coordinates
     const fieldPlacementPrompt = ai.definePrompt({
-        name: 'fieldPlacementPrompt',
-        input: { schema: z.object({ pdfUrl: z.string(), fields: z.array(FormFieldSchema) }) },
-        output: { schema: z.object({
-            placements: z.array(z.object({
-                name: z.string(),
-                x: z.number().describe("The x-coordinate from the left edge of the page."),
-                y: z.number().describe("The y-coordinate from the bottom edge of the page."),
-            }))
-        })},
-        prompt: `Based on the provided PDF, identify the precise x and y coordinates for each of the following form fields on the first page.
+      name: 'fieldPlacementPrompt',
+      input: {
+        schema: z.object({
+          pdfUrl: z.string(),
+          fields: z.array(FormFieldSchema),
+        }),
+      },
+      output: {
+        schema: z.object({
+          placements: z.array(
+            z.object({
+              name: z.string(),
+              x: z.number().describe('The x-coordinate from the left edge of the page.'),
+              y: z.number().describe('The y-coordinate from the bottom edge of the page.'),
+            })
+          ),
+        }),
+      },
+      prompt: `Based on the provided PDF, identify the precise x and y coordinates for each of the following form fields on the first page.
         The origin (0,0) is the bottom-left corner of the page.
         The page dimensions are ${firstPage.getWidth()}pt wide and ${firstPage.getHeight()}pt high.
         Provide coordinates for placing the *start* of the text for each field.
@@ -116,33 +107,36 @@ const fillConsentFormFlow = ai.defineFlow(
         - {{name}}: "{{description}}"
         {{/each}}
         `,
-        config: { model: 'googleai/gemini-1.5-pro' },
+      config: { model: 'googleai/gemini-1.5-pro' },
     });
-    
-    const { output: placementOutput } = await fieldPlacementPrompt({ pdfUrl: params.pdfUrl, fields: params.fields });
+
+    const { output: placementOutput } = await fieldPlacementPrompt({
+      pdfUrl: params.pdfUrl,
+      fields: params.fields,
+    });
 
     if (!placementOutput) {
-        throw new Error("Could not determine field placements.");
+      throw new Error('Could not determine field placements.');
     }
-    
+
     // Draw the text on the PDF
-    placementOutput.placements.forEach(p => {
-        const field = params.fields?.find(f => f.name === p.name);
-        if (field?.value) {
-            firstPage.drawText(field.value, {
-                x: p.x,
-                y: p.y,
-                size: 10,
-                font: helveticaFont,
-                color: rgb(0, 0.2, 0.8),
-            });
-        }
+    placementOutput.placements.forEach((p) => {
+      const field = params.fields?.find((f) => f.name === p.name);
+      if (field?.value) {
+        firstPage.drawText(field.value, {
+          x: p.x,
+          y: p.y,
+          size: 10,
+          font: helveticaFont,
+          color: rgb(0, 0.2, 0.8),
+        });
+      }
     });
-    
+
     // Save the PDF to a buffer and convert to a data URI
     const filledPdfBytes = await pdfDoc.save();
     const filledPdfBase64 = Buffer.from(filledPdfBytes).toString('base64');
-    
+
     return {
       filledPdfDataUri: `data:application/pdf;base64,${filledPdfBase64}`,
     };
