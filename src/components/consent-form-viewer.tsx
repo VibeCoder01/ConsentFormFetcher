@@ -174,7 +174,6 @@ export function ConsentFormViewer({ form }: ConsentFormViewerProps) {
             <div className="flex-1 grid md:grid-cols-2 gap-6 overflow-hidden">
                 <div className="relative h-full overflow-hidden rounded-md border">
                     <iframe
-                        ref={iframeRef}
                         src={`${form.url}#view=fitH`}
                         title={form.title}
                         className="h-full w-full border-0"
@@ -238,19 +237,14 @@ export function ConsentFormViewer({ form }: ConsentFormViewerProps) {
         </DialogContent>
       </Dialog>
       
-       <div className="flex-1 bg-muted/20 flex items-center justify-center p-8">
-            <div className="text-center">
-                <Wand2 className="mx-auto h-16 w-16 text-muted-foreground" />
-                <h3 className="mt-6 text-2xl font-semibold">
-                    Use AI to Fill This Form
-                </h3>
-                <p className="mt-2 text-base text-muted-foreground">
-                    Click the &quot;AI Fill Form&quot; button above to start.
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    You&apos;ll be able to review and print the completed document.
-                </p>
-            </div>
+        <div className="flex-1 bg-muted/20">
+            <iframe
+                ref={iframeRef}
+                src={`${form.url}#view=fitH`}
+                title={form.title}
+                className="h-full w-full border-0"
+                aria-label={`PDF viewer for ${form.title}`}
+            />
         </div>
     </div>
   );
