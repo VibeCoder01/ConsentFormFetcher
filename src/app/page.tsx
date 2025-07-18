@@ -8,7 +8,6 @@ import { FormList } from "@/components/form-list";
 import { ConsentFormViewer } from "@/components/consent-form-viewer";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import config from "@/config/app.json";
 
 export default function Home() {
   const [formCategories, setFormCategories] = useState<ConsentFormCategory[]>([]);
@@ -18,14 +17,19 @@ export default function Home() {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    fetch("/consent-forms.json")
+    fetch("/api/consent-forms")
       .then((res) => res.json())
       .then((data: ConsentFormCategory[]) => {
         setFormCategories(data);
         setIsLoading(false);
         if (data.length > 0 && data[0].forms.length > 0) {
-          // Pre-select the first form
-          setSelectedForm(data[0].forms[0]);
+          // Pre-select the first form that doesn't have a bad URL
+           const firstGoodForm = data.flatMap(d => d.forms).find(f => !f.url.includes('/system/files/publication/field_publication_file/'));
+           if (firstGoodForm) {
+            setSelectedForm(firstGoodForm);
+           } else if(data[0].forms.length > 0) {
+            setSelectedForm(data[0].forms[0]);
+           }
         }
       })
       .catch(console.error);
