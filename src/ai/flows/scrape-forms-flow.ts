@@ -7,6 +7,8 @@
  */
 
 import * as cheerio from 'cheerio';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 import { ConsentForm, ConsentFormCategory } from '@/lib/types';
 import { updateCache } from '@/ai/util/cache';
 import config from '@/config/app.json';
@@ -16,6 +18,13 @@ export interface ScrapeRcrFormsOutput {
   formCount?: number;
   error?: string;
 }
+
+async function saveFormsToJson(data: ConsentFormCategory[]): Promise<void> {
+    const jsonFilePath = path.join(process.cwd(), 'public', 'consent-forms.json');
+    const jsonData = JSON.stringify(data, null, 2);
+    await fs.writeFile(jsonFilePath, jsonData, 'utf-8');
+}
+
 
 export async function scrapeRcrForms(url: string): Promise<ScrapeRcrFormsOutput> {
   try {
@@ -87,6 +96,8 @@ export async function scrapeRcrForms(url: string): Promise<ScrapeRcrFormsOutput>
       throw new Error('No forms were extracted. The page structure may have changed, or there are no PDF links.');
     }
 
+    // Update both the persistent JSON file and the in-memory cache
+    await saveFormsToJson(formCategories);
     updateCache(formCategories);
 
     return { success: true, formCount: totalForms };
