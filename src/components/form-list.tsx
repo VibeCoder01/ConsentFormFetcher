@@ -31,12 +31,11 @@ export function FormList({ formCategories, onSelectForm, selectedFormUrl }: Form
               <AccordionContent className="pb-1">
                 <div className="flex flex-col gap-1 pl-2">
                   {category.forms.map((form) => {
-                    const fullUrl = `${config.rcrBaseUrl}${form.url}`;
                     return (
                       <Button
                         key={form.url}
                         variant={
-                          selectedFormUrl === fullUrl ? "secondary" : "ghost"
+                          selectedFormUrl === form.url ? "secondary" : "ghost"
                         }
                         className="h-auto w-full justify-start text-left whitespace-normal"
                         onClick={() => onSelectForm(form)}

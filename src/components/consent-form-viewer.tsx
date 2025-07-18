@@ -12,9 +12,8 @@ interface ConsentFormViewerProps {
 export function ConsentFormViewer({ form }: ConsentFormViewerProps) {
   const handlePrintOrSave = () => {
     if (form) {
-      // The form.url is a relative path, combine it with the base URL.
-      const fullUrl = `${config.rcrBaseUrl}${form.url}`;
-      window.open(fullUrl, '_blank');
+      // The form.url is a full URL, so we can use it directly.
+      window.open(form.url, '_blank');
     }
   };
 

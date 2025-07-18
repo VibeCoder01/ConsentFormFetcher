@@ -42,7 +42,7 @@ export default function Home() {
     <FormList
       formCategories={formCategories}
       onSelectForm={handleSelectForm}
-      selectedFormUrl={selectedForm ? `${config.rcrBaseUrl}${selectedForm.url}` : undefined}
+      selectedFormUrl={selectedForm ? selectedForm.url : undefined}
     />
   );
   
