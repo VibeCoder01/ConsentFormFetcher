@@ -66,6 +66,7 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
             'Name of patient', 
             'Patient name',
             'Full Name',
+            'Patient full name',
             'topmostSubform[0].Page1[0].p1-f1-1[0]'
         ],
         dob: ['Date of birth', 'Patient’s date of birth (DD/MM/YYYY)'],
