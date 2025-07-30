@@ -3,6 +3,7 @@
 import { z } from 'zod';
 import { PDFDocument, PDFTextField, PDFDropdown, PDFRadioGroup, PDFCheckBox } from 'pdf-lib';
 import { format } from 'date-fns';
+import { setCachedPdf } from '@/ai/util/pdfCache';
 
 const FillPdfInputSchema = z.object({
   formUrl: z.string().url(),
@@ -17,7 +18,7 @@ type FillPdfInput = z.infer<typeof FillPdfInputSchema>;
 
 export interface FillPdfOutput {
   success: boolean;
-  pdfBytes?: Uint8Array;
+  pdfId?: string;
   error?: string;
 }
 
@@ -80,7 +81,11 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     // 4. Save the modified PDF to bytes
     const pdfBytes = await pdfDoc.save();
 
-    return { success: true, pdfBytes };
+    // 5. Cache the PDF and get a unique ID
+    const pdfId = crypto.randomUUID();
+    setCachedPdf(pdfId, pdfBytes);
+
+    return { success: true, pdfId: pdfId };
   } catch (error) {
     console.error('Failed to fill PDF:', error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred while processing the PDF.';
