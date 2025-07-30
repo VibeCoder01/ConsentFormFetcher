@@ -89,7 +89,7 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
         const fieldNameLower = fieldName.toLowerCase();
         
         // This is a special case for the full name which is often problematic
-        if (fieldNameLower.includes('patient') && fieldNameLower.includes('name') && !fieldNameLower.includes('gp')) {
+        if (fieldName.includes('topmostSubform[0].Page1[0].p1-f1-1[0]') || (fieldNameLower.includes('patient') && fieldNameLower.includes('name') && !fieldNameLower.includes('gp'))) {
              if (field instanceof PDFTextField) {
                 field.setText(fieldsToFill.fullName);
                 return; // Move to next field
@@ -97,7 +97,7 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
         }
         
         for (const [dataKey, possibleNames] of Object.entries(fieldMapping)) {
-            if (possibleNames.some(name => fieldNameLower.includes(name.toLowerCase()))) {
+            if (possibleNames.some(name => fieldName.toLowerCase().includes(name.toLowerCase()) || fieldName === name)) {
                 const value = fieldsToFill[dataKey as keyof typeof fieldsToFill];
                 
                 if (field instanceof PDFTextField) {
@@ -139,4 +139,3 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     return { success: false, error: message };
   }
 }
-
