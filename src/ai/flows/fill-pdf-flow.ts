@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -47,7 +48,15 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     const fieldMapping: { [key: string]: string[] } = {
         firstName: ['First name(s)', 'Patient’s first name'],
         lastName: ['Last name', 'Patient’s last name'],
-        fullName: ['Patient Name', 'Name of patient', 'Patient name'],
+        fullName: [
+            'Patient Name', 
+            'Name of patient', 
+            'Patient name', 
+            'Full Name',
+            'Name',
+            // Generic fallback for some forms
+            'topmostSubform[0].Page1[0].p1-f1-1[0]'
+        ],
         dob: ['Date of birth', 'Patient’s date of birth (DD/MM/YYYY)'],
         hospitalNumber: ['Hospital Number', 'Patient’s hospital number'],
     };
