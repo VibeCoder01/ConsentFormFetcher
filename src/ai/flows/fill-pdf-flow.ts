@@ -24,6 +24,8 @@ const FillPdfInputSchema = z.object({
     nhsNumber: z.string(),
     hospitalNumber: z.string(),
     hospitalNumberMTW: z.string(),
+    selectedIdentifier: z.string(),
+    uniqueIdentifierValue: z.string()
   }),
 });
 type FillPdfInput = z.infer<typeof FillPdfInputSchema>;
@@ -64,7 +66,6 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
             'Patient name',
             'Full Name',
             'Name',
-            // Generic fallback for some forms
             'topmostSubform[0].Page1[0].p1-f1-1[0]'
         ],
         dob: ['Date of birth', 'Patient’s date of birth (DD/MM/YYYY)'],
@@ -79,6 +80,7 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
         gpName: ['GP Name'],
         rNumber: ['R Number'],
         nhsNumber: ['NHS Number'],
+        uniqueIdentifierValue: ['Unique Patient Identifier'],
     };
 
     form.getFields().forEach(field => {

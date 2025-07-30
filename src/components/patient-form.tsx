@@ -1,30 +1,38 @@
 
 'use client';
 
-import { PatientData } from '@/lib/types';
+import { PatientData, IdentifierType } from '@/lib/types';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 interface PatientFormProps {
   patientData: PatientData;
   setPatientData: (data: PatientData) => void;
 }
 
+const identifierOptions: { value: IdentifierType; label: string }[] = [
+    { value: 'rNumber', label: 'R Number' },
+    { value: 'nhsNumber', label: 'NHS Number' },
+    { value: 'hospitalNumber', label: 'Hospital Number' },
+    { value: 'hospitalNumberMTW', label: 'Hospital Number (MTW)' },
+];
+
 export function PatientForm({ patientData, setPatientData }: PatientFormProps) {
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const updatedData = {
+    setPatientData({
       ...patientData,
       [name]: value,
-    };
+    });
+  };
 
-    // Also update fullAddress if one of the address fields changes
-    if (['addr1', 'addr2', 'addr3', 'postcode'].includes(name)) {
-        updatedData.fullAddress = [updatedData.addr1, updatedData.addr2, updatedData.addr3, updatedData.postcode].filter(Boolean).join(', ');
-    }
-
-    setPatientData(updatedData);
+  const handleIdentifierChange = (value: string) => {
+    setPatientData({
+        ...patientData,
+        selectedIdentifier: value as IdentifierType,
+    });
   };
 
   return (
@@ -81,9 +89,30 @@ export function PatientForm({ patientData, setPatientData }: PatientFormProps) {
           <Label htmlFor="hospitalNumber">Hospital Number</Label>
           <Input type="text" id="hospitalNumber" name="hospitalNumber" value={patientData.hospitalNumber} onChange={handleChange} />
         </div>
-        <div className="grid w-full max-w-sm items-center gap-1.5 pb-4">
+        <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="hospitalNumberMTW">Hospital Number (MTW)</Label>
           <Input type="text" id="hospitalNumberMTW" name="hospitalNumberMTW" value={patientData.hospitalNumberMTW} onChange={handleChange} />
+        </div>
+        
+        <div className="grid w-full max-w-sm items-center gap-2.5">
+            <Label>Select Unique Patient Identifier</Label>
+            <RadioGroup 
+                value={patientData.selectedIdentifier} 
+                onValueChange={handleIdentifierChange}
+                className="gap-2"
+            >
+                {identifierOptions.map(option => (
+                    <div key={option.value} className="flex items-center space-x-2">
+                        <RadioGroupItem value={option.value} id={option.value} />
+                        <Label htmlFor={option.value} className="font-normal">{option.label}</Label>
+                    </div>
+                ))}
+            </RadioGroup>
+        </div>
+        
+        <div className="grid w-full max-w-sm items-center gap-1.5 pb-4">
+            <Label htmlFor="uniqueIdentifierValue">Unique Patient Identifier</Label>
+            <Input type="text" id="uniqueIdentifierValue" name="uniqueIdentifierValue" value={patientData.uniqueIdentifierValue} readOnly disabled />
         </div>
       </div>
     </div>
