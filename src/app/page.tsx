@@ -25,10 +25,20 @@ export default function Home() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [patientData, setPatientData] = useState<PatientData>({
-    firstName: "John",
-    lastName: "Doe",
+    forename: "John",
+    surname: "Doe",
     dob: "1970-01-01",
     hospitalNumber: "1234567",
+    addr1: "123 Fake Street",
+    addr2: "Fakeville",
+    addr3: "Faketon",
+    postcode: "FK1 1AB",
+    fullAddress: "123 Fake Street, Fakeville, Faketon, FK1 1AB",
+    homePhone: "01234567890",
+    gpName: "Dr. Smith",
+    rNumber: "R1234567",
+    nhsNumber: "123 456 7890",
+    hospitalNumberMTW: "MTW123456",
   });
   const [selectedForm, setSelectedForm] = useState<ConsentForm | null>(null);
   const [isFillingPdf, setIsFillingPdf] = useState(false);
