@@ -65,7 +65,6 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
             'Name of patient', 
             'Patient name',
             'Full Name',
-            'Name',
             'topmostSubform[0].Page1[0].p1-f1-1[0]'
         ],
         dob: ['Date of birth', 'Patient’s date of birth (DD/MM/YYYY)'],
@@ -80,7 +79,7 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
         gpName: ['GP Name'],
         rNumber: ['R Number'],
         nhsNumber: ['NHS Number'],
-        uniqueIdentifierValue: ['Unique Patient Identifier', 'Patient unique identifier'],
+        uniqueIdentifierValue: ['Patient unique identifier', 'Unique Patient Identifier'],
     };
 
     form.getFields().forEach(field => {
@@ -129,3 +128,4 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     return { success: false, error: message };
   }
 }
+
