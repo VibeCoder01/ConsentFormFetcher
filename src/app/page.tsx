@@ -31,7 +31,6 @@ export default function Home() {
     hospitalNumber: "1234567",
   });
   const [selectedForm, setSelectedForm] = useState<ConsentForm | null>(null);
-  const [filledPdfUri, setFilledPdfUri] = useState<string | null>(null);
   const [isFillingPdf, setIsFillingPdf] = useState(false);
   
   const isMobile = useIsMobile();
@@ -68,7 +67,6 @@ export default function Home() {
   const handleSelectForm = async (form: ConsentForm) => {
     setSelectedForm(form);
     setIsFillingPdf(true);
-    setFilledPdfUri(null);
 
     try {
       const result = await fillPdf({
@@ -77,7 +75,7 @@ export default function Home() {
       });
 
       if (result.success && result.pdfId) {
-        setFilledPdfUri(`/api/filled-pdf/${result.pdfId}`);
+        window.open(`/api/filled-pdf/${result.pdfId}`, '_blank');
       } else {
         toast({
           variant: "destructive",
@@ -179,19 +177,17 @@ export default function Home() {
     );
   };
   
-  const pdfViewer = (
+  const mainContent = (
     <div className="flex-1 w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-900">
       {isFillingPdf ? (
          <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="text-muted-foreground">Pre-populating PDF...</p>
           </div>
-      ) : filledPdfUri ? (
-        <iframe src={filledPdfUri} className="w-full h-full" title={selectedForm?.title}></iframe>
       ) : (
         <div className="text-center text-muted-foreground">
           <p>Select a form to begin.</p>
-          <p className="text-sm">Patient data will be pre-populated.</p>
+          <p className="text-sm">A pre-populated PDF will be opened in a new tab.</p>
         </div>
       )}
     </div>
@@ -223,7 +219,7 @@ export default function Home() {
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto md:flex">
           <div className="h-full w-full">
-            {pdfViewer}
+            {mainContent}
           </div>
         </div>
       </main>
