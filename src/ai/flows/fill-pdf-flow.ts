@@ -59,13 +59,7 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     };
 
     const fieldMapping: { [key: string]: string[] } = {
-        fullName: [
-            'Patient Name', 
-            'Name of patient', 
-            'Patient’s first name', // To catch cases where fullname is expected in forename field
-            'Patient full name',
-            'topmostSubform[0].Page1[0].p1-f1-1[0]'
-        ],
+        fullName: ['Patient Name', 'Name of patient', 'Patient full name', 'topmostSubform[0].Page1[0].p1-f1-1[0]', 'Patient’s first name'],
         forename: ['First name(s)', 'Forename'],
         surname: ['Last name', 'Patient’s last name', 'Surname'],
         dob: ['Date of birth', 'Patient’s date of birth (DD/MM/YYYY)'],
@@ -89,7 +83,7 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
         const fieldNameLower = fieldName.toLowerCase();
         
         // This is a special case for the full name which is often problematic
-        if (fieldName.includes('topmostSubform[0].Page1[0].p1-f1-1[0]') || (fieldNameLower.includes('patient') && fieldNameLower.includes('name') && !fieldNameLower.includes('gp'))) {
+        if ((fieldNameLower.includes('patient') && fieldNameLower.includes('name') && !fieldNameLower.includes('gp')) || fieldName.includes('topmostSubform[0].Page1[0].p1-f1-1[0]')) {
              if (field instanceof PDFTextField) {
                 field.setText(fieldsToFill.fullName);
                 return; // Move to next field
