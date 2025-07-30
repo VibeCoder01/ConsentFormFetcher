@@ -20,7 +20,7 @@ export function FormList({ formCategories, onSelectForm }: FormListProps) {
         <h2 className="px-2 text-lg font-semibold tracking-tight mb-2">
           Available Forms
         </h2>
-        <Accordion type="multiple" className="w-full" defaultValue={formCategories.map(c => c.category)}>
+        <Accordion type="multiple" className="w-full">
           {formCategories.map((category) => (
             <AccordionItem value={category.category} key={category.category}>
               <AccordionTrigger className="hover:no-underline text-base px-2">
