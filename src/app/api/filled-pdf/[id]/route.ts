@@ -21,14 +21,12 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Length': pdfBytes.length.toString(),
-        // Instructs the browser to display the file inline
-        'Content-Disposition': 'inline; filename="consent-form.pdf"',
       },
     });
-    
-    // Clean up the file after creating the response
-    await fs.unlink(filePath);
+
+    // We will not delete the file immediately to avoid race conditions.
+    // A separate cleanup mechanism would be needed for a production environment.
+    // await fs.unlink(filePath);
 
     return response;
 
