@@ -15,6 +15,8 @@ import { PatientForm } from "@/components/patient-form";
 import { fillPdf } from "@/ai/flows/fill-pdf-flow";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { setCachedPdf } from "@/ai/util/pdfCache";
+import { randomUUID } from "crypto";
 
 export default function Home() {
   const [formCategories, setFormCategories] = useState<ConsentFormCategory[]>([]);
@@ -76,8 +78,10 @@ export default function Home() {
         patient: patientData
       });
 
-      if (result.success && result.pdfId) {
-        setFilledPdfUri(`/api/filled-pdf/${result.pdfId}`);
+      if (result.success && result.pdfBytes) {
+        const pdfId = window.crypto.randomUUID();
+        setCachedPdf(pdfId, result.pdfBytes);
+        setFilledPdfUri(`/api/filled-pdf/${pdfId}`);
       } else {
         toast({
           variant: "destructive",
@@ -214,7 +218,7 @@ export default function Home() {
         {/* Mobile Sheet */}
         <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
           <SheetContent side="left" className="p-0 w-[85%] sm:w-96 bg-card">
-             <div className="overflow-y-auto h-full">
+             <div className="overflow-y-a_uto h-full">
                {sidebarContent()}
              </div>
           </SheetContent>
