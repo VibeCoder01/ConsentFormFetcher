@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { PDFDocument, PDFTextField, PDFDropdown, PDFRadioGroup, PDFCheckBox } from 'pdf-lib';
 import { PatientData } from '@/lib/types';
 import { format } from 'date-fns';
+import { setCachedPdf } from '@/ai/util/pdfCache';
+import { randomUUID } from 'crypto';
 
 const FillPdfInputSchema = z.object({
   formUrl: z.string().url(),
@@ -18,19 +20,9 @@ type FillPdfInput = z.infer<typeof FillPdfInputSchema>;
 
 export interface FillPdfOutput {
   success: boolean;
-  pdfDataUri?: string;
+  pdfId?: string;
   error?: string;
 }
-
-// A simple mapping from our patient data keys to potential PDF field names.
-// This is a naive implementation and would need to be more robust in a real application.
-const fieldMappings: { [key in keyof PatientData]: string[] } = {
-  firstName: ['Patient First Name', 'First Name', 'patient_first_name'],
-  lastName: ['Patient Last Name', 'Last Name', 'Surname', 'patient_last_name'],
-  dob: ['Patient Date of Birth', 'Date of Birth', 'DOB', 'patient_dob'],
-  hospitalNumber: ['Hospital Number', 'Patient ID', 'MRN', 'hospital_no'],
-};
-
 
 export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
   try {
@@ -71,22 +63,18 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
                 if (field instanceof PDFTextField) {
                     field.setText(value);
                 } else if (field instanceof PDFDropdown && !field.isMultiselect()) {
-                    // This is a simplification. Dropdowns often need specific option names.
                     const options = field.getOptions();
                     if (options.includes(value)) {
                        field.select(value);
                     }
                 } else if (field instanceof PDFRadioGroup) {
-                    // This is a simplification. Radio groups need specific option names.
                      const options = field.getOptions();
                      if (options.includes(value)) {
                         field.select(value);
                      }
                 } else if (field instanceof PDFCheckBox) {
-                    // You'd need logic to decide when to check a box.
-                    // e.g. if (value === 'Yes') field.check();
+                    // Logic to decide when to check a box would be needed here
                 }
-
                 break; 
             }
         }
@@ -94,11 +82,13 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
 
     // 4. Save the modified PDF to bytes
     const pdfBytes = await pdfDoc.save();
+    
+    // 5. Cache the result and get an ID
+    const pdfId = randomUUID();
+    setCachedPdf(pdfId, pdfBytes);
 
-    // 5. Convert to a data URI to send to the client
-    const pdfDataUri = `data:application/pdf;base64,${Buffer.from(pdfBytes).toString('base64')}`;
 
-    return { success: true, pdfDataUri };
+    return { success: true, pdfId };
   } catch (error) {
     console.error('Failed to fill PDF:', error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred while processing the PDF.';

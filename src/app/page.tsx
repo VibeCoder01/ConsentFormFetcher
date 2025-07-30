@@ -14,6 +14,7 @@ import { checkForFormUpdates, updateForms } from "@/ai/flows/update-check-flow";
 import { PatientForm } from "@/components/patient-form";
 import { fillPdf } from "@/ai/flows/fill-pdf-flow";
 import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [formCategories, setFormCategories] = useState<ConsentFormCategory[]>([]);
@@ -34,6 +35,7 @@ export default function Home() {
   const [isFillingPdf, setIsFillingPdf] = useState(false);
   
   const isMobile = useIsMobile();
+  const { toast } = useToast();
 
   const fetchForms = () => {
     setIsLoading(true);
@@ -73,14 +75,23 @@ export default function Home() {
         formUrl: form.url,
         patient: patientData
       });
-      if (result.success && result.pdfDataUri) {
-        setFilledPdfUri(result.pdfDataUri);
+
+      if (result.success && result.pdfId) {
+        setFilledPdfUri(`/api/filled-pdf/${result.pdfId}`);
       } else {
-        // Handle error case, maybe show a toast
-        console.error("Failed to fill PDF:", result.error);
+        toast({
+          variant: "destructive",
+          title: "PDF Generation Failed",
+          description: result.error || "An unknown error occurred while preparing the PDF.",
+        });
       }
     } catch(error) {
-      console.error("Error filling PDF:", error);
+       const errorMessage = error instanceof Error ? error.message : String(error);
+       toast({
+        variant: "destructive",
+        title: "Error",
+        description: `An error occurred while filling the PDF: ${errorMessage}`,
+      });
     } finally {
       setIsFillingPdf(false)
       if (isMobile) {
