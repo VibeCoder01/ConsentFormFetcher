@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { ConsentForm, ConsentFormCategory } from "@/lib/types";
+import type { ConsentForm, ConsentFormCategory, PatientData } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AppHeader } from "@/components/app-header";
 import { FormList } from "@/components/form-list";
@@ -11,6 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { UpdateAvailableAlert } from "@/components/update-available-alert";
 import { checkForFormUpdates, updateForms } from "@/ai/flows/update-check-flow";
+import { PatientForm } from "@/components/patient-form";
+import { fillPdf } from "@/ai/flows/fill-pdf-flow";
+import { Loader2 } from "lucide-react";
 
 export default function Home() {
   const [formCategories, setFormCategories] = useState<ConsentFormCategory[]>([]);
@@ -20,6 +23,16 @@ export default function Home() {
   const [updateAvailable, setUpdateAvailable] = useState<ConsentFormCategory[] | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+  const [patientData, setPatientData] = useState<PatientData>({
+    firstName: "John",
+    lastName: "Doe",
+    dob: "1970-01-01",
+    hospitalNumber: "1234567",
+  });
+  const [selectedForm, setSelectedForm] = useState<ConsentForm | null>(null);
+  const [filledPdfUri, setFilledPdfUri] = useState<string | null>(null);
+  const [isFillingPdf, setIsFillingPdf] = useState(false);
+  
   const isMobile = useIsMobile();
 
   const fetchForms = () => {
@@ -50,10 +63,29 @@ export default function Home() {
       .finally(() => setIsCheckingForUpdates(false));
   }, []);
 
-  const handleSelectForm = (form: ConsentForm) => {
-    window.open(form.url, "_blank");
-    if (isMobile) {
-      setSheetOpen(false);
+  const handleSelectForm = async (form: ConsentForm) => {
+    setSelectedForm(form);
+    setIsFillingPdf(true);
+    setFilledPdfUri(null);
+
+    try {
+      const result = await fillPdf({
+        formUrl: form.url,
+        patient: patientData
+      });
+      if (result.success && result.pdfDataUri) {
+        setFilledPdfUri(result.pdfDataUri);
+      } else {
+        // Handle error case, maybe show a toast
+        console.error("Failed to fill PDF:", result.error);
+      }
+    } catch(error) {
+      console.error("Error filling PDF:", error);
+    } finally {
+      setIsFillingPdf(false)
+      if (isMobile) {
+        setSheetOpen(false);
+      }
     }
   };
 
@@ -78,6 +110,7 @@ export default function Home() {
     <FormList
       formCategories={formCategories}
       onSelectForm={handleSelectForm}
+      selectedFormUrl={selectedForm?.url}
     />
   );
   
@@ -107,7 +140,7 @@ export default function Home() {
     </div>
   );
 
-  const mainContent = () => {
+  const sidebarContent = () => {
     if (isCheckingForUpdates) {
       return initializingComponent;
     }
@@ -127,8 +160,31 @@ export default function Home() {
         </div>
       )
     }
-    return formListComponent;
+    return (
+      <>
+        <PatientForm patientData={patientData} setPatientData={setPatientData} />
+        {formListComponent}
+      </>
+    );
   };
+  
+  const pdfViewer = (
+    <div className="flex-1 w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+      {isFillingPdf ? (
+         <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Pre-populating PDF...</p>
+          </div>
+      ) : filledPdfUri ? (
+        <iframe src={filledPdfUri} className="w-full h-full" title={selectedForm?.title}></iframe>
+      ) : (
+        <div className="text-center text-muted-foreground">
+          <p>Select a form to begin.</p>
+          <p className="text-sm">Patient data will be pre-populated.</p>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="flex h-dvh w-full flex-col bg-background">
@@ -138,9 +194,9 @@ export default function Home() {
       />
       <main className="flex flex-1 overflow-hidden">
         {/* Desktop Sidebar */}
-        <aside className="hidden md:flex flex-1 flex-col border-r bg-card">
+        <aside className="hidden md:flex w-96 flex-col border-r bg-card">
           <div className="flex-1 overflow-y-auto">
-            {mainContent()}
+            {sidebarContent()}
           </div>
         </aside>
 
@@ -148,15 +204,15 @@ export default function Home() {
         <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
           <SheetContent side="left" className="p-0 w-[85%] sm:w-96 bg-card">
              <div className="overflow-y-auto h-full">
-               {mainContent()}
+               {sidebarContent()}
              </div>
           </SheetContent>
         </Sheet>
         
-        {/* Mobile View */}
-        <div className="flex-1 overflow-y-auto md:hidden">
-          <div className="h-full">
-            {mainContent()}
+        {/* Main Content */}
+        <div className="flex-1 overflow-y-auto md:flex">
+          <div className="h-full w-full">
+            {pdfViewer}
           </div>
         </div>
       </main>
