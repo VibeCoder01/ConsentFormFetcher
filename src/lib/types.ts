@@ -22,6 +22,7 @@ export interface PatientData {
     fullAddress: string;
     homePhone: string;
     gpName: string;
+    hospitalName: string;
     rNumber: string;
     nhsNumber: string;
     hospitalNumber: string;
