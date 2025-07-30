@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { ConsentForm, ConsentFormCategory, PatientData } from "@/lib/types";
+import type { ConsentForm, ConsentFormCategory, PatientData, IdentifierType } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AppHeader } from "@/components/app-header";
 import { FormList } from "@/components/form-list";
@@ -39,12 +39,31 @@ export default function Home() {
     rNumber: "R1234567",
     nhsNumber: "123 456 7890",
     hospitalNumberMTW: "MTW123456",
+    selectedIdentifier: 'hospitalNumber',
+    uniqueIdentifierValue: '1234567'
   });
   const [selectedForm, setSelectedForm] = useState<ConsentForm | null>(null);
   const [isFillingPdf, setIsFillingPdf] = useState(false);
   
   const isMobile = useIsMobile();
   const { toast } = useToast();
+
+  const handlePatientDataChange = (newData: PatientData) => {
+    // Also update fullAddress if one of the address fields changes
+    if (['addr1', 'addr2', 'addr3', 'postcode'].some(field => newData[field as keyof PatientData] !== patientData[field as keyof PatientData])) {
+        newData.fullAddress = [newData.addr1, newData.addr2, newData.addr3, newData.postcode].filter(Boolean).join(', ');
+    }
+
+    // Update the unique identifier value if the selected identifier or its value changes
+    const selectedIdField = newData.selectedIdentifier;
+    const selectedIdValue = newData[selectedIdField as Exclude<IdentifierType, 'selectedIdentifier' | 'uniqueIdentifierValue'>];
+
+    if (newData.uniqueIdentifierValue !== selectedIdValue) {
+        newData.uniqueIdentifierValue = selectedIdValue;
+    }
+    
+    setPatientData(newData);
+  };
 
   const fetchForms = () => {
     setIsLoading(true);
@@ -181,7 +200,7 @@ export default function Home() {
     }
     return (
       <>
-        <PatientForm patientData={patientData} setPatientData={setPatientData} />
+        <PatientForm patientData={patientData} setPatientData={handlePatientDataChange} />
         {formListComponent}
       </>
     );
