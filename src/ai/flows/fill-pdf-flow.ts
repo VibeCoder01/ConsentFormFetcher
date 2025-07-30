@@ -59,7 +59,16 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     };
 
     const fieldMapping: { [key: string]: string[] } = {
-        fullName: ['Patient Name', 'Name of patient', 'Patient full name', 'topmostSubform[0].Page1[0].p1-f1-1[0]', 'Patient name'],
+        fullName: [
+          'Patient Name',
+          'Patient name',
+          'Patients Name',
+          "Patient's Name",
+          'PatientName',
+          'Name of patient',
+          'Patient full name',
+          'topmostSubform[0].Page1[0].p1-f1-1[0]'
+        ],
         forename: ['First name(s)', 'Forename', 'Patient’s first name'],
         surname: ['Last name', 'Patient’s last name', 'Surname'],
         dob: ['Date of birth', 'Patient’s date of birth (DD/MM/YYYY)'],
