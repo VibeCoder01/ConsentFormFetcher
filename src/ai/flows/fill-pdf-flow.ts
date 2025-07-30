@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { PDFDocument, PDFTextField, PDFDropdown, PDFRadioGroup, PDFCheckBox } from 'pdf-lib';
+import { PDFDocument, PDFTextField, PDFDropdown, PDFRadioGroup, PDFCheckBox, StandardFonts } from 'pdf-lib';
 import { format } from 'date-fns';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -124,6 +124,10 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
             }
         }
     }
+
+    // Ensure text will be visible in PDF viewers by updating field appearances
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
+    form.updateFieldAppearances(font)
 
 
     // 4. Save the modified PDF to bytes
