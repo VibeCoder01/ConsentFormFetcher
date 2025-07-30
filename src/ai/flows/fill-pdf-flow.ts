@@ -79,14 +79,14 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     };
 
     const fields = form.getFields();
-    const fieldNames = fields.map(f => f.getName());
+    const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
     for (const [dataKey, possibleNames] of Object.entries(fieldMapping)) {
         let fieldToSet = null;
 
         // Priority 1: Find an exact match (case-insensitive)
         for (const name of possibleNames) {
-            const exactMatchField = fields.find(f => f.getName().toLowerCase() === name.toLowerCase());
+            const exactMatchField = fields.find(f => normalize(f.getName()) === normalize(name));
             if (exactMatchField) {
                 fieldToSet = exactMatchField;
                 break;
@@ -96,7 +96,7 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
         // Priority 2: Find a field that includes the name (more fuzzy)
         if (!fieldToSet) {
              for (const name of possibleNames) {
-                const partialMatchField = fields.find(f => f.getName().toLowerCase().includes(name.toLowerCase()));
+                const partialMatchField = fields.find(f => normalize(f.getName()).includes(normalize(name)));
                 if (partialMatchField) {
                     fieldToSet = partialMatchField;
                     break;
