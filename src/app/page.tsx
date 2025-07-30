@@ -16,6 +16,26 @@ import { fillPdf } from "@/ai/flows/fill-pdf-flow";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+const initialPatientData: PatientData = {
+  forename: "John",
+  surname: "Doe",
+  dob: "1970-01-01",
+  hospitalNumber: "1234567",
+  addr1: "123 Fake Street",
+  addr2: "Fakeville",
+  addr3: "Faketon",
+  postcode: "FK1 1AB",
+  fullAddress: "123 Fake Street, Fakeville, Faketon, FK1 1AB",
+  homePhone: "01234567890",
+  gpName: "Dr. Smith",
+  rNumber: "R1234567",
+  nhsNumber: "123 456 7890",
+  hospitalNumberMTW: "MTW123456",
+  selectedIdentifier: 'hospitalNumber',
+  uniqueIdentifierValue: '1234567'
+};
+
+
 export default function Home() {
   const [formCategories, setFormCategories] = useState<ConsentFormCategory[]>([]);
   const [isSheetOpen, setSheetOpen] = useState(false);
@@ -24,24 +44,7 @@ export default function Home() {
   const [updateAvailable, setUpdateAvailable] = useState<ConsentFormCategory[] | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
-  const [patientData, setPatientData] = useState<PatientData>({
-    forename: "John",
-    surname: "Doe",
-    dob: "1970-01-01",
-    hospitalNumber: "1234567",
-    addr1: "123 Fake Street",
-    addr2: "Fakeville",
-    addr3: "Faketon",
-    postcode: "FK1 1AB",
-    fullAddress: "123 Fake Street, Fakeville, Faketon, FK1 1AB",
-    homePhone: "01234567890",
-    gpName: "Dr. Smith",
-    rNumber: "R1234567",
-    nhsNumber: "123 456 7890",
-    hospitalNumberMTW: "MTW123456",
-    selectedIdentifier: 'hospitalNumber',
-    uniqueIdentifierValue: '1234567'
-  });
+  const [patientData, setPatientData] = useState<PatientData>(initialPatientData);
   const [selectedForm, setSelectedForm] = useState<ConsentForm | null>(null);
   const [isFillingPdf, setIsFillingPdf] = useState(false);
   
@@ -192,7 +195,7 @@ export default function Home() {
               <AlertTitle>No Forms Found</AlertTitle>
               <AlertDescription>
                 Could not load consent forms. Please try checking for updates on the{' '}
-                <a href="/config" className="underline">Configuration</a> page.
+                <Link href="/config" className="underline">Configuration</Link> page.
               </AlertDescription>
             </Alert>
         </div>

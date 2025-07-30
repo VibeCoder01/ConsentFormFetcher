@@ -80,7 +80,7 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
         gpName: ['GP Name'],
         rNumber: ['R Number'],
         nhsNumber: ['NHS Number'],
-        uniqueIdentifierValue: ['Unique Patient Identifier'],
+        uniqueIdentifierValue: ['Unique Patient Identifier', 'Patient unique identifier'],
     };
 
     form.getFields().forEach(field => {
