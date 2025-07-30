@@ -62,6 +62,7 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
         fullName: [
           'Patient Name',
           'Patient name',
+          'Patient name:',
           'Patients Name',
           "Patient's Name",
           'PatientName',
