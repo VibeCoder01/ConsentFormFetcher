@@ -3,7 +3,8 @@
 import { z } from 'zod';
 import { PDFDocument, PDFTextField, PDFDropdown, PDFRadioGroup, PDFCheckBox } from 'pdf-lib';
 import { format } from 'date-fns';
-import { setCachedPdf } from '@/ai/util/pdfCache';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 const FillPdfInputSchema = z.object({
   formUrl: z.string().url(),
@@ -81,9 +82,14 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     // 4. Save the modified PDF to bytes
     const pdfBytes = await pdfDoc.save();
 
-    // 5. Cache the PDF and get a unique ID
+    // 5. Save the PDF to a temporary file
     const pdfId = crypto.randomUUID();
-    setCachedPdf(pdfId, pdfBytes);
+    const tmpDir = path.join(process.cwd(), 'tmp');
+    // Ensure the tmp directory exists
+    await fs.mkdir(tmpDir, { recursive: true });
+    const filePath = path.join(tmpDir, `${pdfId}.pdf`);
+    await fs.writeFile(filePath, pdfBytes);
+    
 
     return { success: true, pdfId: pdfId };
   } catch (error) {
