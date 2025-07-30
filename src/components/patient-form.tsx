@@ -78,6 +78,10 @@ export function PatientForm({ patientData, setPatientData }: PatientFormProps) {
           <Input type="text" id="gpName" name="gpName" value={patientData.gpName} onChange={handleChange} />
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
+          <Label htmlFor="hospitalName">Name of Hospital</Label>
+          <Input type="text" id="hospitalName" name="hospitalName" value={patientData.hospitalName} onChange={handleChange} />
+        </div>
+        <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="rNumber">R Number</Label>
           <Input type="text" id="rNumber" name="rNumber" value={patientData.rNumber} onChange={handleChange} />
         </div>

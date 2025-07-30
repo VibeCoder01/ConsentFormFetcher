@@ -15,12 +15,12 @@ import { PatientForm } from "@/components/patient-form";
 import { fillPdf } from "@/ai/flows/fill-pdf-flow";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 const initialPatientData: PatientData = {
   forename: "John",
   surname: "Doe",
   dob: "1970-01-01",
-  hospitalNumber: "1234567",
   addr1: "123 Fake Street",
   addr2: "Fakeville",
   addr3: "Faketon",
@@ -28,8 +28,10 @@ const initialPatientData: PatientData = {
   fullAddress: "123 Fake Street, Fakeville, Faketon, FK1 1AB",
   homePhone: "01234567890",
   gpName: "Dr. Smith",
+  hospitalName: "General Hospital",
   rNumber: "R1234567",
   nhsNumber: "123 456 7890",
+  hospitalNumber: "1234567",
   hospitalNumberMTW: "MTW123456",
   selectedIdentifier: 'hospitalNumber',
   uniqueIdentifierValue: '1234567'
