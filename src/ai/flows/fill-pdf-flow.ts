@@ -10,10 +10,20 @@ import * as path from 'path';
 const FillPdfInputSchema = z.object({
   formUrl: z.string().url(),
   patient: z.object({
-    firstName: z.string(),
-    lastName: z.string(),
+    surname: z.string(),
+    forename: z.string(),
     dob: z.string(),
+    addr1: z.string(),
+    addr2: z.string(),
+    addr3: z.string(),
+    postcode: z.string(),
+    fullAddress: z.string(),
+    homePhone: z.string(),
+    gpName: z.string(),
+    rNumber: z.string(),
+    nhsNumber: z.string(),
     hospitalNumber: z.string(),
+    hospitalNumberMTW: z.string(),
   }),
 });
 type FillPdfInput = z.infer<typeof FillPdfInputSchema>;
@@ -36,7 +46,7 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     const form = pdfDoc.getForm();
 
     // 3. Fill in the fields
-    const fullName = `${patient.firstName} ${patient.lastName}`;
+    const fullName = `${patient.forename} ${patient.surname}`;
     const formattedDob = format(new Date(patient.dob), 'dd/MM/yyyy');
 
     const fieldsToFill = {
@@ -46,12 +56,12 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     };
 
     const fieldMapping: { [key: string]: string[] } = {
-        firstName: ['First name(s)', 'Patient’s first name'],
-        lastName: ['Last name', 'Patient’s last name'],
+        forename: ['First name(s)', 'Patient’s first name', 'Forename'],
+        surname: ['Last name', 'Patient’s last name', 'Surname'],
         fullName: [
             'Patient Name', 
             'Name of patient', 
-            'Patient name', 
+            'Patient name',
             'Full Name',
             'Name',
             // Generic fallback for some forms
@@ -59,6 +69,16 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
         ],
         dob: ['Date of birth', 'Patient’s date of birth (DD/MM/YYYY)'],
         hospitalNumber: ['Hospital Number', 'Patient’s hospital number'],
+        hospitalNumberMTW: ['Hospital Number MTW'],
+        addr1: ['Address Line 1', 'Addr1'],
+        addr2: ['Address Line 2', 'Addr2'],
+        addr3: ['Address Line 3', 'Addr3'],
+        postcode: ['Postcode'],
+        fullAddress: ['Address'],
+        homePhone: ['Home Phone', 'Home Telephone Number'],
+        gpName: ['GP Name'],
+        rNumber: ['R Number'],
+        nhsNumber: ['NHS Number'],
     };
 
     form.getFields().forEach(field => {
