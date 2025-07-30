@@ -59,7 +59,7 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     };
 
     const fieldMapping: { [key: string]: string[] } = {
-        fullName: ['Patient Name', 'Name of patient', 'Patient full name', 'topmostSubform[0].Page1[0].p1-f1-1[0]', 'Patient’s first name'],
+        fullName: ['Patient Name', 'Name of patient', 'Patient full name', 'topmostSubform[0].Page1[0].p1-f1-1[0]', 'Patient’s first name', 'Patient name'],
         forename: ['First name(s)', 'Forename'],
         surname: ['Last name', 'Patient’s last name', 'Surname'],
         dob: ['Date of birth', 'Patient’s date of birth (DD/MM/YYYY)'],
@@ -78,41 +78,53 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
         uniqueIdentifierValue: ['Patient unique identifier', 'Unique Patient Identifier'],
     };
 
-    form.getFields().forEach(field => {
-        const fieldName = field.getName();
-        const fieldNameLower = fieldName.toLowerCase();
-        
-        // This is a special case for the full name which is often problematic
-        if ((fieldNameLower.includes('patient') && fieldNameLower.includes('name') && !fieldNameLower.includes('gp')) || fieldName.includes('topmostSubform[0].Page1[0].p1-f1-1[0]')) {
-             if (field instanceof PDFTextField) {
-                field.setText(fieldsToFill.fullName);
-                return; // Move to next field
+    const fields = form.getFields();
+    const fieldNames = fields.map(f => f.getName());
+
+    for (const [dataKey, possibleNames] of Object.entries(fieldMapping)) {
+        let fieldToSet = null;
+
+        // Priority 1: Find an exact match (case-insensitive)
+        for (const name of possibleNames) {
+            const exactMatchField = fields.find(f => f.getName().toLowerCase() === name.toLowerCase());
+            if (exactMatchField) {
+                fieldToSet = exactMatchField;
+                break;
             }
         }
-        
-        for (const [dataKey, possibleNames] of Object.entries(fieldMapping)) {
-            if (possibleNames.some(name => fieldName.toLowerCase().includes(name.toLowerCase()) || fieldName === name)) {
-                const value = fieldsToFill[dataKey as keyof typeof fieldsToFill];
-                
-                if (field instanceof PDFTextField) {
-                    field.setText(value);
-                } else if (field instanceof PDFDropdown && !field.isMultiselect()) {
-                    const options = field.getOptions();
-                    if (options.includes(value)) {
-                       field.select(value);
-                    }
-                } else if (field instanceof PDFRadioGroup) {
-                     const options = field.getOptions();
-                     if (options.includes(value)) {
-                        field.select(value);
-                     }
-                } else if (field instanceof PDFCheckBox) {
-                    // Logic to decide when to check a box would be needed here
+
+        // Priority 2: Find a field that includes the name (more fuzzy)
+        if (!fieldToSet) {
+             for (const name of possibleNames) {
+                const partialMatchField = fields.find(f => f.getName().toLowerCase().includes(name.toLowerCase()));
+                if (partialMatchField) {
+                    fieldToSet = partialMatchField;
+                    break;
                 }
-                break; 
             }
         }
-    });
+        
+        if (fieldToSet) {
+            const value = fieldsToFill[dataKey as keyof typeof fieldsToFill];
+            
+            if (fieldToSet instanceof PDFTextField) {
+                fieldToSet.setText(value);
+            } else if (fieldToSet instanceof PDFDropdown && !fieldToSet.isMultiselect()) {
+                const options = fieldToSet.getOptions();
+                if (options.includes(value)) {
+                   fieldToSet.select(value);
+                }
+            } else if (fieldToSet instanceof PDFRadioGroup) {
+                 const options = fieldToSet.getOptions();
+                 if (options.includes(value)) {
+                    fieldToSet.select(value);
+                 }
+            } else if (fieldToSet instanceof PDFCheckBox) {
+                // Logic to decide when to check a box would be needed here
+            }
+        }
+    }
+
 
     // 4. Save the modified PDF to bytes
     const pdfBytes = await pdfDoc.save();
