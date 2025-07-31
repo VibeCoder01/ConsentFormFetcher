@@ -35,10 +35,13 @@ export async function getPdfFields(formUrl: string): Promise<GetPdfFieldsOutput>
     });
     const form = pdfDoc.getForm();
 
-    // 3. Get all field names, filtering out checkboxes
+    // 3. Get all field names, filtering out checkboxes and patient initial fields
     const fields = form.getFields();
     const fieldNames = fields
-      .filter(field => !(field instanceof PDFCheckBox))
+      .filter(field => {
+        const name = field.getName().toLowerCase();
+        return !(field instanceof PDFCheckBox) && !name.includes('initials');
+      })
       .map(field => field.getName());
 
     return { success: true, fields: fieldNames };
