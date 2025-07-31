@@ -196,6 +196,7 @@ export default function Home() {
         mappings['clinician name'] = selectedStaffMember.name;
         mappings['clinician name 1'] = selectedStaffMember.name; // Alias
         mappings['name of person'] = selectedStaffMember.name; // Alias
+        mappings['responsible consultant'] = selectedStaffMember.name;
         mappings['job title'] = selectedStaffMember.title;
         mappings['jobtitle'] = selectedStaffMember.title;
     }
