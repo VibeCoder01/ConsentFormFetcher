@@ -144,6 +144,7 @@ export default function Home() {
       'nhs number': patientData.nhsNumber,
       'nhsnumber': patientData.nhsNumber,
       'unique patient identifier': patientData.uniqueIdentifierValue,
+      'patient unique identifier': patientData.uniqueIdentifierValue,
     };
   }, [patientData]);
 
