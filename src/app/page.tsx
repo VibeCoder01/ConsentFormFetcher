@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { ConsentForm, ConsentFormCategory, PatientData, IdentifierType } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AppHeader } from "@/components/app-header";
@@ -13,9 +13,12 @@ import { UpdateAvailableAlert } from "@/components/update-available-alert";
 import { checkForFormUpdates, updateForms } from "@/ai/flows/update-check-flow";
 import { PatientForm } from "@/components/patient-form";
 import { fillPdf } from "@/ai/flows/fill-pdf-flow";
+import { getPdfFields } from "@/ai/flows/get-pdf-fields-flow";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { PdfForm, PdfFormSkeleton } from "@/components/pdf-form";
+import { format } from 'date-fns';
 
 const initialPatientData: PatientData = {
   forename: "John",
@@ -48,7 +51,11 @@ export default function Home() {
   const [showAlert, setShowAlert] = useState(false);
   const [patientData, setPatientData] = useState<PatientData>(initialPatientData);
   const [selectedForm, setSelectedForm] = useState<ConsentForm | null>(null);
-  const [isFillingPdf, setIsFillingPdf] = useState(false);
+
+  const [pdfFields, setPdfFields] = useState<string[]>([]);
+  const [isFetchingFields, setIsFetchingFields] = useState(false);
+  const [pdfFormData, setPdfFormData] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const isMobile = useIsMobile();
   const { toast } = useToast();
@@ -98,23 +105,87 @@ export default function Home() {
       .finally(() => setIsCheckingForUpdates(false));
   }, []);
 
+  const patientMappings = useMemo(() => {
+    const formattedDob = patientData.dob ? format(new Date(patientData.dob), 'dd/MM/yyyy') : '';
+    const fullName = `${patientData.forename} ${patientData.surname}`;
+    
+    return {
+      'patient name': fullName,
+      'name of patient': fullName,
+      'patientname': fullName,
+      'patient full name': fullName,
+      'fullname': fullName,
+      'surname': patientData.surname,
+      'last name': patientData.surname,
+      'forename': patientData.forename,
+      'first name': patientData.forename,
+      'dob': formattedDob,
+      'date of birth': formattedDob,
+      'hospital number': patientData.hospitalNumber,
+      'hospitalnumber': patientData.hospitalNumber,
+      'hospital number mtw': patientData.hospitalNumberMTW,
+      'hospitalnamemtw': patientData.hospitalNumberMTW,
+      'name of hospital': patientData.hospitalName,
+      'hospitalname': patientData.hospitalName,
+      'addr1': patientData.addr1,
+      'address line 1': patientData.addr1,
+      'addr2': patientData.addr2,
+      'address line 2': patientData.addr2,
+      'addr3': patientData.addr3,
+      'address line 3': patientData.addr3,
+      'postcode': patientData.postcode,
+      'address': patientData.fullAddress,
+      'home phone': patientData.homePhone,
+      'home telephone': patientData.homePhone,
+      'gp name': patientData.gpName,
+      'gpname': patientData.gpName,
+      'r number': patientData.rNumber,
+      'rnumber': patientData.rNumber,
+      'nhs number': patientData.nhsNumber,
+      'nhsnumber': patientData.nhsNumber,
+      'unique patient identifier': patientData.uniqueIdentifierValue,
+    };
+  }, [patientData]);
+
+  const prePopulateForm = (fields: string[]) => {
+    const formData: Record<string, string> = {};
+    const usedPatientKeys = new Set<string>();
+
+    for (const field of fields) {
+        const normalizedField = field.toLowerCase().replace(/[^a-z0-9]/g, '');
+        let prefilledValue = '';
+
+        for (const [key, value] of Object.entries(patientMappings)) {
+            const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (normalizedField.includes(normalizedKey) && !usedPatientKeys.has(key)) {
+                prefilledValue = value;
+                // Simple mechanism to avoid over-populating similar fields, e.g. "Name" and "Patient Name"
+                // This is not perfect but can help.
+                // usedPatientKeys.add(key); 
+                break;
+            }
+        }
+        formData[field] = prefilledValue;
+    }
+    setPdfFormData(formData);
+  };
+
   const handleSelectForm = async (form: ConsentForm) => {
     setSelectedForm(form);
-    setIsFillingPdf(true);
+    setPdfFields([]);
+    setIsFetchingFields(true);
+    if (isMobile) setSheetOpen(false);
 
     try {
-      const result = await fillPdf({
-        formUrl: form.url,
-        patient: patientData
-      });
-
-      if (result.success && result.pdfId) {
-        window.open(`/api/filled-pdf/${result.pdfId}`, '_blank');
+      const result = await getPdfFields(form.url);
+      if (result.success && result.fields) {
+        setPdfFields(result.fields);
+        prePopulateForm(result.fields);
       } else {
         toast({
           variant: "destructive",
-          title: "PDF Generation Failed",
-          description: result.error || "An unknown error occurred while preparing the PDF.",
+          title: "Error fetching form fields",
+          description: result.error || "Could not inspect the selected PDF.",
         });
       }
     } catch(error) {
@@ -122,15 +193,44 @@ export default function Home() {
        toast({
         variant: "destructive",
         title: "Error",
-        description: `An error occurred while filling the PDF: ${errorMessage}`,
+        description: `An error occurred while getting PDF fields: ${errorMessage}`,
       });
     } finally {
-      setIsFillingPdf(false)
-      if (isMobile) {
-        setSheetOpen(false);
-      }
+      setIsFetchingFields(false);
     }
   };
+
+  const handlePdfSubmit = async (finalFormData: Record<string, string>) => {
+      if (!selectedForm) return;
+
+      setIsSubmitting(true);
+      try {
+        const result = await fillPdf({
+            formUrl: selectedForm.url,
+            fields: finalFormData
+        });
+
+        if (result.success && result.pdfId) {
+            window.open(`/api/filled-pdf/${result.pdfId}`, '_blank');
+        } else {
+             toast({
+                variant: "destructive",
+                title: "PDF Generation Failed",
+                description: result.error || "An unknown error occurred while preparing the PDF.",
+            });
+        }
+
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: `An error occurred while filling the PDF: ${errorMessage}`,
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+  }
 
   const handleConfirmUpdate = async () => {
     if (!updateAvailable) return;
@@ -211,21 +311,33 @@ export default function Home() {
     );
   };
   
-  const mainContent = (
-    <div className="flex-1 w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-      {isFillingPdf ? (
-         <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Pre-populating PDF...</p>
-          </div>
-      ) : (
+  const mainContent = () => {
+    if (isFetchingFields) {
+        return <PdfFormSkeleton />;
+    }
+
+    if (selectedForm && pdfFields.length > 0) {
+        return (
+            <PdfForm
+                formTitle={selectedForm.title}
+                fields={pdfFields}
+                initialData={pdfFormData}
+                isSubmitting={isSubmitting}
+                onSubmit={handlePdfSubmit}
+            />
+        );
+    }
+
+    return (
+      <div className="flex-1 w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-900">
         <div className="text-center text-muted-foreground">
           <p>Select a form to begin.</p>
-          <p className="text-sm">A pre-populated PDF will be opened in a new tab.</p>
+          <p className="text-sm">The form's fields will appear here for you to edit.</p>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  };
+
 
   return (
     <div className="flex h-dvh w-full flex-col bg-background">
@@ -253,7 +365,7 @@ export default function Home() {
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto md:flex">
           <div className="h-full w-full">
-            {mainContent}
+            {mainContent()}
           </div>
         </div>
       </main>
@@ -267,3 +379,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
