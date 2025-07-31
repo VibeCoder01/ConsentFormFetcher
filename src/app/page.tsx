@@ -115,7 +115,6 @@ export default function Home() {
       'name of patient': fullName,
       'patientname': fullName,
       'patient name': fullName,
-      'fullname': fullName,
       'name': fullName, // Generic name, handled with care in pre-population logic
       
       'surname': patientData.surname,
@@ -170,18 +169,25 @@ export default function Home() {
         let prefilledValue = '';
         let matchedKey: string | null = null;
 
-        for (const [key, value] of Object.entries(patientMappings)) {
+        // Sort keys by length descending to match more specific keys first (e.g., "patient name" before "name")
+        const sortedKeys = Object.keys(patientMappings).sort((a, b) => b.length - a.length);
+
+        for (const key of sortedKeys) {
+            const value = patientMappings[key as keyof typeof patientMappings];
             const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-            // Use exact match for 'name' to avoid conflicts like 'hospital name'
+            // For 'name', check if the field starts with 'name' to catch 'name2', 'name3' etc.
+            // but not 'hospitalname'. For other keys, use 'includes'.
             const isMatch = (key === 'name')
-                ? normalizedField === normalizedKey
+                ? normalizedField.startsWith(normalizedKey)
                 : normalizedField.includes(normalizedKey);
 
             if (isMatch) {
-                prefilledValue = value;
-                matchedKey = key;
-                break; // Stop after first match
+                // Avoid overwriting if a more specific key has already matched
+                if (!prefilledValue) {
+                    prefilledValue = value;
+                    matchedKey = key;
+                }
             }
         }
         newPdfFormData[fieldName] = prefilledValue;
@@ -400,5 +406,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
