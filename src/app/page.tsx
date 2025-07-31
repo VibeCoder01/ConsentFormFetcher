@@ -110,6 +110,7 @@ export default function Home() {
     const fullName = `${patientData.forename} ${patientData.surname}`;
     
     return {
+      'name': fullName,
       'patient name': fullName,
       'name of patient': fullName,
       'patientname': fullName,
@@ -381,3 +382,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
