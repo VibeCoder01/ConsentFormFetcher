@@ -169,30 +169,42 @@ export default function Home() {
 
     const specialStartsWithKeys = ['name', 'date'];
 
-    for (const fieldName of fields) {
+    for (let i = 0; i < fields.length; i++) {
+        const fieldName = fields[i];
         const normalizedField = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
         let prefilledValue = '';
         let matchedKey: string | null = null;
 
-        // Sort keys by length descending to match more specific keys first (e.g., "patient name" before "name")
         const sortedKeys = Object.keys(patientMappings).sort((a, b) => b.length - a.length);
 
         for (const key of sortedKeys) {
             const value = patientMappings[key as keyof typeof patientMappings];
             const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-            const isMatch = specialStartsWithKeys.includes(key)
+            const isMatch = specialStartsWithKeys.some(swKey => key === swKey)
                 ? normalizedField.startsWith(normalizedKey)
                 : normalizedField.includes(normalizedKey);
 
             if (isMatch) {
-                // Avoid overwriting if a more specific key has already matched
                 if (!prefilledValue) {
                     prefilledValue = value;
                     matchedKey = key;
                 }
             }
         }
+
+        // Rule: Do not populate a 'Name' field if the next field is 'Job Title'.
+        if (matchedKey === 'name') {
+            if (i + 1 < fields.length) {
+                const nextFieldName = fields[i + 1];
+                const normalizedNextField = nextFieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (normalizedNextField.includes('jobtitle')) {
+                    prefilledValue = ''; // Leave blank
+                    matchedKey = null; // Unset the match
+                }
+            }
+        }
+        
         newPdfFormData[fieldName] = prefilledValue;
         newPdfFields.push({ name: fieldName, matchedKey });
     }
@@ -409,3 +421,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
