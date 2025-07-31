@@ -17,7 +17,7 @@ import { getPdfFields } from "@/ai/flows/get-pdf-fields-flow";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { PdfForm, PdfFormSkeleton } from "@/components/pdf-form";
+import { PdfForm, PdfFormSkeleton, PdfField } from "@/components/pdf-form";
 import { format } from 'date-fns';
 
 const initialPatientData: PatientData = {
@@ -52,7 +52,7 @@ export default function Home() {
   const [patientData, setPatientData] = useState<PatientData>(initialPatientData);
   const [selectedForm, setSelectedForm] = useState<ConsentForm | null>(null);
 
-  const [pdfFields, setPdfFields] = useState<string[]>([]);
+  const [pdfFields, setPdfFields] = useState<PdfField[]>([]);
   const [isFetchingFields, setIsFetchingFields] = useState(false);
   const [pdfFormData, setPdfFormData] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -148,26 +148,28 @@ export default function Home() {
   }, [patientData]);
 
   const prePopulateForm = (fields: string[]) => {
-    const formData: Record<string, string> = {};
-    const usedPatientKeys = new Set<string>();
+    const newPdfFields: PdfField[] = [];
+    const newPdfFormData: Record<string, string> = {};
 
-    for (const field of fields) {
-        const normalizedField = field.toLowerCase().replace(/[^a-z0-9]/g, '');
+    for (const fieldName of fields) {
+        const normalizedField = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
         let prefilledValue = '';
+        let matchedKey: string | null = null;
 
         for (const [key, value] of Object.entries(patientMappings)) {
             const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
-            if (normalizedField.includes(normalizedKey) && !usedPatientKeys.has(key)) {
+            if (normalizedField.includes(normalizedKey)) {
                 prefilledValue = value;
-                // Simple mechanism to avoid over-populating similar fields, e.g. "Name" and "Patient Name"
-                // This is not perfect but can help.
-                // usedPatientKeys.add(key); 
+                matchedKey = key;
                 break;
             }
         }
-        formData[field] = prefilledValue;
+        newPdfFormData[fieldName] = prefilledValue;
+        newPdfFields.push({ name: fieldName, matchedKey });
     }
-    setPdfFormData(formData);
+    
+    setPdfFields(newPdfFields);
+    setPdfFormData(newPdfFormData);
   };
 
   const handleSelectForm = async (form: ConsentForm) => {
@@ -179,7 +181,6 @@ export default function Home() {
     try {
       const result = await getPdfFields(form.url);
       if (result.success && result.fields) {
-        setPdfFields(result.fields);
         prePopulateForm(result.fields);
       } else {
         toast({
@@ -379,5 +380,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
