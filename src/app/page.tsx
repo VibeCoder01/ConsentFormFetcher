@@ -193,10 +193,11 @@ export default function Home() {
     };
 
     if (selectedStaffMember) {
+        const clinicianInfo = `${selectedStaffMember.name}, ${selectedStaffMember.title} - ${selectedStaffMember.phone}`;
         mappings['clinician name'] = selectedStaffMember.name;
         mappings['clinician name 1'] = selectedStaffMember.name; // Alias
         mappings['name of person'] = selectedStaffMember.name; // Alias
-        mappings['responsible consultant'] = selectedStaffMember.name;
+        mappings['responsible consultant'] = clinicianInfo;
         mappings['job title'] = selectedStaffMember.title;
         mappings['jobtitle'] = selectedStaffMember.title;
     }
