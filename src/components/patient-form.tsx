@@ -5,6 +5,7 @@ import { PatientData, IdentifierType } from '@/lib/types';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface PatientFormProps {
   patientData: PatientData;
@@ -16,6 +17,12 @@ const identifierOptions: { value: IdentifierType; label: string }[] = [
     { value: 'nhsNumber', label: 'NHS Number' },
     { value: 'hospitalNumber', label: 'Hospital Number' },
     { value: 'hospitalNumberMTW', label: 'Hospital Number (MTW)' },
+];
+
+const hospitalOptions = [
+    "Kent Oncology Centre",
+    "Kent Oncology Centre - Maidstone Hospital",
+    "Kent Oncology Centre - Kent & Canterbury Hospital"
 ];
 
 export function PatientForm({ patientData, setPatientData }: PatientFormProps) {
@@ -34,6 +41,14 @@ export function PatientForm({ patientData, setPatientData }: PatientFormProps) {
         selectedIdentifier: value as IdentifierType,
     });
   };
+
+  const handleHospitalChange = (value: string) => {
+    setPatientData({
+      ...patientData,
+      hospitalName: value,
+    });
+  };
+
 
   return (
     <div className="p-2 md:p-4 border-b">
@@ -79,7 +94,19 @@ export function PatientForm({ patientData, setPatientData }: PatientFormProps) {
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="hospitalName">Name of Hospital</Label>
-          <Input type="text" id="hospitalName" name="hospitalName" value={patientData.hospitalName} onChange={handleChange} />
+           <Select
+            value={patientData.hospitalName}
+            onValueChange={handleHospitalChange}
+          >
+            <SelectTrigger id="hospitalName">
+              <SelectValue placeholder="Select a hospital" />
+            </SelectTrigger>
+            <SelectContent>
+              {hospitalOptions.map(option => (
+                <SelectItem key={option} value={option}>{option}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="rNumber">R Number</Label>
