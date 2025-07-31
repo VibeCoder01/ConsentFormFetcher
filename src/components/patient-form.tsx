@@ -7,6 +7,7 @@ import { Input } from './ui/input';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { cn } from '@/lib/utils';
+import { useMemo } from 'react';
 
 interface PatientFormProps {
   patientData: PatientData;
@@ -58,6 +59,18 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
       });
   };
 
+  const isUnder16 = useMemo(() => {
+    if (!patientData.dob) return false;
+    const birthDate = new Date(patientData.dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age < 16;
+  }, [patientData.dob]);
+
 
   return (
     <div className="p-2 md:p-4 border-b">
@@ -75,7 +88,14 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="dob">Date of Birth</Label>
-          <Input type="date" id="dob" name="dob" value={patientData.dob} onChange={handleChange} />
+          <Input 
+            type="date" 
+            id="dob" 
+            name="dob" 
+            value={patientData.dob} 
+            onChange={handleChange} 
+            className={cn(isUnder16 && "bg-red-100 dark:bg-red-900/30 border-red-500")}
+          />
         </div>
          <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="addr1">Address Line 1</Label>
@@ -180,5 +200,3 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
     </div>
   );
 }
-
-    
