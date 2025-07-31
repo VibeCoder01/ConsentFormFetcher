@@ -29,6 +29,7 @@ export interface PatientData {
     hospitalNumberMTW: string;
     selectedIdentifier: IdentifierType;
     uniqueIdentifierValue: string;
+    macmillanContactId: string | null;
 }
 
 export interface StaffMember {
