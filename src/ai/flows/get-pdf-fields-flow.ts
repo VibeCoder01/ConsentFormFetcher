@@ -1,12 +1,12 @@
 
-'use server';
+'use a server';
 /**
  * @fileOverview A flow for extracting all fillable field names from a PDF.
  *
- * - getPdfFields - Fetches a PDF and returns the names of its form fields.
+ * - getPdfFields - Fetches a PDF and returns the names of its form fields, excluding checkboxes.
  */
 
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, PDFCheckBox } from 'pdf-lib';
 
 export interface GetPdfFieldsOutput {
   success: boolean;
@@ -35,9 +35,11 @@ export async function getPdfFields(formUrl: string): Promise<GetPdfFieldsOutput>
     });
     const form = pdfDoc.getForm();
 
-    // 3. Get all field names
+    // 3. Get all field names, filtering out checkboxes
     const fields = form.getFields();
-    const fieldNames = fields.map(field => field.getName());
+    const fieldNames = fields
+      .filter(field => !(field instanceof PDFCheckBox))
+      .map(field => field.getName());
 
     return { success: true, fields: fieldNames };
   } catch (error) {
@@ -46,5 +48,3 @@ export async function getPdfFields(formUrl: string): Promise<GetPdfFieldsOutput>
     return { success: false, error: message };
   }
 }
-
-    
