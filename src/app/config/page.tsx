@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -13,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, RefreshCw, Users } from "lucide-react";
 import { scrapeRcrForms } from "@/ai/flows/scrape-forms-flow";
 
 export default function ConfigPage() {
@@ -60,7 +61,7 @@ export default function ConfigPage() {
         <h1 className="ml-4 text-xl font-bold">Configuration</h1>
       </header>
       <main className="flex-1 p-4 md:p-8 lg:p-12">
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto max-w-2xl space-y-8">
           <Card>
             <CardHeader>
               <CardTitle>Data Source</CardTitle>
@@ -81,6 +82,24 @@ export default function ConfigPage() {
               </Button>
             </CardFooter>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Staff Management</CardTitle>
+              <CardDescription>
+                Add, edit, or remove staff members from the list used to populate clinician details on forms.
+              </CardDescription>
+            </CardHeader>
+            <CardFooter>
+               <Link href="/config/staff" passHref>
+                  <Button variant="outline">
+                    <Users className="mr-2 h-4 w-4" />
+                    Edit Staff List
+                  </Button>
+               </Link>
+            </CardFooter>
+          </Card>
+
         </div>
       </main>
     </div>
