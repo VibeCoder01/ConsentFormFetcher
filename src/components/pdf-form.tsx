@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,14 @@ import { Loader2 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Skeleton } from "./ui/skeleton";
 
+export interface PdfField {
+    name: string;
+    matchedKey: string | null;
+}
+
 interface PdfFormProps {
     formTitle: string;
-    fields: string[];
+    fields: PdfField[];
     initialData: Record<string, string>;
     isSubmitting: boolean;
     onSubmit: (formData: Record<string, string>) => void;
@@ -20,6 +25,10 @@ interface PdfFormProps {
 
 export function PdfForm({ formTitle, fields, initialData, isSubmitting, onSubmit }: PdfFormProps) {
     const [formData, setFormData] = useState(initialData);
+
+    useEffect(() => {
+        setFormData(initialData);
+    }, [initialData]);
 
     const handleChange = (fieldName: string, value: string) => {
         setFormData(prev => ({...prev, [fieldName]: value}));
@@ -41,14 +50,19 @@ export function PdfForm({ formTitle, fields, initialData, isSubmitting, onSubmit
                     <form onSubmit={handleSubmit} id="pdf-data-form">
                         <div className="space-y-4">
                             {fields.map(field => (
-                                <div key={field} className="grid w-full items-center gap-1.5">
-                                    <Label htmlFor={field} className="text-xs text-muted-foreground truncate">{field}</Label>
+                                <div key={field.name} className="grid w-full items-center gap-1.5">
+                                    <Label htmlFor={field.name} className="text-xs text-muted-foreground truncate">
+                                        {field.name}
+                                        {field.matchedKey && (
+                                            <span className="text-primary/80 font-medium"> - matched with - {field.matchedKey}</span>
+                                        )}
+                                    </Label>
                                     <Input
                                         type="text"
-                                        id={field}
-                                        name={field}
-                                        value={formData[field] || ''}
-                                        onChange={(e) => handleChange(field, e.target.value)}
+                                        id={field.name}
+                                        name={field.name}
+                                        value={formData[field.name] || ''}
+                                        onChange={(e) => handleChange(field.name, e.target.value)}
                                         className="text-base"
                                     />
                                 </div>
@@ -90,5 +104,3 @@ export function PdfFormSkeleton() {
         </div>
     )
 }
-
-    
