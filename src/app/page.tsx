@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import type { ConsentForm, ConsentFormCategory, PatientData, IdentifierType } from "@/lib/types";
+import type { ConsentForm, ConsentFormCategory, PatientData, IdentifierType, StaffMember } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AppHeader } from "@/components/app-header";
 import { FormList } from "@/components/form-list";
@@ -12,6 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { UpdateAvailableAlert } from "@/components/update-available-alert";
 import { checkForFormUpdates, updateForms } from "@/ai/flows/update-check-flow";
 import { PatientForm } from "@/components/patient-form";
+import { ClinicianForm } from "@/components/clinician-form";
 import { fillPdf } from "@/ai/flows/fill-pdf-flow";
 import { getPdfFields } from "@/ai/flows/get-pdf-fields-flow";
 import { Loader2 } from "lucide-react";
@@ -52,6 +53,9 @@ export default function Home() {
   const [patientData, setPatientData] = useState<PatientData>(initialPatientData);
   const [selectedForm, setSelectedForm] = useState<ConsentForm | null>(null);
 
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
+  const [selectedStaffMember, setSelectedStaffMember] = useState<StaffMember | null>(null);
+
   const [pdfFields, setPdfFields] = useState<PdfField[]>([]);
   const [isFetchingFields, setIsFetchingFields] = useState(false);
   const [pdfFormData, setPdfFormData] = useState<Record<string, string>>({});
@@ -77,22 +81,42 @@ export default function Home() {
     setPatientData(newData);
   };
 
-  const fetchForms = () => {
-    setIsLoading(true);
-    fetch("/api/consent-forms")
-      .then((res) => res.json())
-      .then((data: ConsentFormCategory[]) => {
-        setFormCategories(data);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error(error);
-        setIsLoading(false);
-      });
+  const handleStaffMemberChange = (staffId: string) => {
+    const selected = staffMembers.find(s => s.id === staffId) || null;
+    setSelectedStaffMember(selected);
   };
 
+  const fetchInitialData = async () => {
+    setIsLoading(true);
+    try {
+      const [formsRes, staffRes] = await Promise.all([
+        fetch("/api/consent-forms"),
+        fetch("/api/staff")
+      ]);
+
+      const formsData: ConsentFormCategory[] = await formsRes.json();
+      const staffData: StaffMember[] = await staffRes.json();
+
+      setFormCategories(formsData);
+      setStaffMembers(staffData);
+      if (staffData.length > 0) {
+        setSelectedStaffMember(staffData[0]);
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Error fetching initial data",
+        description: "Could not load forms or staff list. Please try again later.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
   useEffect(() => {
-    fetchForms();
+    fetchInitialData();
 
     checkForFormUpdates()
       .then((result) => {
@@ -110,13 +134,13 @@ export default function Home() {
     const fullName = `${patientData.forename} ${patientData.surname}`;
     const todaysDate = format(new Date(), 'dd/MM/yyyy');
     
-    return {
+    const mappings: Record<string, string> = {
       // More specific names first
       'patient full name': fullName,
       'name of patient': fullName,
       'patientname': fullName,
       'patient name': fullName,
-      'name': fullName, // Generic name, handled with care in pre-population logic
+      'name': fullName,
       
       'surname': patientData.surname,
       'last name': patientData.surname,
@@ -161,7 +185,19 @@ export default function Home() {
 
       'date': todaysDate,
     };
-  }, [patientData]);
+
+    if (selectedStaffMember) {
+        mappings['clinician name'] = selectedStaffMember.name;
+        mappings['job title'] = selectedStaffMember.title;
+        mappings['jobtitle'] = selectedStaffMember.title;
+        mappings['contact number'] = selectedStaffMember.phone;
+        mappings['bleep number'] = selectedStaffMember.phone;
+        mappings['bleep'] = selectedStaffMember.phone;
+    }
+
+    return mappings;
+
+  }, [patientData, selectedStaffMember]);
 
   const prePopulateForm = (fields: string[]) => {
     const newPdfFields: PdfField[] = [];
@@ -175,10 +211,13 @@ export default function Home() {
         let prefilledValue = '';
         let matchedKey: string | null = null;
 
+        // Sort keys by length descending to match more specific keys first (e.g., 'patient name' before 'name')
         const sortedKeys = Object.keys(patientMappings).sort((a, b) => b.length - a.length);
-
+        
         for (const key of sortedKeys) {
             const value = patientMappings[key as keyof typeof patientMappings];
+            if (!value) continue; // Skip if the mapping value is empty
+
             const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
 
             const isMatch = specialStartsWithKeys.some(swKey => key === swKey)
@@ -186,15 +225,16 @@ export default function Home() {
                 : normalizedField.includes(normalizedKey);
 
             if (isMatch) {
+                // Check if a value has already been assigned from a more specific key
                 if (!prefilledValue) {
                     prefilledValue = value;
                     matchedKey = key;
                 }
             }
         }
-
+        
         // Rule: Do not populate a 'Name' field if the next field is 'Job Title'.
-        if (matchedKey === 'name') {
+        if (matchedKey && specialStartsWithKeys.includes(matchedKey) && matchedKey.includes('name')) {
             if (i + 1 < fields.length) {
                 const nextFieldName = fields[i + 1];
                 const normalizedNextField = nextFieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -204,7 +244,7 @@ export default function Home() {
                 }
             }
         }
-        
+
         newPdfFormData[fieldName] = prefilledValue;
         newPdfFields.push({ name: fieldName, matchedKey });
     }
@@ -212,6 +252,7 @@ export default function Home() {
     setPdfFields(newPdfFields);
     setPdfFormData(newPdfFormData);
   };
+
 
   const handleSelectForm = async (form: ConsentForm) => {
     setSelectedForm(form);
@@ -282,7 +323,7 @@ export default function Home() {
 
     try {
       await updateForms(updateAvailable);
-      fetchForms(); // Re-fetch the forms to update the list
+      fetchInitialData(); // Re-fetch all data to update the list
     } catch (error) {
       console.error("Failed to update forms:", error);
     } finally {
@@ -348,6 +389,11 @@ export default function Home() {
     return (
       <>
         <PatientForm patientData={patientData} setPatientData={handlePatientDataChange} />
+        <ClinicianForm 
+          staffMembers={staffMembers}
+          selectedStaffId={selectedStaffMember?.id}
+          onStaffMemberChange={handleStaffMemberChange}
+        />
         {formListComponent}
       </>
     );
@@ -421,5 +467,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
