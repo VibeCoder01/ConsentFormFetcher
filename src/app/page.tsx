@@ -108,6 +108,8 @@ export default function Home() {
   const patientMappings = useMemo(() => {
     const formattedDob = patientData.dob ? format(new Date(patientData.dob), 'dd/MM/yyyy') : '';
     const fullName = `${patientData.forename} ${patientData.surname}`;
+    const initials = `${patientData.forename?.[0] || ''}${patientData.surname?.[0] || ''}`.toUpperCase();
+    const todaysDate = format(new Date(), 'dd/MM/yyyy');
     
     return {
       // More specific names first
@@ -125,6 +127,8 @@ export default function Home() {
       
       'dob': formattedDob,
       'date of birth': formattedDob,
+
+      'patient initials': initials,
       
       'hospital number mtw': patientData.hospitalNumberMTW,
       'hospitalnamemtw': patientData.hospitalNumberMTW,
@@ -157,12 +161,16 @@ export default function Home() {
       
       'patient unique identifier': patientData.uniqueIdentifierValue,
       'unique patient identifier': patientData.uniqueIdentifierValue,
+
+      'date': todaysDate,
     };
   }, [patientData]);
 
   const prePopulateForm = (fields: string[]) => {
     const newPdfFields: PdfField[] = [];
     const newPdfFormData: Record<string, string> = {};
+
+    const specialStartsWithKeys = ['name', 'patient initials', 'date'];
 
     for (const fieldName of fields) {
         const normalizedField = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -176,9 +184,7 @@ export default function Home() {
             const value = patientMappings[key as keyof typeof patientMappings];
             const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-            // For 'name', check if the field starts with 'name' to catch 'name2', 'name3' etc.
-            // but not 'hospitalname'. For other keys, use 'includes'.
-            const isMatch = (key === 'name')
+            const isMatch = specialStartsWithKeys.includes(key)
                 ? normalizedField.startsWith(normalizedKey)
                 : normalizedField.includes(normalizedKey);
 
