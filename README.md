@@ -16,16 +16,17 @@ The application follows a client-server model built with Next.js, where the fron
 ### 2. Main User Interface (`src/app/page.tsx`)
 
 -   **Patient Details Form**: A form is displayed on the sidebar allowing the user to input patient details (name, DOB, address, etc.). The hospital name is a dropdown to ensure consistency. This data is managed in the main page's state.
--   **Clinician and Macmillan Contact Selection**: Two dropdown menus in the sidebar allow the user to select a clinician and a Macmillan contact from the list managed in `staff.json`.
+    -   **Age Verification**: If the entered Date of Birth indicates the patient is under 16, the input field is highlighted in red, and a warning dialog appears to ensure the correct consent procedures are followed.
+-   **Clinician and Macmillan Contact Selection**: Two dropdown menus in the sidebar allow the user to select a clinician and a Macmillan contact from the list managed in `staff.json`. These dropdowns are highlighted until a selection is made.
 -   **Form List**: The application reads `consent-forms.json` and displays the available forms in a categorized, accordion-style list.
 
 ### 3. PDF Interaction and Pre-population
 
 This is the most complex part of the application's logic. When a user selects a form from the list, the following sequence occurs:
 
-1.  **Field Extraction (`src/ai/flows/get-pdf-fields-flow.ts`)**: A request is sent to a server-side flow. This flow downloads the selected PDF and uses the `pdf-lib` library to inspect its structure and extract a list of all fillable field names. Crucially, it filters out and **excludes checkboxes** from this list.
+1.  **Field Extraction (`src/ai/flows/get-pdf-fields-flow.ts`)**: A request is sent to a server-side flow. This flow downloads the selected PDF and uses the `pdf-lib` library to inspect its structure and extract a list of all fillable field names. Crucially, it filters out and **excludes checkboxes and fields containing "initials", "signature", "st", or "lt"** from this list.
 
-2.  **Dynamic Form Rendering (`src/components/pdf-form.tsx`)**: The list of field names is sent back to the client. The main page then renders a dynamic form, creating a text input for each field name received from the backend.
+2.  **Dynamic Form Rendering (`src/components/pdf-form.tsx`)**: The list of field names is sent back to the client. The main page then renders a dynamic form, creating a text input for each field name received from the backend. The UI clearly indicates which patient data was used to pre-fill each field (e.g., "matched with - Clinician Name + Title + Phone").
 
 3.  **Intelligent Pre-population (`prePopulateForm` in `page.tsx`)**: Before rendering the form, the application attempts to intelligently pre-populate the fields using the entered patient data and selected staff details. This is done via a mapping object (`patientMappings`).
     -   The logic normalizes both the PDF field name and the mapping keys (by converting to lowercase and removing special characters) to ensure a high chance of a match.
