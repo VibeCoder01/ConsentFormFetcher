@@ -39,7 +39,7 @@ export default function StaffConfigPage() {
     fetchStaff();
   }, [toast]);
 
-  const handleFieldChange = (index: number, field: keyof StaffMember, value: string) => {
+  const handleFieldChange = (index: number, field: keyof Omit<StaffMember, 'id'>, value: string) => {
     const updatedStaff = [...staff];
     updatedStaff[index] = { ...updatedStaff[index], [field]: value };
     setStaff(updatedStaff);
@@ -154,10 +154,6 @@ export default function StaffConfigPage() {
                             <div className="space-y-1.5">
                                 <Label htmlFor={`phone-${index}`}>Phone/Bleep</Label>
                                 <Input id={`phone-${index}`} value={member.phone} onChange={(e) => handleFieldChange(index, 'phone', e.target.value)} placeholder="e.g., 1234"/>
-                            </div>
-                             <div className="space-y-1.5">
-                                <Label htmlFor={`id-${index}`}>Unique ID</Label>
-                                <Input id={`id-${index}`} value={member.id} onChange={(e) => handleFieldChange(index, 'id', e.target.value)} placeholder="e.g., jane_doe"/>
                             </div>
                         </CardContent>
                         <CardFooter>
