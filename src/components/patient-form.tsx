@@ -1,7 +1,7 @@
 
 'use client';
 
-import { PatientData, IdentifierType } from '@/lib/types';
+import { PatientData, IdentifierType, StaffMember } from '@/lib/types';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 interface PatientFormProps {
   patientData: PatientData;
   setPatientData: (data: PatientData) => void;
+  staffMembers: StaffMember[];
 }
 
 const identifierOptions: { value: IdentifierType; label: string }[] = [
@@ -25,7 +26,7 @@ const hospitalOptions = [
     "Kent Oncology Centre - Kent & Canterbury Hospital"
 ];
 
-export function PatientForm({ patientData, setPatientData }: PatientFormProps) {
+export function PatientForm({ patientData, setPatientData, staffMembers }: PatientFormProps) {
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -47,6 +48,13 @@ export function PatientForm({ patientData, setPatientData }: PatientFormProps) {
       ...patientData,
       hospitalName: value,
     });
+  };
+  
+  const handleMacmillanChange = (value: string) => {
+      setPatientData({
+          ...patientData,
+          macmillanContactId: value
+      });
   };
 
 
@@ -106,6 +114,22 @@ export function PatientForm({ patientData, setPatientData }: PatientFormProps) {
                 <SelectItem key={option} value={option}>{option}</SelectItem>
               ))}
             </SelectContent>
+          </Select>
+        </div>
+        <div className="grid w-full max-w-sm items-center gap-1.5">
+          <Label htmlFor="macmillanContact">Macmillan Contact</Label>
+          <Select
+              value={patientData.macmillanContactId || ''}
+              onValueChange={handleMacmillanChange}
+          >
+              <SelectTrigger id="macmillanContact">
+                  <SelectValue placeholder="Select a contact" />
+              </SelectTrigger>
+              <SelectContent>
+                  {staffMembers.map(staff => (
+                      <SelectItem key={staff.id} value={staff.id}>{staff.name} - {staff.title}</SelectItem>
+                  ))}
+              </SelectContent>
           </Select>
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">

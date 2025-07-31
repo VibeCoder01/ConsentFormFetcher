@@ -38,7 +38,8 @@ const initialPatientData: PatientData = {
   hospitalNumber: "1234567",
   hospitalNumberMTW: "MTW123456",
   selectedIdentifier: 'hospitalNumber',
-  uniqueIdentifierValue: '1234567'
+  uniqueIdentifierValue: '1234567',
+  macmillanContactId: null,
 };
 
 
@@ -101,6 +102,11 @@ export default function Home() {
       setStaffMembers(staffData);
       if (staffData.length > 0) {
         setSelectedStaffMember(staffData[0]);
+        // Set default macmillan contact if available
+        const macmillanContact = staffData.find(s => s.title.toLowerCase().includes('macmillan'));
+        if (macmillanContact) {
+            setPatientData(prev => ({...prev, macmillanContactId: macmillanContact.id}))
+        }
       }
     } catch (error) {
       console.error(error);
@@ -192,14 +198,17 @@ export default function Home() {
         mappings['name of person'] = selectedStaffMember.name; // Alias
         mappings['job title'] = selectedStaffMember.title;
         mappings['jobtitle'] = selectedStaffMember.title;
-        mappings['contact number'] = selectedStaffMember.phone;
-        mappings['bleep number'] = selectedStaffMember.phone;
-        mappings['bleep'] = selectedStaffMember.phone;
+    }
+
+    const selectedMacmillan = staffMembers.find(s => s.id === patientData.macmillanContactId);
+    if(selectedMacmillan) {
+        mappings['contact details'] = selectedMacmillan.phone;
+        mappings['contact number'] = selectedMacmillan.phone; // Overwrites clinician's phone
     }
 
     return mappings;
 
-  }, [patientData, selectedStaffMember]);
+  }, [patientData, selectedStaffMember, staffMembers]);
 
   const prePopulateForm = (fields: string[]) => {
     const newPdfFields: PdfField[] = [];
@@ -407,7 +416,11 @@ export default function Home() {
     }
     return (
       <>
-        <PatientForm patientData={patientData} setPatientData={handlePatientDataChange} />
+        <PatientForm 
+            patientData={patientData} 
+            setPatientData={handlePatientDataChange} 
+            staffMembers={staffMembers} 
+        />
         <ClinicianForm 
           staffMembers={staffMembers}
           selectedStaffId={selectedStaffMember?.id}
