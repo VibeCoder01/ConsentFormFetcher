@@ -23,7 +23,7 @@ import { format } from 'date-fns';
 
 const initialPatientData: PatientData = {
   forename: "John",
-  surname: "Doe",
+  surname: "Smith",
   dob: "1970-01-01",
   addr1: "123 Fake Street",
   addr2: "Fakeville",
@@ -495,3 +495,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
