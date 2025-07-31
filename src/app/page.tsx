@@ -108,7 +108,6 @@ export default function Home() {
   const patientMappings = useMemo(() => {
     const formattedDob = patientData.dob ? format(new Date(patientData.dob), 'dd/MM/yyyy') : '';
     const fullName = `${patientData.forename} ${patientData.surname}`;
-    const initials = `${patientData.forename?.[0] || ''}${patientData.surname?.[0] || ''}`.toUpperCase();
     const todaysDate = format(new Date(), 'dd/MM/yyyy');
     
     return {
@@ -127,8 +126,6 @@ export default function Home() {
       
       'dob': formattedDob,
       'date of birth': formattedDob,
-
-      'patient initials': initials,
       
       'hospital number mtw': patientData.hospitalNumberMTW,
       'hospitalnamemtw': patientData.hospitalNumberMTW,
@@ -170,7 +167,7 @@ export default function Home() {
     const newPdfFields: PdfField[] = [];
     const newPdfFormData: Record<string, string> = {};
 
-    const specialStartsWithKeys = ['name', 'patient initials', 'date'];
+    const specialStartsWithKeys = ['name', 'date'];
 
     for (const fieldName of fields) {
         const normalizedField = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
