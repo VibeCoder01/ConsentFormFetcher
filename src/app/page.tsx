@@ -202,8 +202,9 @@ export default function Home() {
 
     const selectedMacmillan = staffMembers.find(s => s.id === patientData.macmillanContactId);
     if(selectedMacmillan) {
-        mappings['contact details'] = selectedMacmillan.phone;
-        mappings['contact number'] = selectedMacmillan.phone; // Overwrites clinician's phone
+        const macmillanContactInfo = `${selectedMacmillan.name}, ${selectedMacmillan.title} - ${selectedMacmillan.phone}`;
+        mappings['contact details'] = macmillanContactInfo;
+        mappings['contact number'] = macmillanContactInfo; // Overwrites clinician's phone
     }
 
     return mappings;
