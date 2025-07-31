@@ -16,7 +16,7 @@ The application follows a client-server model built with Next.js, where the fron
 ### 2. Main User Interface (`src/app/page.tsx`)
 
 -   **Patient Details Form**: A form is displayed on the sidebar allowing the user to input patient details (name, DOB, address, etc.). The hospital name is a dropdown to ensure consistency. This data is managed in the main page's state.
--   **Clinician Selection**: A dropdown menu in the sidebar allows the user to select a clinician from the list managed in `staff.json`.
+-   **Clinician and Macmillan Contact Selection**: Two dropdown menus in the sidebar allow the user to select a clinician and a Macmillan contact from the list managed in `staff.json`.
 -   **Form List**: The application reads `consent-forms.json` and displays the available forms in a categorized, accordion-style list.
 
 ### 3. PDF Interaction and Pre-population
@@ -32,6 +32,7 @@ This is the most complex part of the application's logic. When a user selects a 
     -   For most fields, it checks if the normalized PDF field name *includes* a normalized key (e.g., `hospitalnumber` includes `hospitalnumber`).
     -   **Special `startsWith` Logic**: For the keys 'name' and 'date', a more precise `startsWith` check is used. This allows it to correctly match "Name", "Name 2", "Date", and "Date 1" without incorrectly matching fields like "Hospital Name" or "Date of Birth".
     -   **Contextual Rule for Clinician**: There is a specific rule to handle clinician details. If a field matches "Name" but the immediately following field in the PDF is "Job Title", the "Name" field is populated with the selected clinician's name and the "Job Title" field with their title. This prevents patient data from being entered into fields meant for staff.
+    -   **Macmillan Contact Rule**: If a field name includes "contact details" or "contact number", it is populated with a combined string of the selected Macmillan contact's name, title, and phone number (e.g., "Memory Masamba, Macmillan Radiographer - 01227 864311").
 
 4.  **Final PDF Generation**: After the user reviews and potentially edits the pre-populated data in the dynamic form, they click "Submit".
     -   The final form data is sent to the `fillPdf` flow (`src/ai/flows/fill-pdf-flow.ts`).
