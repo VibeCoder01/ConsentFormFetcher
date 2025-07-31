@@ -110,24 +110,32 @@ export default function Home() {
     const fullName = `${patientData.forename} ${patientData.surname}`;
     
     return {
-      'name': fullName,
-      'patient name': fullName,
+      // More specific names first
+      'patient full name': fullName,
       'name of patient': fullName,
       'patientname': fullName,
-      'patient full name': fullName,
+      'patient name': fullName,
       'fullname': fullName,
+      'name': fullName, // Generic name, handled with care in pre-population logic
+      
       'surname': patientData.surname,
       'last name': patientData.surname,
+      
       'forename': patientData.forename,
       'first name': patientData.forename,
+      
       'dob': formattedDob,
       'date of birth': formattedDob,
-      'hospital number': patientData.hospitalNumber,
-      'hospitalnumber': patientData.hospitalNumber,
+      
       'hospital number mtw': patientData.hospitalNumberMTW,
       'hospitalnamemtw': patientData.hospitalNumberMTW,
+      'hospital number': patientData.hospitalNumber,
+      'hospitalnumber': patientData.hospitalNumber,
+      
       'name of hospital': patientData.hospitalName,
       'hospitalname': patientData.hospitalName,
+      
+      'address': patientData.fullAddress,
       'addr1': patientData.addr1,
       'address line 1': patientData.addr1,
       'addr2': patientData.addr2,
@@ -135,17 +143,21 @@ export default function Home() {
       'addr3': patientData.addr3,
       'address line 3': patientData.addr3,
       'postcode': patientData.postcode,
-      'address': patientData.fullAddress,
+      
       'home phone': patientData.homePhone,
       'home telephone': patientData.homePhone,
+      
       'gp name': patientData.gpName,
       'gpname': patientData.gpName,
+      
       'r number': patientData.rNumber,
       'rnumber': patientData.rNumber,
+      
       'nhs number': patientData.nhsNumber,
       'nhsnumber': patientData.nhsNumber,
-      'unique patient identifier': patientData.uniqueIdentifierValue,
+      
       'patient unique identifier': patientData.uniqueIdentifierValue,
+      'unique patient identifier': patientData.uniqueIdentifierValue,
     };
   }, [patientData]);
 
@@ -160,10 +172,16 @@ export default function Home() {
 
         for (const [key, value] of Object.entries(patientMappings)) {
             const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
-            if (normalizedField.includes(normalizedKey)) {
+
+            // Use exact match for 'name' to avoid conflicts like 'hospital name'
+            const isMatch = (key === 'name')
+                ? normalizedField === normalizedKey
+                : normalizedField.includes(normalizedKey);
+
+            if (isMatch) {
                 prefilledValue = value;
                 matchedKey = key;
-                break;
+                break; // Stop after first match
             }
         }
         newPdfFormData[fieldName] = prefilledValue;
