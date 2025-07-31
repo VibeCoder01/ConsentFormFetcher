@@ -7,7 +7,8 @@ import { Input } from './ui/input';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { cn } from '@/lib/utils';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { AgeWarningDialog } from './age-warning-dialog';
 
 interface PatientFormProps {
   patientData: PatientData;
@@ -29,6 +30,7 @@ const hospitalOptions = [
 ];
 
 export function PatientForm({ patientData, setPatientData, staffMembers }: PatientFormProps) {
+  const [showAgeWarning, setShowAgeWarning] = useState(false);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -70,6 +72,12 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
     }
     return age < 16;
   }, [patientData.dob]);
+
+  useEffect(() => {
+    if (isUnder16) {
+      setShowAgeWarning(true);
+    }
+  }, [isUnder16]);
 
 
   return (
@@ -197,6 +205,7 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
             <Input type="text" id="uniqueIdentifierValue" name="uniqueIdentifierValue" value={patientData.uniqueIdentifierValue} readOnly disabled />
         </div>
       </div>
+      <AgeWarningDialog open={showAgeWarning} onOpenChange={setShowAgeWarning} />
     </div>
   );
 }
