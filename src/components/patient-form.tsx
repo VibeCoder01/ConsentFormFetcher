@@ -6,6 +6,7 @@ import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { cn } from '@/lib/utils';
 
 interface PatientFormProps {
   patientData: PatientData;
@@ -106,8 +107,11 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
             value={patientData.hospitalName}
             onValueChange={handleHospitalChange}
           >
-            <SelectTrigger id="hospitalName">
-              <SelectValue placeholder="Select a hospital" />
+            <SelectTrigger 
+                id="hospitalName" 
+                className={cn(!patientData.hospitalName && "bg-red-100 dark:bg-red-900/30")}
+            >
+              <SelectValue placeholder="Make a selection" />
             </SelectTrigger>
             <SelectContent>
               {hospitalOptions.map(option => (
@@ -122,8 +126,11 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
               value={patientData.macmillanContactId || ''}
               onValueChange={handleMacmillanChange}
           >
-              <SelectTrigger id="macmillanContact">
-                  <SelectValue placeholder="Select a contact" />
+              <SelectTrigger 
+                id="macmillanContact" 
+                className={cn(!patientData.macmillanContactId && "bg-red-100 dark:bg-red-900/30")}
+              >
+                  <SelectValue placeholder="Make a selection" />
               </SelectTrigger>
               <SelectContent>
                   {staffMembers.map(staff => (
@@ -173,3 +180,5 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
     </div>
   );
 }
+
+    
