@@ -5,6 +5,7 @@ import { StaffMember } from '@/lib/types';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Skeleton } from './ui/skeleton';
+import { cn } from '@/lib/utils';
 
 interface ClinicianFormProps {
   staffMembers: StaffMember[];
@@ -36,8 +37,11 @@ export function ClinicianForm({ staffMembers, selectedStaffId, onStaffMemberChan
                         value={selectedStaffId || ''}
                         onValueChange={onStaffMemberChange}
                     >
-                        <SelectTrigger id="clinicianName">
-                            <SelectValue placeholder="Select a clinician" />
+                        <SelectTrigger 
+                            id="clinicianName"
+                             className={cn(!selectedStaffId && "bg-red-100 dark:bg-red-900/30")}
+                        >
+                            <SelectValue placeholder="Make a selection" />
                         </SelectTrigger>
                         <SelectContent>
                             {staffMembers.map(staff => (
@@ -50,3 +54,5 @@ export function ClinicianForm({ staffMembers, selectedStaffId, onStaffMemberChan
         </div>
     );
 }
+
+    
