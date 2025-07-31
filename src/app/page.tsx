@@ -188,6 +188,8 @@ export default function Home() {
 
     if (selectedStaffMember) {
         mappings['clinician name'] = selectedStaffMember.name;
+        mappings['clinician name 1'] = selectedStaffMember.name; // Alias
+        mappings['name of person'] = selectedStaffMember.name; // Alias
         mappings['job title'] = selectedStaffMember.title;
         mappings['jobtitle'] = selectedStaffMember.title;
         mappings['contact number'] = selectedStaffMember.phone;
@@ -207,25 +209,54 @@ export default function Home() {
 
     for (let i = 0; i < fields.length; i++) {
         const fieldName = fields[i];
-        const normalizedField = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
         let prefilledValue = '';
         let matchedKey: string | null = null;
+        let fieldProcessed = false;
 
-        // Sort keys by length descending to match more specific keys first (e.g., 'patient name' before 'name')
+        // Rule for Name followed by Job Title
+        const normalizedField = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (specialStartsWithKeys.includes('name') && normalizedField.startsWith('name') && i + 1 < fields.length) {
+            const nextFieldName = fields[i + 1];
+            const normalizedNextField = nextFieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (normalizedNextField.includes('jobtitle')) {
+                if (selectedStaffMember) {
+                    newPdfFormData[fieldName] = selectedStaffMember.name;
+                    newPdfFields.push({ name: fieldName, matchedKey: 'clinician name' });
+
+                    newPdfFormData[nextFieldName] = selectedStaffMember.title;
+                    newPdfFields.push({ name: nextFieldName, matchedKey: 'job title' });
+                } else {
+                    // if no clinician is selected, leave them blank
+                    newPdfFormData[fieldName] = '';
+                    newPdfFields.push({ name: fieldName, matchedKey: null });
+
+                    newPdfFormData[nextFieldName] = '';
+                    newPdfFields.push({ name: nextFieldName, matchedKey: null });
+                }
+                
+                i++; // Increment i to skip the next field since we've already processed it
+                fieldProcessed = true;
+            }
+        }
+        
+        if (fieldProcessed) {
+            continue;
+        }
+
+        // Generic matching logic
         const sortedKeys = Object.keys(patientMappings).sort((a, b) => b.length - a.length);
         
         for (const key of sortedKeys) {
             const value = patientMappings[key as keyof typeof patientMappings];
-            if (!value) continue; // Skip if the mapping value is empty
+            if (!value) continue;
 
             const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-            const isMatch = specialStartsWithKeys.some(swKey => key === swKey)
+            const isMatch = specialStartsWithKeys.some(swKey => key.startsWith(swKey))
                 ? normalizedField.startsWith(normalizedKey)
                 : normalizedField.includes(normalizedKey);
 
             if (isMatch) {
-                // Check if a value has already been assigned from a more specific key
                 if (!prefilledValue) {
                     prefilledValue = value;
                     matchedKey = key;
@@ -233,18 +264,6 @@ export default function Home() {
             }
         }
         
-        // Rule: Do not populate a 'Name' field if the next field is 'Job Title'.
-        if (matchedKey && specialStartsWithKeys.includes(matchedKey) && matchedKey.includes('name')) {
-            if (i + 1 < fields.length) {
-                const nextFieldName = fields[i + 1];
-                const normalizedNextField = nextFieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
-                if (normalizedNextField.includes('jobtitle')) {
-                    prefilledValue = ''; // Leave blank
-                    matchedKey = null; // Unset the match
-                }
-            }
-        }
-
         newPdfFormData[fieldName] = prefilledValue;
         newPdfFields.push({ name: fieldName, matchedKey });
     }
