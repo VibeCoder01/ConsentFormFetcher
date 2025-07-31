@@ -32,7 +32,7 @@ const initialPatientData: PatientData = {
   fullAddress: "123 Fake Street, Fakeville, Faketon, FK1 1AB",
   homePhone: "01234567890",
   gpName: "Dr. Smith",
-  hospitalName: "Kent Oncology Centre",
+  hospitalName: "", // Default to empty to show placeholder
   rNumber: "R1234567",
   nhsNumber: "123 456 7890",
   hospitalNumber: "1234567",
@@ -100,14 +100,15 @@ export default function Home() {
 
       setFormCategories(formsData);
       setStaffMembers(staffData);
-      if (staffData.length > 0) {
-        setSelectedStaffMember(staffData[0]);
-        // Set default macmillan contact if available
-        const macmillanContact = staffData.find(s => s.title.toLowerCase().includes('macmillan'));
-        if (macmillanContact) {
-            setPatientData(prev => ({...prev, macmillanContactId: macmillanContact.id}))
-        }
-      }
+      // We no longer set a default staff member here
+      // if (staffData.length > 0) {
+      //   setSelectedStaffMember(staffData[0]);
+      //   // Set default macmillan contact if available
+      //   const macmillanContact = staffData.find(s => s.title.toLowerCase().includes('macmillan'));
+      //   if (macmillanContact) {
+      //       setPatientData(prev => ({...prev, macmillanContactId: macmillanContact.id}))
+      //   }
+      // }
     } catch (error) {
       console.error(error);
       toast({
@@ -195,8 +196,7 @@ export default function Home() {
     if (selectedStaffMember) {
         const clinicianInfo = `${selectedStaffMember.name}, ${selectedStaffMember.title} - ${selectedStaffMember.phone}`;
         mappings['clinician name'] = selectedStaffMember.name;
-        mappings['clinician name 1'] = selectedStaffMember.name; // Alias
-        mappings['name of person'] = selectedStaffMember.name; // Alias
+        mappings['name of person'] = selectedStaffMember.name;
         mappings['responsible consultant'] = clinicianInfo;
         mappings['job title'] = selectedStaffMember.title;
         mappings['jobtitle'] = selectedStaffMember.title;
@@ -502,3 +502,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
