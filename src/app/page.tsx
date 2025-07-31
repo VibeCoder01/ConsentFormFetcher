@@ -100,15 +100,6 @@ export default function Home() {
 
       setFormCategories(formsData);
       setStaffMembers(staffData);
-      // We no longer set a default staff member here
-      // if (staffData.length > 0) {
-      //   setSelectedStaffMember(staffData[0]);
-      //   // Set default macmillan contact if available
-      //   const macmillanContact = staffData.find(s => s.title.toLowerCase().includes('macmillan'));
-      //   if (macmillanContact) {
-      //       setPatientData(prev => ({...prev, macmillanContactId: macmillanContact.id}))
-      //   }
-      // }
     } catch (error) {
       console.error(error);
       toast({
@@ -141,72 +132,73 @@ export default function Home() {
     const fullName = `${patientData.forename} ${patientData.surname}`;
     const todaysDate = format(new Date(), 'dd/MM/yyyy');
     
-    const mappings: Record<string, string> = {
+    type Mapping = { value: string; description: string };
+    const mappings: Record<string, Mapping> = {
       // More specific names first
-      'patient full name': fullName,
-      'name of patient': fullName,
-      'patientname': fullName,
-      'patient name': fullName,
-      'name': fullName,
+      'patient full name': { value: fullName, description: 'Patient Full Name' },
+      'name of patient': { value: fullName, description: 'Patient Full Name' },
+      'patientname': { value: fullName, description: 'Patient Full Name' },
+      'patient name': { value: fullName, description: 'Patient Full Name' },
+      'name': { value: fullName, description: 'Patient Full Name' },
       
-      'surname': patientData.surname,
-      'last name': patientData.surname,
+      'surname': { value: patientData.surname, description: 'Surname' },
+      'last name': { value: patientData.surname, description: 'Surname' },
       
-      'forename': patientData.forename,
-      'first name': patientData.forename,
+      'forename': { value: patientData.forename, description: 'Forename' },
+      'first name': { value: patientData.forename, description: 'Forename' },
       
-      'dob': formattedDob,
-      'date of birth': formattedDob,
+      'dob': { value: formattedDob, description: 'Date of Birth' },
+      'date of birth': { value: formattedDob, description: 'Date of Birth' },
       
-      'hospital number mtw': patientData.hospitalNumberMTW,
-      'hospitalnamemtw': patientData.hospitalNumberMTW,
-      'hospital number': patientData.hospitalNumber,
-      'hospitalnumber': patientData.hospitalNumber,
+      'hospital number mtw': { value: patientData.hospitalNumberMTW, description: 'Hospital Number (MTW)' },
+      'hospitalnamemtw': { value: patientData.hospitalNumberMTW, description: 'Hospital Number (MTW)' },
+      'hospital number': { value: patientData.hospitalNumber, description: 'Hospital Number' },
+      'hospitalnumber': { value: patientData.hospitalNumber, description: 'Hospital Number' },
       
-      'name of hospital': patientData.hospitalName,
-      'hospitalname': patientData.hospitalName,
+      'name of hospital': { value: patientData.hospitalName, description: 'Hospital Name' },
+      'hospitalname': { value: patientData.hospitalName, description: 'Hospital Name' },
       
-      'address': patientData.fullAddress,
-      'addr1': patientData.addr1,
-      'address line 1': patientData.addr1,
-      'addr2': patientData.addr2,
-      'address line 2': patientData.addr2,
-      'addr3': patientData.addr3,
-      'address line 3': patientData.addr3,
-      'postcode': patientData.postcode,
+      'address': { value: patientData.fullAddress, description: 'Full Address' },
+      'addr1': { value: patientData.addr1, description: 'Address Line 1' },
+      'address line 1': { value: patientData.addr1, description: 'Address Line 1' },
+      'addr2': { value: patientData.addr2, description: 'Address Line 2' },
+      'address line 2': { value: patientData.addr2, description: 'Address Line 2' },
+      'addr3': { value: patientData.addr3, description: 'Address Line 3' },
+      'address line 3': { value: patientData.addr3, description: 'Address Line 3' },
+      'postcode': { value: patientData.postcode, description: 'Postcode' },
       
-      'home phone': patientData.homePhone,
-      'home telephone': patientData.homePhone,
+      'home phone': { value: patientData.homePhone, description: 'Home Phone' },
+      'home telephone': { value: patientData.homePhone, description: 'Home Phone' },
       
-      'gp name': patientData.gpName,
-      'gpname': patientData.gpName,
+      'gp name': { value: patientData.gpName, description: 'GP Name' },
+      'gpname': { value: patientData.gpName, description: 'GP Name' },
       
-      'r number': patientData.rNumber,
-      'rnumber': patientData.rNumber,
+      'r number': { value: patientData.rNumber, description: 'R Number' },
+      'rnumber': { value: patientData.rNumber, description: 'R Number' },
       
-      'nhs number': patientData.nhsNumber,
-      'nhsnumber': patientData.nhsNumber,
+      'nhs number': { value: patientData.nhsNumber, description: 'NHS Number' },
+      'nhsnumber': { value: patientData.nhsNumber, description: 'NHS Number' },
       
-      'patient unique identifier': patientData.uniqueIdentifierValue,
-      'unique patient identifier': patientData.uniqueIdentifierValue,
+      'patient unique identifier': { value: patientData.uniqueIdentifierValue, description: 'Unique Patient ID' },
+      'unique patient identifier': { value: patientData.uniqueIdentifierValue, description: 'Unique Patient ID' },
 
-      'date': todaysDate,
+      'date': { value: todaysDate, description: 'Todays Date' },
     };
 
     if (selectedStaffMember) {
         const clinicianInfo = `${selectedStaffMember.name}, ${selectedStaffMember.title} - ${selectedStaffMember.phone}`;
-        mappings['clinician name'] = selectedStaffMember.name;
-        mappings['name of person'] = selectedStaffMember.name;
-        mappings['responsible consultant'] = clinicianInfo;
-        mappings['job title'] = selectedStaffMember.title;
-        mappings['jobtitle'] = selectedStaffMember.title;
+        mappings['clinician name'] = { value: selectedStaffMember.name, description: 'Clinician Name' };
+        mappings['name of person'] = { value: selectedStaffMember.name, description: 'Clinician Name' };
+        mappings['responsible consultant'] = { value: clinicianInfo, description: 'Clinician Name + Title + Phone' };
+        mappings['job title'] = { value: selectedStaffMember.title, description: 'Clinician Title' };
+        mappings['jobtitle'] = { value: selectedStaffMember.title, description: 'Clinician Title' };
     }
 
     const selectedMacmillan = staffMembers.find(s => s.id === patientData.macmillanContactId);
     if(selectedMacmillan) {
         const macmillanContactInfo = `${selectedMacmillan.name}, ${selectedMacmillan.title} - ${selectedMacmillan.phone}`;
-        mappings['contact details'] = macmillanContactInfo;
-        mappings['contact number'] = macmillanContactInfo; // Overwrites clinician's phone
+        mappings['contact details'] = { value: macmillanContactInfo, description: 'Macmillan Contact Name + Title + Phone' };
+        mappings['contact number'] = { value: macmillanContactInfo, description: 'Macmillan Contact Name + Title + Phone' };
     }
 
     return mappings;
@@ -222,21 +214,22 @@ export default function Home() {
     for (let i = 0; i < fields.length; i++) {
         const fieldName = fields[i];
         let prefilledValue = '';
-        let matchedKey: string | null = null;
+        let matchedKeyDescription: string | null = null;
         let fieldProcessed = false;
 
-        // Rule for Name followed by Job Title
         const normalizedField = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        // Rule for Name followed by Job Title
         if (specialStartsWithKeys.includes('name') && normalizedField.startsWith('name') && i + 1 < fields.length) {
             const nextFieldName = fields[i + 1];
             const normalizedNextField = nextFieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
             if (normalizedNextField.includes('jobtitle')) {
                 if (selectedStaffMember) {
                     newPdfFormData[fieldName] = selectedStaffMember.name;
-                    newPdfFields.push({ name: fieldName, matchedKey: 'clinician name' });
+                    newPdfFields.push({ name: fieldName, matchedKey: 'Clinician Name' });
 
                     newPdfFormData[nextFieldName] = selectedStaffMember.title;
-                    newPdfFields.push({ name: nextFieldName, matchedKey: 'job title' });
+                    newPdfFields.push({ name: nextFieldName, matchedKey: 'Clinician Title' });
                 } else {
                     // if no clinician is selected, leave them blank
                     newPdfFormData[fieldName] = '';
@@ -259,8 +252,8 @@ export default function Home() {
         const sortedKeys = Object.keys(patientMappings).sort((a, b) => b.length - a.length);
         
         for (const key of sortedKeys) {
-            const value = patientMappings[key as keyof typeof patientMappings];
-            if (!value) continue;
+            const mapping = patientMappings[key as keyof typeof patientMappings];
+            if (!mapping.value) continue;
 
             const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -270,14 +263,14 @@ export default function Home() {
 
             if (isMatch) {
                 if (!prefilledValue) {
-                    prefilledValue = value;
-                    matchedKey = key;
+                    prefilledValue = mapping.value;
+                    matchedKeyDescription = mapping.description;
                 }
             }
         }
         
         newPdfFormData[fieldName] = prefilledValue;
-        newPdfFields.push({ name: fieldName, matchedKey });
+        newPdfFields.push({ name: fieldName, matchedKey: matchedKeyDescription });
     }
     
     setPdfFields(newPdfFields);
@@ -502,5 +495,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
