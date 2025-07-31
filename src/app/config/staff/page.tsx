@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, PlusCircle, Save, Trash2, Loader2 } from 'lucide-react';
 import type { StaffMember } from '@/lib/types';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function StaffConfigPage() {
   const { toast } = useToast();
@@ -56,13 +57,15 @@ export default function StaffConfigPage() {
 
   const handleSaveChanges = async () => {
     setIsSaving(true);
+    // Filter out any completely empty staff members before saving
+    const nonEmptyStaff = staff.filter(member => member.name || member.title || member.phone);
     try {
       const response = await fetch('/api/staff', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(staff),
+        body: JSON.stringify(nonEmptyStaff),
       });
 
       if (!response.ok) {
@@ -74,6 +77,8 @@ export default function StaffConfigPage() {
         title: 'Success',
         description: 'Staff list updated successfully.',
       });
+      // Re-set the state with the potentially filtered list
+      setStaff(nonEmptyStaff);
     } catch (error) {
        const errorMessage = error instanceof Error ? error.message : String(error);
        toast({
@@ -115,6 +120,32 @@ export default function StaffConfigPage() {
     </div>
   );
 
+  const isLastMemberEmpty = () => {
+      if (staff.length === 0) return false;
+      const lastMember = staff[staff.length - 1];
+      return !lastMember.name && !lastMember.title && !lastMember.phone;
+  };
+
+  const addStaffButton = (
+    <TooltipProvider>
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <div className="inline-block"> 
+                    <Button onClick={addStaffMember} disabled={isLastMemberEmpty()}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add New Staff Member
+                    </Button>
+                </div>
+            </TooltipTrigger>
+            {isLastMemberEmpty() && (
+                 <TooltipContent>
+                    <p>Please fill in the last staff member before adding a new one.</p>
+                </TooltipContent>
+            )}
+        </Tooltip>
+    </TooltipProvider>
+  );
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="flex h-16 items-center border-b bg-card px-4 md:px-6">
@@ -129,10 +160,7 @@ export default function StaffConfigPage() {
         <div className="mx-auto max-w-4xl space-y-8">
           <div className="flex justify-between items-center">
             <p className="text-muted-foreground">Modify details, add, or remove staff members.</p>
-            <Button onClick={addStaffMember}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add New Staff Member
-            </Button>
+            {addStaffButton}
           </div>
           
           {isLoading ? loadingSkeleton : (
@@ -167,14 +195,23 @@ export default function StaffConfigPage() {
             </div>
           )}
 
-          {!isLoading && (
-            <div className="mt-8 flex justify-end">
+          {!isLoading && staff.length > 0 && (
+            <div className="mt-8 flex justify-between items-center">
+                {addStaffButton}
                 <Button onClick={handleSaveChanges} disabled={isSaving}>
                     {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                     Save All Changes
                 </Button>
             </div>
           )}
+           {!isLoading && staff.length === 0 && (
+                <div className="mt-8 flex justify-end">
+                    <Button onClick={handleSaveChanges} disabled={isSaving}>
+                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Save All Changes
+                    </Button>
+                </div>
+            )}
         </div>
       </main>
     </div>
