@@ -31,7 +31,9 @@ export async function getPdfFields(formUrl: string): Promise<GetPdfFieldsOutput>
     // 2. Load the PDF with pdf-lib
     const pdfDoc = await PDFDocument.load(existingPdfBytes, { 
         // Some PDFs can have update sections that corrupt them if not handled
-        updateMetadata: false 
+        updateMetadata: false,
+        // Some PDFs are encrypted, this allows us to load them
+        ignoreEncryption: true,
     });
     const form = pdfDoc.getForm();
 
