@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { cn } from '@/lib/utils';
 import { useMemo, useState, useEffect } from 'react';
 import { AgeWarningDialog } from './age-warning-dialog';
+import { Button } from './ui/button';
 
 interface PatientFormProps {
   patientData: PatientData;
@@ -82,9 +83,12 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
 
   return (
     <div className="p-2 md:p-4 border-b">
-       <h2 className="px-2 text-lg font-semibold tracking-tight mb-2">
-          Patient Details
+       <div className="flex justify-between items-center px-2 mb-4">
+        <h2 className="text-lg font-semibold tracking-tight">
+            Patient Details
         </h2>
+        <Button size="sm" disabled>Get Live Patient Demographics</Button>
+       </div>
       <div className="space-y-4 px-2">
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="forename">Forename</Label>
