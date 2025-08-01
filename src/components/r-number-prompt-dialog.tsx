@@ -15,18 +15,31 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 interface RNumberPromptDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (rNumber: string) => void;
+  isSubmitting: boolean;
 }
 
-export function RNumberPromptDialog({ open, onOpenChange, onSubmit }: RNumberPromptDialogProps) {
+export function RNumberPromptDialog({ open, onOpenChange, onSubmit, isSubmitting }: RNumberPromptDialogProps) {
   const [rNumber, setRNumber] = useState("");
 
   const handleSubmit = () => {
-    onSubmit(rNumber);
+    // Basic validation for R number format
+    if (rNumber && /^R\d{7}$/i.test(rNumber)) {
+        onSubmit(rNumber);
+    } else {
+        // You could add a toast or inline error here for more robust feedback
+        console.error("Invalid R Number format");
+    }
+  }
+  
+  const handleCancel = () => {
+    onOpenChange(false);
+    setRNumber(""); // Reset on cancel
   }
 
   return (
@@ -35,7 +48,7 @@ export function RNumberPromptDialog({ open, onOpenChange, onSubmit }: RNumberPro
         <AlertDialogHeader>
           <AlertDialogTitle>Get Live Patient Demographics</AlertDialogTitle>
           <AlertDialogDescription>
-            Please enter the patient's R Number to fetch their details.
+            Please enter the patient's R Number to fetch their details. It must start with 'R' and be followed by 7 digits.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="grid items-center gap-1.5">
@@ -46,14 +59,18 @@ export function RNumberPromptDialog({ open, onOpenChange, onSubmit }: RNumberPro
                 value={rNumber}
                 onChange={(e) => setRNumber(e.target.value)}
                 placeholder="e.g., R1234567"
+                disabled={isSubmitting}
             />
         </div>
         <AlertDialogFooter>
           <AlertDialogCancel asChild>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>Cancel</Button>
           </AlertDialogCancel>
           <AlertDialogAction asChild>
-            <Button onClick={handleSubmit} disabled={!rNumber}>Get Demographics</Button>
+            <Button onClick={handleSubmit} disabled={!rNumber || isSubmitting || !/^R\d{7}$/i.test(rNumber)}>
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Get Demographics
+            </Button>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

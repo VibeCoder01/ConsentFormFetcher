@@ -1,7 +1,7 @@
 
 'use client';
 
-import { PatientData, IdentifierType, StaffMember } from '@/lib/types';
+import { PatientData, IdentifierType, StaffMember, KomsResponse } from '@/lib/types';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
@@ -11,6 +11,8 @@ import { useMemo, useState, useEffect } from 'react';
 import { AgeWarningDialog } from './age-warning-dialog';
 import { Button } from './ui/button';
 import { RNumberPromptDialog } from './r-number-prompt-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 interface PatientFormProps {
   patientData: PatientData;
@@ -34,6 +36,8 @@ const hospitalOptions = [
 export function PatientForm({ patientData, setPatientData, staffMembers }: PatientFormProps) {
   const [showAgeWarning, setShowAgeWarning] = useState(false);
   const [showRNumberPrompt, setShowRNumberPrompt] = useState(false);
+  const [isFetchingDemographics, setIsFetchingDemographics] = useState(false);
+  const { toast } = useToast();
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -64,12 +68,56 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
       });
   };
 
-  const handleRNumberSubmit = (rNumber: string) => {
-    setPatientData({
-      ...patientData,
-      rNumber: rNumber,
-    });
+  const handleRNumberSubmit = async (rNumber: string) => {
+    setIsFetchingDemographics(true);
     setShowRNumberPrompt(false);
+    toast({
+      title: 'Fetching...',
+      description: `Getting demographics for ${rNumber}...`,
+    });
+
+    try {
+        const response = await fetch(`/api/koms?RNumber=${rNumber}`);
+        const data: KomsResponse | { error: string } = await response.json();
+
+        if (!response.ok || 'error' in data) {
+            const errorMsg = 'error' in data ? data.error : `Request failed with status ${response.status}`;
+            throw new Error(errorMsg);
+        }
+
+        // We have good data, update the form
+        setPatientData({
+            ...patientData,
+            forename: data.forename || '',
+            surname: data.surname || '',
+            dob: data.dob || '',
+            rNumber: data.rNumber || rNumber,
+            addr1: data.addr1 || '',
+            addr2: data.addr2 || '',
+            addr3: data.addr3 || '',
+            postcode: data.postcode || '',
+            homePhone: data.homePhone || '',
+            gpName: data.gpName || '',
+            nhsNumber: data.nhsNumber || '',
+            hospitalNumber: data.hospitalNumber || '',
+            hospitalNumberMTW: data.hospitalNumberMTW || '',
+        });
+
+        toast({
+            title: 'Success',
+            description: `Successfully fetched details for ${data.fullName}.`,
+        });
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+        toast({
+            variant: "destructive",
+            title: "Fetch Failed",
+            description: errorMessage,
+        });
+    } finally {
+        setIsFetchingDemographics(false);
+    }
   }
 
   const isUnder16 = useMemo(() => {
@@ -97,7 +145,10 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
         <h2 className="text-lg font-semibold tracking-tight">
             Patient Details
         </h2>
-        <Button size="sm" onClick={() => setShowRNumberPrompt(true)}>Get Live Patient Demographics</Button>
+        <Button size="sm" onClick={() => setShowRNumberPrompt(true)} disabled={isFetchingDemographics}>
+            {isFetchingDemographics ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Get Live Patient Demographics
+        </Button>
        </div>
       <div className="space-y-4 px-2">
         <div className="grid w-full max-w-sm items-center gap-1.5">
@@ -224,6 +275,7 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
         open={showRNumberPrompt} 
         onOpenChange={setShowRNumberPrompt}
         onSubmit={handleRNumberSubmit}
+        isSubmitting={isFetchingDemographics}
       />
     </div>
   );
