@@ -261,7 +261,7 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
                 {identifierOptions.map(option => (
                     <div key={option.value} className="flex items-center space-x-2">
                         <RadioGroupItem value={option.value} id={option.value} />
-                        <Label htmlFor={option.value}>{option.label}</Label>
+                        <Label htmlFor={option.value} className='font-normal'>{option.label}</Label>
                     </div>
                 ))}
             </RadioGroup>
@@ -269,7 +269,7 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
         
         <div className="grid w-full max-w-sm items-center gap-1.5 pb-4">
             <Label htmlFor="uniqueIdentifierValue">Unique Patient Identifier</Label>
-            <Input type="text" id="uniqueIdentifierValue" name="uniqueIdentifierValue" value={patientData.uniqueIdentifierValue} readOnly disabled />
+            <Input type="text" id="uniqueIdentifierValue" name="uniqueIdentifierValue" value={patientData.uniqueIdentifierValue} readOnly />
         </div>
       </div>
       <AgeWarningDialog open={showAgeWarning} onOpenChange={setShowAgeWarning} />
