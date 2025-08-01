@@ -46,9 +46,14 @@ Below the patient details, you will find two dropdown menus:
 ### 6. Configuration
 
 -   Click the **Settings** icon (⚙️) in the top-right corner to go to the Configuration page.
--   From here, you can:
-    -   Manually trigger an update to fetch the latest forms from the RCR website.
-    -   Navigate to a separate page to add, edit, or remove staff members from the dropdown lists.
+-   From here, you can manage the application's data sources and staff list.
+
+-   **Data Source URL**: You can view and edit the URL from which the application scrapes consent forms.
+    -   To change it, simply type the new URL into the input field.
+    -   Click **Save Changes** to make your new URL active.
+    -   Click **Restore Default** to revert to the original RCR website URL.
+-   **Update Forms**: Click **Check for Updated Forms** to manually trigger a scrape of the currently saved URL to refresh the list of available forms.
+-   **Staff Management**: Click **Edit Staff List** to navigate to a separate page where you can add, edit, or remove staff members from the dropdown lists.
 
 ---
 
@@ -65,24 +70,24 @@ The application is a client-server model built with Next.js. The frontend is a R
 
 ### 2. Data Management and Scraping
 
--   **Data Source**: The URL for the RCR consent form page is defined in `src/config/app.json`.
+-   **Data Source**: The URL for the RCR consent form page is defined in `src/config/app.json`. This URL can be modified by the user via the configuration page UI, which uses an API endpoint at `/api/config` to update the file.
 -   **Scraping**: The `scrapeRcrForms` flow (`src/ai/flows/scrape-forms-flow.ts`) is triggered from the `/config` page. It uses `cheerio` to parse the RCR webpage and extract the title and URL of all PDF forms.
 -   **Data Storage**: The scraped form data is stored in `public/consent-forms.json`. The application automatically checks if this file is outdated compared to the live website on startup and prompts the user to update if necessary via the `checkForFormUpdates` flow (`src/ai/flows/update-check-flow.ts`).
 -   **Staff Data**: Staff members are stored in `src/config/staff.json`. A dedicated UI at `/config/staff` allows for managing this list, which is served via a simple API endpoint at `/api/staff`.
 
 ### 3. PDF Interaction and Pre-population Logic
 
-This is the most complex part of the application.
+This is the most complex part of the application. A key design principle is that the application **always uses the latest version of a form** by downloading the PDF directly from the RCR website on-demand, rather than using a locally cached copy.
 
-1.  **Field Extraction (`src/ai/flows/get-pdf-fields-flow.ts`)**: When a user selects a form, this flow is called. It downloads the PDF and uses the `pdf-lib` library to inspect it and extract the names of all fillable fields. It intentionally filters out checkboxes and fields related to signatures or initials to reduce clutter.
+1.  **Field Extraction (`src/ai/flows/get-pdf-fields-flow.ts`)**: When a user selects a form, this flow is called. It downloads the PDF from its live URL on the RCR website and uses the `pdf-lib` library to inspect it and extract the names of all fillable fields. It intentionally filters out checkboxes and fields related to signatures or initials to reduce clutter.
 
 2.  **Dynamic Form Rendering (`src/components/pdf-form.tsx`)**: The list of field names is returned to the client, which then renders a dynamic form with a text input for each field.
 
 3.  **Intelligent Pre-population (`prePopulateForm` in `page.tsx`)**: Before rendering, the application tries to intelligently match and pre-fill the PDF fields using the available patient and staff data.
     -   **Normalization**: It normalizes both the PDF field names and the mapping keys (from the `patientMappings` object) by converting them to lowercase and removing special characters to increase the likelihood of a match.
     -   **Matching Strategy**:
-        -   For most keys, it checks if the normalized PDF field name *includes* a normalized mapping key.
-        -   For the keys 'name', 'date', and 'hospital', it uses a more precise `startsWith` check to avoid incorrect matches (e.g., to prevent "Name of hospital" from matching the patient's "name").
+        -   It uses a precise `startsWith` check for keys like 'name', 'date', and 'hospital' to avoid incorrect matches (e.g., to prevent "Name of hospital" from matching the patient's "name").
+        -   For most other keys, it checks if the normalized PDF field name *includes* a normalized mapping key.
     -   **Contextual Rules**:
         -   **Clinician Details**: A special rule handles a common pattern where a "Name" field is followed by a "Job Title" field. It correctly populates these with the selected clinician's details.
         -   **Post-Clinician Blank Fields**: The logic is explicitly designed to leave the next `Name` field and the subsequent `Date` field blank after filling the clinician's name and job title. This prevents patient data from being entered into fields meant for a witness or second signatory.
