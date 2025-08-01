@@ -40,7 +40,8 @@ export async function getPdfFields(formUrl: string): Promise<GetPdfFieldsOutput>
     const fieldNames = fields
       .filter(field => {
         const name = field.getName().toLowerCase();
-        return !(field instanceof PDFCheckBox) && !name.includes('initials') && !name.includes('signature') && !name.includes('st') && !name.includes('lt');
+        // Exact matches for 'st' and 'lt' are now checked to avoid over-filtering
+        return !(field instanceof PDFCheckBox) && !name.includes('initials') && !name.includes('signature') && name !== 'st' && name !== 'lt';
       })
       .map(field => field.getName());
 

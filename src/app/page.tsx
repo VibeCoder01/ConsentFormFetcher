@@ -187,8 +187,8 @@ export default function Home() {
 
     if (selectedStaffMember) {
         const clinicianInfo = `${selectedStaffMember.name}, ${selectedStaffMember.title} - ${selectedStaffMember.phone}`;
-        mappings['clinician name'] = { value: selectedStaffMember.name, description: 'Clinician Name' };
-        mappings['name of person'] = { value: selectedStaffMember.name, description: 'Clinician Name' };
+        mappings['clinician name'] = { value: clinicianInfo, description: 'Clinician Name + Title + Phone' };
+        mappings['name of person'] = { value: clinicianInfo, description: 'Clinician Name + Title + Phone' };
         mappings['responsible consultant'] = { value: clinicianInfo, description: 'Clinician Name + Title + Phone' };
         mappings['job title'] = { value: selectedStaffMember.title, description: 'Clinician Title' };
         mappings['jobtitle'] = { value: selectedStaffMember.title, description: 'Clinician Title' };
@@ -210,6 +210,9 @@ export default function Home() {
     const newPdfFormData: Record<string, string> = {};
 
     const specialStartsWithKeys = ['name', 'date'];
+    
+    // Explicit keys for clinician to avoid populating patient data in staff fields
+    const clinicianRelatedKeys = ['clinician name', 'name of person', 'responsible consultant'];
 
     for (let i = 0; i < fields.length; i++) {
         const fieldName = fields[i];
@@ -223,7 +226,7 @@ export default function Home() {
         if (specialStartsWithKeys.includes('name') && normalizedField.startsWith('name') && i + 1 < fields.length) {
             const nextFieldName = fields[i + 1];
             const normalizedNextField = nextFieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
-            if (normalizedNextField.includes('jobtitle')) {
+            if (normalizedNextField.includes('jobtitle') || normalizedNextField.includes('title')) {
                 if (selectedStaffMember) {
                     newPdfFormData[fieldName] = selectedStaffMember.name;
                     newPdfFields.push({ name: fieldName, matchedKey: 'Clinician Name' });
@@ -262,6 +265,10 @@ export default function Home() {
                 : normalizedField.includes(normalizedKey);
 
             if (isMatch) {
+                 // If the match is a clinician-related one, ensure we have a selected staff member.
+                if(clinicianRelatedKeys.includes(key) && !selectedStaffMember) {
+                    continue; // Skip if it's a clinician field but no clinician is selected
+                }
                 if (!prefilledValue) {
                     prefilledValue = mapping.value;
                     matchedKeyDescription = mapping.description;
@@ -495,5 +502,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
