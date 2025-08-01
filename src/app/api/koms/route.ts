@@ -36,15 +36,27 @@ export async function GET(req: NextRequest) {
     
     // The DoB header from KOMS might be in a different format. 
     // We will attempt to parse it and reformat to YYYY-MM-DD for the input[type=date].
-    let dob = h.get('DoB'); // e.g., "17-May-1990"
+    let dob = h.get('DoB'); // e.g., "17/05/1990"
     if (dob) {
         try {
-            const date = new Date(dob);
-            // Check if date is valid
-            if (!isNaN(date.getTime())) {
-                dob = date.toISOString().split('T')[0]; // "1990-05-17"
+            // It might be DD/MM/YYYY, so we need to parse it manually
+            const parts = dob.split('/');
+            if (parts.length === 3) {
+                const [day, month, year] = parts;
+                const date = new Date(`${year}-${month}-${day}`);
+                 // Check if date is valid
+                if (!isNaN(date.getTime())) {
+                    dob = date.toISOString().split('T')[0]; // "1990-05-17"
+                } else {
+                    dob = ''; // Set to empty if parsing fails
+                }
             } else {
-                dob = ''; // Set to empty if parsing fails
+                 const date = new Date(dob);
+                 if (!isNaN(date.getTime())) {
+                    dob = date.toISOString().split('T')[0];
+                 } else {
+                    dob = '';
+                 }
             }
         } catch (e) {
             dob = ''; // Set to empty on error
@@ -66,7 +78,7 @@ export async function GET(req: NextRequest) {
         addr2: h.get('addr2'),
         addr3: h.get('addr3'),
         postcode: h.get('postcode'),
-        homePhone: h.get('HomeTelephone'),
+        homePhone: h.get('HomePhone'),
         gpName: h.get('GPName'),
         nhsNumber: h.get('NHSNumber'),
         hospitalNumber: h.get('HospitalNumber'),
