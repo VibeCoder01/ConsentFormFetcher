@@ -1,5 +1,6 @@
 
 import type { NextRequest } from 'next/server';
+import config from '@/config/app.json';
 
 // Per Next.js docs, this is the proper way to access env vars in a route handler
 const KOMS_URL = process.env.KOMS_URL;
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest) {
   }
 
   // quick sanity-check: “R” followed by seven digits
-  if (!rNumber || !/^R\d{7}$/i.test(rNumber))
+  if (config.validateRNumber && (!rNumber || !/^R\d{7}$/i.test(rNumber)))
     return Response.json({ error: 'Invalid R number. It should start with "R" and be followed by 7 digits.' }, { status: 400 });
 
   try {
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
         'Content-Type': 'application/x-www-form-urlencoded',
         'User-Agent': 'NextJS/15'
         },
-        body: `RNumber=${encodeURIComponent(rNumber)}`
+        body: `RNumber=${encodeURIComponent(rNumber || '')}`
     });
 
     if (!koms.ok)
