@@ -16,6 +16,7 @@ import { Loader2 } from 'lucide-react';
 
 interface PatientFormProps {
   patientData: PatientData;
+  initialData: PatientData;
   setPatientData: (data: PatientData, fromDemographics?: boolean) => void;
   staffMembers: StaffMember[];
 }
@@ -33,10 +34,11 @@ const hospitalOptions = [
     "Kent Oncology Centre - Kent & Canterbury Hospital"
 ];
 
-export function PatientForm({ patientData, setPatientData, staffMembers }: PatientFormProps) {
+export function PatientForm({ patientData, initialData, setPatientData, staffMembers }: PatientFormProps) {
   const [showAgeWarning, setShowAgeWarning] = useState(false);
   const [showRNumberPrompt, setShowRNumberPrompt] = useState(false);
   const [isFetchingDemographics, setIsFetchingDemographics] = useState(false);
+  const [demographicsLoaded, setDemographicsLoaded] = useState(false);
   const { toast } = useToast();
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,6 +86,8 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
             const errorMsg = 'error' in data ? data.error : `Request failed with status ${response.status}`;
             throw new Error(errorMsg);
         }
+        
+        setDemographicsLoaded(true);
 
         // We have good data, update the form
         setPatientData({
@@ -139,6 +143,10 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
       setShowAgeWarning(true);
     }
   }, [isUnder16]);
+  
+  const isInitialValue = (fieldName: keyof PatientData) => {
+    return !demographicsLoaded && patientData[fieldName] === initialData[fieldName];
+  };
 
 
   return (
@@ -155,11 +163,11 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
       <div className="space-y-4 px-2">
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="forename">Forename</Label>
-          <Input type="text" id="forename" name="forename" value={patientData.forename} onChange={handleChange} />
+          <Input type="text" id="forename" name="forename" value={patientData.forename} onChange={handleChange} className={cn(isInitialValue('forename') && "bg-red-100 dark:bg-red-900/30")} />
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="surname">Surname</Label>
-          <Input type="text" id="surname" name="surname" value={patientData.surname} onChange={handleChange} />
+          <Input type="text" id="surname" name="surname" value={patientData.surname} onChange={handleChange} className={cn(isInitialValue('surname') && "bg-red-100 dark:bg-red-900/30")} />
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="dob">Date of Birth</Label>
@@ -169,32 +177,35 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
             name="dob" 
             value={patientData.dob} 
             onChange={handleChange} 
-            className={cn(isUnder16 && "bg-red-100 dark:bg-red-900/30 border-red-500")}
+            className={cn(
+                isUnder16 && "bg-red-100 dark:bg-red-900/30 border-red-500",
+                isInitialValue('dob') && "bg-red-100 dark:bg-red-900/30"
+            )}
           />
         </div>
          <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="addr1">Address Line 1</Label>
-          <Input type="text" id="addr1" name="addr1" value={patientData.addr1} onChange={handleChange} />
+          <Input type="text" id="addr1" name="addr1" value={patientData.addr1} onChange={handleChange} className={cn(isInitialValue('addr1') && "bg-red-100 dark:bg-red-900/30")} />
         </div>
          <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="addr2">Address Line 2</Label>
-          <Input type="text" id="addr2" name="addr2" value={patientData.addr2} onChange={handleChange} />
+          <Input type="text" id="addr2" name="addr2" value={patientData.addr2} onChange={handleChange} className={cn(isInitialValue('addr2') && "bg-red-100 dark:bg-red-900/30")} />
         </div>
          <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="addr3">Address Line 3</Label>
-          <Input type="text" id="addr3" name="addr3" value={patientData.addr3} onChange={handleChange} />
+          <Input type="text" id="addr3" name="addr3" value={patientData.addr3} onChange={handleChange} className={cn(isInitialValue('addr3') && "bg-red-100 dark:bg-red-900/30")} />
         </div>
          <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="postcode">Postcode</Label>
-          <Input type="text" id="postcode" name="postcode" value={patientData.postcode} onChange={handleChange} />
+          <Input type="text" id="postcode" name="postcode" value={patientData.postcode} onChange={handleChange} className={cn(isInitialValue('postcode') && "bg-red-100 dark:bg-red-900/30")} />
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="homePhone">Home Phone</Label>
-          <Input type="text" id="homePhone" name="homePhone" value={patientData.homePhone} onChange={handleChange} />
+          <Input type="text" id="homePhone" name="homePhone" value={patientData.homePhone} onChange={handleChange} className={cn(isInitialValue('homePhone') && "bg-red-100 dark:bg-red-900/30")} />
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="gpName">GP Name</Label>
-          <Input type="text" id="gpName" name="gpName" value={patientData.gpName} onChange={handleChange} />
+          <Input type="text" id="gpName" name="gpName" value={patientData.gpName} onChange={handleChange} className={cn(isInitialValue('gpName') && "bg-red-100 dark:bg-red-900/30")} />
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="hospitalName">Name of Hospital</Label>
@@ -236,19 +247,19 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="rNumber">R Number</Label>
-          <Input type="text" id="rNumber" name="rNumber" value={patientData.rNumber} onChange={handleChange} />
+          <Input type="text" id="rNumber" name="rNumber" value={patientData.rNumber} onChange={handleChange} className={cn(isInitialValue('rNumber') && "bg-red-100 dark:bg-red-900/30")} />
         </div>
          <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="nhsNumber">NHS Number</Label>
-          <Input type="text" id="nhsNumber" name="nhsNumber" value={patientData.nhsNumber} onChange={handleChange} />
+          <Input type="text" id="nhsNumber" name="nhsNumber" value={patientData.nhsNumber} onChange={handleChange} className={cn(isInitialValue('nhsNumber') && "bg-red-100 dark:bg-red-900/30")} />
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="hospitalNumber">Hospital Number</Label>
-          <Input type="text" id="hospitalNumber" name="hospitalNumber" value={patientData.hospitalNumber} onChange={handleChange} />
+          <Input type="text" id="hospitalNumber" name="hospitalNumber" value={patientData.hospitalNumber} onChange={handleChange} className={cn(isInitialValue('hospitalNumber') && "bg-red-100 dark:bg-red-900/30")} />
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="hospitalNumberMTW">Hospital Number (MTW)</Label>
-          <Input type="text" id="hospitalNumberMTW" name="hospitalNumberMTW" value={patientData.hospitalNumberMTW} onChange={handleChange} />
+          <Input type="text" id="hospitalNumberMTW" name="hospitalNumberMTW" value={patientData.hospitalNumberMTW} onChange={handleChange} className={cn(isInitialValue('hospitalNumberMTW') && "bg-red-100 dark:bg-red-900/30")} />
         </div>
         
         <div className="grid w-full max-w-sm items-center gap-2.5">
@@ -261,7 +272,7 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
                 {identifierOptions.map(option => (
                     <div key={option.value} className="flex items-center space-x-2">
                         <RadioGroupItem value={option.value} id={option.value} />
-                        <Label htmlFor={option.value} className='font-normal'>{option.label}</Label>
+                        <Label htmlFor={option.value}>{option.label}</Label>
                     </div>
                 ))}
             </RadioGroup>
