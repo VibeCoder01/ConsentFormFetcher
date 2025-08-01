@@ -30,17 +30,21 @@ export function RNumberPromptDialog({ open, onOpenChange, onSubmit, isSubmitting
   const isRNumberValid = !config.validateRNumber || (!!rNumber && /^R\d{7}$/i.test(rNumber));
 
   const handleSubmit = () => {
-    if (isRNumberValid) {
+    if (isRNumberValid && rNumber && !isSubmitting) {
         onSubmit(rNumber);
-    } else {
-        // You could add a toast or inline error here for more robust feedback
-        console.error("Invalid R Number format");
     }
   }
   
   const handleCancel = () => {
     onOpenChange(false);
     setRNumber(""); // Reset on cancel
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault(); // Prevent default form submission
+      handleSubmit();
+    }
   }
 
   return (
@@ -62,6 +66,7 @@ export function RNumberPromptDialog({ open, onOpenChange, onSubmit, isSubmitting
                 type="text"
                 value={rNumber}
                 onChange={(e) => setRNumber(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="e.g., R1234567"
                 disabled={isSubmitting}
             />
