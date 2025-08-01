@@ -1,10 +1,9 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import config from "@/config/app.json";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,12 +14,88 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, RefreshCw, Users } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2 } from "lucide-react";
 import { scrapeRcrForms } from "@/ai/flows/scrape-forms-flow";
+
+const DEFAULT_RCR_URL = "https://www.rcr.ac.uk/our-services/management-service-delivery/national-radiotherapy-consent-forms/";
 
 export default function ConfigPage() {
   const { toast } = useToast();
   const [isScraping, setIsScraping] = useState(false);
+  const [isSavingUrl, setIsSavingUrl] = useState(false);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+  
+  const [rcrUrl, setRcrUrl] = useState("");
+  const [isUrlModified, setIsUrlModified] = useState(false);
+  const [validateRNumber, setValidateRNumber] = useState(false);
+
+  useEffect(() => {
+    async function fetchConfig() {
+      setIsLoadingConfig(true);
+      try {
+        const res = await fetch('/api/config');
+        if (!res.ok) throw new Error('Failed to fetch config');
+        const config = await res.json();
+        setRcrUrl(config.rcrConsentFormsUrl);
+        setValidateRNumber(config.validateRNumber);
+      } catch (error) {
+         toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Could not load app configuration.',
+        });
+      } finally {
+        setIsLoadingConfig(false);
+      }
+    }
+    fetchConfig();
+  }, [toast]);
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRcrUrl(e.target.value);
+    setIsUrlModified(true);
+  }
+
+  const handleRestoreDefaultUrl = () => {
+    setRcrUrl(DEFAULT_RCR_URL);
+    setIsUrlModified(true);
+  };
+
+  const handleSaveUrl = async () => {
+    setIsSavingUrl(true);
+    try {
+       const response = await fetch('/api/config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rcrConsentFormsUrl: rcrUrl }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save URL.');
+      }
+      
+      toast({
+        title: 'Success',
+        description: 'Data source URL updated successfully.',
+      });
+      setIsUrlModified(false);
+
+    } catch (error) {
+       const errorMessage = error instanceof Error ? error.message : String(error);
+       toast({
+        variant: "destructive",
+        title: "Save Failed",
+        description: errorMessage,
+      });
+    } finally {
+        setIsSavingUrl(false);
+    }
+  };
 
   const handleUpdate = async () => {
     setIsScraping(true);
@@ -30,7 +105,7 @@ export default function ConfigPage() {
     });
 
     try {
-      const result = await scrapeRcrForms(config.rcrConsentFormsUrl);
+      const result = await scrapeRcrForms(rcrUrl);
       if (result.success) {
         toast({
           title: "Update Successful",
@@ -51,6 +126,44 @@ export default function ConfigPage() {
     }
   };
 
+  const dataSourceCardContent = () => {
+    if (isLoadingConfig) {
+      return (
+        <CardContent>
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
+      )
+    }
+    return (
+      <>
+        <CardContent>
+          <Input 
+            value={rcrUrl}
+            onChange={handleUrlChange}
+            aria-label="RCR Consent Forms URL"
+            className="font-mono text-sm"
+          />
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <div className="flex gap-2">
+            <Button onClick={handleSaveUrl} disabled={!isUrlModified || isSavingUrl}>
+              {isSavingUrl ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Save Changes
+            </Button>
+             <Button onClick={handleRestoreDefaultUrl} variant="outline" disabled={isSavingUrl}>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Restore Default
+            </Button>
+          </div>
+          <Button onClick={handleUpdate} disabled={isScraping || isUrlModified}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isScraping ? 'animate-spin' : ''}`} />
+            Check for Updated Forms
+          </Button>
+        </CardFooter>
+      </>
+    )
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="flex h-16 items-center border-b px-4 md:px-6 bg-card">
@@ -67,21 +180,10 @@ export default function ConfigPage() {
             <CardHeader>
               <CardTitle>Data Source</CardTitle>
               <CardDescription>
-                The URL from which consent forms are scraped. This process can
-                be triggered to update the local form list.
+                The URL from which consent forms are scraped. This can be manually updated and saved.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="break-all rounded-md bg-muted p-3 font-mono text-sm text-muted-foreground">
-                {config.rcrConsentFormsUrl}
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={handleUpdate} disabled={isScraping}>
-                <RefreshCw className={`mr-2 h-4 w-4 ${isScraping ? 'animate-spin' : ''}`} />
-                Check for Updated Forms
-              </Button>
-            </CardFooter>
+            {dataSourceCardContent()}
           </Card>
 
           <Card>
@@ -110,8 +212,8 @@ export default function ConfigPage() {
             </CardHeader>
             <CardContent className="flex items-center gap-4">
                 <p className="text-sm font-medium">R Number Validation:</p>
-                <Badge variant={config.validateRNumber ? "default" : "secondary"}>
-                  {config.validateRNumber ? "Enabled" : "Disabled"}
+                <Badge variant={validateRNumber ? "default" : "secondary"}>
+                  {validateRNumber ? "Enabled" : "Disabled"}
                 </Badge>
             </CardContent>
             <CardFooter>
