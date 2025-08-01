@@ -148,6 +148,13 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
     return !demographicsLoaded && patientData[fieldName] === initialData[fieldName];
   };
 
+  const showMacmillanWarning = useMemo(() => {
+      if (!patientData.macmillanContactId) return false;
+      const selectedStaff = staffMembers.find(s => s.id === patientData.macmillanContactId);
+      if (!selectedStaff) return false;
+      return !selectedStaff.title.toLowerCase().includes('macmillan');
+  }, [patientData.macmillanContactId, staffMembers]);
+
 
   return (
     <div className="p-2 md:p-4 border-b">
@@ -234,7 +241,10 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
           >
               <SelectTrigger 
                 id="macmillanContact" 
-                className={cn(!patientData.macmillanContactId && "bg-red-100 dark:bg-red-900/30")}
+                className={cn(
+                  !patientData.macmillanContactId && "bg-red-100 dark:bg-red-900/30",
+                  showMacmillanWarning && "bg-orange-200 dark:bg-orange-800/50"
+                  )}
               >
                   <SelectValue placeholder="Make a selection" />
               </SelectTrigger>
@@ -272,7 +282,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
                 {identifierOptions.map(option => (
                     <div key={option.value} className="flex items-center space-x-2">
                         <RadioGroupItem value={option.value} id={option.value} />
-                        <Label htmlFor={option.value} className="font-normal">{option.label}</Label>
+                        <Label htmlFor={option.value}>{option.label}</Label>
                     </div>
                 ))}
             </RadioGroup>
