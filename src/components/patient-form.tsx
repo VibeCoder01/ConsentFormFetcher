@@ -22,7 +22,7 @@ interface PatientFormProps {
 }
 
 const identifierOptions: { value: IdentifierType; label: string }[] = [
-    { value: 'rNumber', label: 'R Number' },
+    { value: 'rNumber', label: 'KOMS patient number' },
     { value: 'nhsNumber', label: 'NHS Number' },
     { value: 'hospitalNumber', label: 'Hospital Number' },
     { value: 'hospitalNumberMTW', label: 'Hospital Number (MTW)' },
@@ -246,7 +246,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
           </Select>
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
-          <Label htmlFor="rNumber">R Number</Label>
+          <Label htmlFor="rNumber">KOMS patient number</Label>
           <Input type="text" id="rNumber" name="rNumber" value={patientData.rNumber} onChange={handleChange} className={cn(isInitialValue('rNumber') && "bg-red-100 dark:bg-red-900/30")} />
         </div>
          <div className="grid w-full max-w-sm items-center gap-1.5">
@@ -272,7 +272,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
                 {identifierOptions.map(option => (
                     <div key={option.value} className="flex items-center space-x-2">
                         <RadioGroupItem value={option.value} id={option.value} />
-                        <Label htmlFor={option.value}>{option.label}</Label>
+                        <Label htmlFor={option.value} className="font-normal">{option.label}</Label>
                     </div>
                 ))}
             </RadioGroup>
