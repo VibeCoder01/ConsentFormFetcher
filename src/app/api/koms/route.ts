@@ -74,7 +74,16 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'An unknown network error occurred';
+    let message = 'An unknown network error occurred';
+    if (error instanceof Error) {
+        // The 'cause' property often holds more specific network error details
+        const cause = (error as any).cause;
+        if (cause && typeof cause.code === 'string') {
+            message = cause.code; // e.g., 'ECONNREFUSED', 'ENOTFOUND'
+        } else {
+            message = error.message; // fallback to the original message
+        }
+    }
     return Response.json({ error: `Failed to connect to KOMS service: ${message}` }, { status: 504 }); // Gateway Timeout
   }
 }
