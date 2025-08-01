@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
         method: 'POST',
         headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'NextJS/15'
+        'User-Agent': 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)'
         },
         body: `RNumber=${encodeURIComponent(rNumber || '')}`
     });
