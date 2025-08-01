@@ -282,5 +282,3 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
     </div>
   );
 }
-
-    
