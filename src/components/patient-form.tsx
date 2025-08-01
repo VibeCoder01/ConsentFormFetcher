@@ -16,7 +16,7 @@ import { Loader2 } from 'lucide-react';
 
 interface PatientFormProps {
   patientData: PatientData;
-  setPatientData: (data: PatientData) => void;
+  setPatientData: (data: PatientData, fromDemographics?: boolean) => void;
   staffMembers: StaffMember[];
 }
 
@@ -101,7 +101,9 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
             nhsNumber: data.nhsNumber || '',
             hospitalNumber: data.hospitalNumber || '',
             hospitalNumberMTW: data.hospitalNumberMTW || '',
-        });
+            hospitalName: '', // Reset hospital dropdown
+            macmillanContactId: null, // Reset macmillan dropdown
+        }, true); // Pass true to indicate it's from demographics fetch
 
         toast({
             title: 'Success',
@@ -280,3 +282,5 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
     </div>
   );
 }
+
+    
