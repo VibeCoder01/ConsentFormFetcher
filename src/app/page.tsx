@@ -424,7 +424,8 @@ export default function Home() {
     return (
       <>
         <PatientForm 
-            patientData={patientData} 
+            patientData={patientData}
+            initialData={initialPatientData}
             setPatientData={handlePatientDataChange} 
             staffMembers={staffMembers} 
         />
