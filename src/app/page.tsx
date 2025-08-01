@@ -258,6 +258,17 @@ export default function Home() {
                         newPdfFormData[followingFieldName] = '';
                         newPdfFields.push({ name: followingFieldName, matchedKey: 'Intentionally left blank' });
                         i++; // We've processed this field too, so skip it.
+
+                        // And check if the one after that is a date field
+                        if (i + 1 < fields.length) {
+                            const dateFieldName = fields[i+1];
+                            const normalizedDateField = dateFieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                            if (normalizedDateField.startsWith('date')) {
+                                newPdfFormData[dateFieldName] = '';
+                                newPdfFields.push({ name: dateFieldName, matchedKey: 'Intentionally left blank' });
+                                i++; // Processed, so skip.
+                            }
+                        }
                     }
                 }
             }
@@ -518,7 +529,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
-
-    
