@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useMemo } from 'react';
 import { StaffMember } from '@/lib/types';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -14,6 +15,13 @@ interface ClinicianFormProps {
 }
 
 export function ClinicianForm({ staffMembers, selectedStaffId, onStaffMemberChange }: ClinicianFormProps) {
+    const showConsultantWarning = useMemo(() => {
+        if (!selectedStaffId) return false;
+        const selectedStaff = staffMembers.find(s => s.id === selectedStaffId);
+        if (!selectedStaff) return false;
+        return !selectedStaff.title.toLowerCase().includes('consultant');
+    }, [selectedStaffId, staffMembers]);
+
     if (!staffMembers || staffMembers.length === 0) {
         return (
              <div className="p-4 border-b">
@@ -39,7 +47,10 @@ export function ClinicianForm({ staffMembers, selectedStaffId, onStaffMemberChan
                     >
                         <SelectTrigger 
                             id="clinicianName"
-                             className={cn(!selectedStaffId && "bg-red-100 dark:bg-red-900/30")}
+                             className={cn(
+                                 !selectedStaffId && "bg-red-100 dark:bg-red-900/30",
+                                 showConsultantWarning && "bg-orange-200 dark:bg-orange-800/50"
+                             )}
                         >
                             <SelectValue placeholder="Make a selection" />
                         </SelectTrigger>
