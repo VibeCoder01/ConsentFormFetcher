@@ -32,7 +32,7 @@ const initialPatientData: PatientData = {
   fullAddress: "123 Fake Street, Fakeville, Faketon, FK1 1AB",
   homePhone: "01234567890",
   gpName: "Dr. Smith",
-  hospitalName: "", // Default to empty to show placeholder
+  hospitalName: "Kent Oncology Centre",
   rNumber: "R1234567",
   nhsNumber: "123 456 7890",
   hospitalNumber: "1234567",
