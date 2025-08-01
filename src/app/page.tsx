@@ -356,36 +356,74 @@ export default function Home() {
   };
 
   const handlePdfSubmit = async (finalFormData: Record<string, string>) => {
-      if (!selectedForm) return;
-
-      setIsSubmitting(true);
-      try {
-        const result = await fillPdf({
-            formUrl: selectedForm.url,
-            fields: finalFormData
-        });
-
-        if (result.success && result.pdfId) {
-            window.open(`/api/filled-pdf/${result.pdfId}`, '_blank');
-        } else {
-             toast({
-                variant: "destructive",
-                title: "PDF Generation Failed",
-                description: result.error || "An unknown error occurred while preparing the PDF.",
-            });
+    if (!selectedForm) return;
+  
+    setIsSubmitting(true);
+  
+    // Create a mutable copy of the data to modify
+    const dataToFill = { ...finalFormData };
+    const fieldNames = pdfFields.map(f => f.name);
+  
+    // Find the index of the "Job Title" field
+    const jobTitleFieldIndex = fieldNames.findIndex(name =>
+      name.toLowerCase().replace(/[^a-z0-9]/g, '').includes('jobtitle')
+    );
+  
+    if (jobTitleFieldIndex !== -1) {
+      let nameFieldBlanked = false;
+      let dateFieldBlanked = false;
+  
+      // Start searching from the field AFTER the job title
+      for (let i = jobTitleFieldIndex + 1; i < fieldNames.length; i++) {
+        const fieldName = fieldNames[i];
+        const normalizedFieldName = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  
+        // Find and blank the first "Name" field
+        if (!nameFieldBlanked && normalizedFieldName.includes('name')) {
+          dataToFill[fieldName] = '';
+          nameFieldBlanked = true;
+          continue; // Move to the next field
         }
-
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: `An error occurred while filling the PDF: ${errorMessage}`,
-        });
-      } finally {
-        setIsSubmitting(false);
+  
+        // Find and blank the first "Date" field after the name has been blanked
+        if (nameFieldBlanked && !dateFieldBlanked && normalizedFieldName.includes('date')) {
+          dataToFill[fieldName] = '';
+          dateFieldBlanked = true;
+        }
+  
+        // If both are blanked, we can stop searching
+        if (nameFieldBlanked && dateFieldBlanked) {
+          break;
+        }
       }
-  }
+    }
+  
+    try {
+      const result = await fillPdf({
+        formUrl: selectedForm.url,
+        fields: dataToFill, // Use the modified data
+      });
+  
+      if (result.success && result.pdfId) {
+        window.open(`/api/filled-pdf/${result.pdfId}`, '_blank');
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'PDF Generation Failed',
+          description: result.error || 'An unknown error occurred while preparing the PDF.',
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: `An error occurred while filling the PDF: ${errorMessage}`,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleConfirmUpdate = async () => {
     if (!updateAvailable) return;
