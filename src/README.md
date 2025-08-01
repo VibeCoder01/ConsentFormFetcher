@@ -1,0 +1,94 @@
+# ConsentForm Fetcher
+
+This is a Next.js application designed to fetch, display, and intelligently pre-populate medical consent forms from The Royal College of Radiologists (RCR) website.
+
+---
+
+## User Guide
+
+This guide explains how to use the application to prepare a consent form.
+
+### 1. The Main Screen
+
+The application is divided into two main sections:
+-   **Left Sidebar**: Contains the patient and clinician details forms, and the list of available consent forms.
+-   **Main Area**: Displays the fields of the selected PDF form for review and editing.
+
+### 2. Entering Patient Details
+
+On the left sidebar, you will find a "Patient Details" form.
+
+-   **Initial Data**: The form starts with dummy data ("John Smith"). Fields with this initial data have a red background. This red highlight disappears as soon as you edit a field or import live data.
+-   **Manual Entry**: You can manually type the patient's information into each field.
+-   **Fetch Live Data**: To import data automatically, click the **"Get Live Patient Demographics"** button. A pop-up will appear where you can enter a patient's **KOMS patient number**. Pressing Enter or clicking the button will fetch the patient's details and populate the form.
+    -   When live data is loaded, dropdown menus like "Name of Hospital" are reset, requiring a manual selection.
+-   **Age Warning**: If you enter a Date of Birth for a patient who is under 16, the field will turn red, and a warning dialog will appear. This is to ensure correct consent procedures are followed for minors.
+
+### 3. Selecting Staff Members
+
+Below the patient details, you will find two dropdown menus:
+
+-   **Select Clinician**: Choose the responsible clinician from this list. If you select a staff member whose title does not contain "Consultant," the field will turn orange as a warning.
+-   **Macmillan Contact**: This is part of the patient form. Choose the appropriate Macmillan contact. If the selected person's title does not contain "Macmillan," the field will turn orange.
+
+### 4. Selecting a Consent Form
+
+-   The **"Available Forms"** section on the left sidebar lists all consent forms scraped from the RCR website, organized by category.
+-   Click on a form title to select it.
+
+### 5. Reviewing and Generating the PDF
+
+-   Once you select a form, its fillable fields will appear in the main content area.
+-   The application will intelligently pre-populate these fields based on the patient and clinician data you entered. The source of the pre-filled data (e.g., "matched with - Patient Full Name") is shown above each field.
+-   Review all fields for accuracy. You can edit any pre-filled information directly on this screen.
+-   When you are satisfied, click the **"Submit & Open PDF"** button. A new browser tab will open with the finalized, filled-in PDF, ready for you to print or save.
+
+### 6. Configuration
+
+-   Click the **Settings** icon (⚙️) in the top-right corner to go to the Configuration page.
+-   From here, you can:
+    -   Manually trigger an update to fetch the latest forms from the RCR website.
+    -   Navigate to a separate page to add, edit, or remove staff members from the dropdown lists.
+
+---
+
+## Tech Guide
+
+This guide provides a technical overview of the application's architecture and logic for developers.
+
+### 1. Core Architecture
+
+The application is a client-server model built with Next.js. The frontend is a React-based single-page application, and the backend consists of server-side "flows" that handle data processing and interactions with external services.
+
+-   **Frontend**: `src/app/page.tsx` is the main component, managing state for patient data, staff selections, and the selected form. It orchestrates calls to the backend flows. UI components are built with ShadCN.
+-   **Backend Flows**: Server-side logic is encapsulated in TypeScript files within `src/ai/flows/`. These handle tasks like scraping, PDF parsing, and PDF filling.
+
+### 2. Data Management and Scraping
+
+-   **Data Source**: The URL for the RCR consent form page is defined in `src/config/app.json`.
+-   **Scraping**: The `scrapeRcrForms` flow (`src/ai/flows/scrape-forms-flow.ts`) is triggered from the `/config` page. It uses `cheerio` to parse the RCR webpage and extract the title and URL of all PDF forms.
+-   **Data Storage**: The scraped form data is stored in `public/consent-forms.json`. The application automatically checks if this file is outdated compared to the live website on startup and prompts the user to update if necessary via the `checkForFormUpdates` flow (`src/ai/flows/update-check-flow.ts`).
+-   **Staff Data**: Staff members are stored in `src/config/staff.json`. A dedicated UI at `/config/staff` allows for managing this list, which is served via a simple API endpoint at `/api/staff`.
+
+### 3. PDF Interaction and Pre-population Logic
+
+This is the most complex part of the application. A key design principle is that the application **always uses the latest version of a form** by downloading the PDF directly from the RCR website on-demand, rather than using a locally cached copy.
+
+1.  **Field Extraction (`src/ai/flows/get-pdf-fields-flow.ts`)**: When a user selects a form, this flow is called. It downloads the PDF from its live URL on the RCR website and uses the `pdf-lib` library to inspect it and extract the names of all fillable fields. It intentionally filters out checkboxes and fields related to signatures or initials to reduce clutter.
+
+2.  **Dynamic Form Rendering (`src/components/pdf-form.tsx`)**: The list of field names is returned to the client, which then renders a dynamic form with a text input for each field.
+
+3.  **Intelligent Pre-population (`prePopulateForm` in `page.tsx`)**: Before rendering, the application tries to intelligently match and pre-fill the PDF fields using the available patient and staff data.
+    -   **Normalization**: It normalizes both the PDF field names and the mapping keys (from the `patientMappings` object) by converting them to lowercase and removing special characters to increase the likelihood of a match.
+    -   **Matching Strategy**:
+        -   For most keys, it checks if the normalized PDF field name *includes* a normalized mapping key.
+        -   For the keys 'name', 'date', and 'hospital', it uses a more precise `startsWith` check to avoid incorrect matches (e.g., to prevent "Name of hospital" from matching the patient's "name").
+    -   **Contextual Rules**:
+        -   **Clinician Details**: A special rule handles a common pattern where a "Name" field is followed by a "Job Title" field. It correctly populates these with the selected clinician's details.
+        -   **Post-Clinician Blank Fields**: The logic is explicitly designed to leave the next `Name` field and the subsequent `Date` field blank after filling the clinician's name and job title. This prevents patient data from being entered into fields meant for a witness or second signatory.
+        -   **Macmillan Contact**: If a field name includes "contact details" or "contact number," it's populated with the selected Macmillan contact's information.
+
+4.  **Final PDF Generation (`src/ai/flows/fill-pdf-flow.ts`)**: After the user reviews the form, the final data is sent to the `fillPdf` flow.
+    -   This flow uses `pdf-lib` to fill the original PDF with the final data.
+    -   The filled PDF is saved to a temporary file in the `/tmp` directory, and its unique ID is returned to the client.
+    -   The client then opens a new tab pointing to an API route (`/api/filled-pdf/[id]`), which serves the generated PDF for viewing and printing.
