@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, RefreshCw, Users } from "lucide-react";
 import { scrapeRcrForms } from "@/ai/flows/scrape-forms-flow";
 
@@ -97,6 +98,26 @@ export default function ConfigPage() {
                     Edit Staff List
                   </Button>
                </Link>
+            </CardFooter>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Live Demographics Validation</CardTitle>
+              <CardDescription>
+                This setting controls whether the R Number entered by a user is validated for the correct format (e.g., R1234567) before calling the KOMS service. This can be disabled for testing purposes.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center gap-4">
+                <p className="text-sm font-medium">R Number Validation:</p>
+                <Badge variant={config.validateRNumber ? "default" : "secondary"}>
+                  {config.validateRNumber ? "Enabled" : "Disabled"}
+                </Badge>
+            </CardContent>
+            <CardFooter>
+                <p className="text-xs text-muted-foreground">
+                    To change this setting, please edit the <code>validateRNumber</code> value in the <code>src/config/app.json</code> file.
+                </p>
             </CardFooter>
           </Card>
 
