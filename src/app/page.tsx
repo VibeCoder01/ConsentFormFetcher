@@ -215,7 +215,6 @@ export default function Home() {
 
     const specialStartsWithKeys = ['name', 'date'];
     
-    // Explicit keys for clinician to avoid populating patient data in staff fields
     const clinicianRelatedKeys = ['clinician name', 'name of person', 'responsible consultant'];
 
     for (let i = 0; i < fields.length; i++) {
@@ -226,11 +225,12 @@ export default function Home() {
 
         const normalizedField = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
         
-        // Rule for Name followed by Job Title
-        if (specialStartsWithKeys.includes('name') && normalizedField.startsWith('name') && i + 1 < fields.length) {
+        // Rule for Name -> Job Title -> Name (blank) -> Date (blank)
+        if (normalizedField.startsWith('name') && i + 1 < fields.length) {
             const nextFieldName = fields[i + 1];
             const normalizedNextField = nextFieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
             if (normalizedNextField.includes('jobtitle') || normalizedNextField.includes('title')) {
+                // We found the Name -> Job Title pair for the clinician
                 if (selectedStaffMember) {
                     newPdfFormData[fieldName] = selectedStaffMember.name;
                     newPdfFields.push({ name: fieldName, matchedKey: 'Clinician Name' });
@@ -238,16 +238,36 @@ export default function Home() {
                     newPdfFormData[nextFieldName] = selectedStaffMember.title;
                     newPdfFields.push({ name: nextFieldName, matchedKey: 'Clinician Title' });
                 } else {
-                    // if no clinician is selected, leave them blank
                     newPdfFormData[fieldName] = '';
                     newPdfFields.push({ name: fieldName, matchedKey: null });
-
                     newPdfFormData[nextFieldName] = '';
                     newPdfFields.push({ name: nextFieldName, matchedKey: null });
                 }
                 
-                i++; // Increment i to skip the next field since we've already processed it
+                i++; // Skip Job Title field in next iteration
                 fieldProcessed = true;
+
+                // Check if the next field is a "Name" field, and leave it blank
+                if (i + 1 < fields.length) {
+                    const followingNameField = fields[i + 1];
+                    const normalizedFollowingName = followingNameField.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    if (normalizedFollowingName.startsWith('name')) {
+                        newPdfFormData[followingNameField] = '';
+                        newPdfFields.push({ name: followingNameField, matchedKey: 'Intentionally left blank' });
+                        i++; // Skip the blank Name field
+
+                        // Check if the field after that is a "Date" field, and leave it blank
+                        if (i + 1 < fields.length) {
+                            const followingDateField = fields[i + 1];
+                            const normalizedFollowingDate = followingDateField.toLowerCase().replace(/[^a-z0-9]/g, '');
+                            if (normalizedFollowingDate.startsWith('date')) {
+                                newPdfFormData[followingDateField] = '';
+                                newPdfFields.push({ name: followingDateField, matchedKey: 'Intentionally left blank' });
+                                i++; // Skip the blank Date field
+                            }
+                        }
+                    }
+                }
             }
         }
         
@@ -269,9 +289,8 @@ export default function Home() {
                 : normalizedField.includes(normalizedKey);
 
             if (isMatch) {
-                 // If the match is a clinician-related one, ensure we have a selected staff member.
                 if(clinicianRelatedKeys.includes(key) && !selectedStaffMember) {
-                    continue; // Skip if it's a clinician field but no clinician is selected
+                    continue; 
                 }
                 if (!prefilledValue) {
                     prefilledValue = mapping.value;
@@ -507,3 +526,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
