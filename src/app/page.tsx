@@ -161,7 +161,8 @@ export default function Home() {
       
       'name of hospital': { value: patientData.hospitalName, description: 'Hospital Name' },
       'hospitalname': { value: patientData.hospitalName, description: 'Hospital Name' },
-      
+      'hospital': { value: patientData.hospitalName, description: 'Hospital Name' },
+
       'address': { value: patientData.fullAddress, description: 'Full Address' },
       'addr1': { value: patientData.addr1, description: 'Address Line 1' },
       'address line 1': { value: patientData.addr1, description: 'Address Line 1' },
@@ -213,7 +214,7 @@ export default function Home() {
     const newPdfFields: PdfField[] = [];
     const newPdfFormData: Record<string, string> = {};
 
-    const specialStartsWithKeys = ['name', 'date'];
+    const specialStartsWithKeys = ['name', 'date', 'hospital'];
     
     const clinicianRelatedKeys = ['clinician name', 'name of person', 'responsible consultant'];
 
@@ -287,9 +288,16 @@ export default function Home() {
 
             const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-            const isMatch = specialStartsWithKeys.some(swKey => key.startsWith(swKey))
+            const useStartsWith = specialStartsWithKeys.some(swKey => {
+                // check for whole word match
+                const regex = new RegExp(`\\b${swKey}\\b`);
+                return regex.test(key);
+            });
+
+            const isMatch = useStartsWith
                 ? normalizedField.startsWith(normalizedKey)
                 : normalizedField.includes(normalizedKey);
+
 
             if (isMatch) {
                 if(clinicianRelatedKeys.includes(key) && !selectedStaffMember) {
