@@ -79,7 +79,7 @@ The application is a client-server model built with Next.js. The frontend is a R
 
 This is the most complex part of the application. A key design principle is that the application **always uses the latest version of a form** by downloading the PDF directly from the RCR website on-demand, rather than using a locally cached copy.
 
-1.  **Field Extraction (`src/ai/flows/get-pdf-fields-flow.ts`)**: When a user selects a form, this flow is called. It downloads the PDF from its live URL on the RCR website and uses the `pdf-lib` library to inspect it and extract the names of all fillable fields. It intentionally filters out checkboxes and fields related to signatures or initials to reduce clutter.
+1.  **Field Extraction (`src/ai/flows/get-pdf-fields-flow.ts`)**: When a user selects a form, this flow is called. It downloads the PDF from its live URL on the RCR website and uses the `pdf-lib` library to inspect it and extract the names of all fillable fields. It intentionally filters out checkboxes and fields related to signatures or initials to reduce clutter. To handle protected forms from the RCR website, the application instructs `pdf-lib` to ignore encryption when loading the document.
 
 2.  **Dynamic Form Rendering (`src/components/pdf-form.tsx`)**: The list of field names is returned to the client, which then renders a dynamic form with a text input for each field.
 
