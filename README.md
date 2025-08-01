@@ -98,6 +98,3 @@ This is the most complex part of the application. A key design principle is that
     -   The filled PDF is saved to a temporary file in the `/tmp` directory, and its unique ID is returned to the client.
     -   The client then opens a new tab pointing to an API route (`/api/filled-pdf/[id]`), which serves the generated PDF for viewing and printing.
 
-## License
-
-This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.

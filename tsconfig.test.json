@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "./test-dist",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": [
+    "src/ai/flows/get-pdf-fields-flow.ts",
+    "src/ai/flows/scrape-forms-flow.ts",
+    "src/ai/util/cache.ts",
+    "src/lib/types.ts",
+    "src/config/app.json"
+  ]
+}
