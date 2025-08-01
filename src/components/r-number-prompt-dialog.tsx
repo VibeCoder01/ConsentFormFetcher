@@ -54,13 +54,13 @@ export function RNumberPromptDialog({ open, onOpenChange, onSubmit, isSubmitting
           <AlertDialogTitle>Get Live Patient Demographics</AlertDialogTitle>
           <AlertDialogDescription>
             {config.validateRNumber 
-              ? "Please enter the patient's R Number to fetch their details. It must start with 'R' and be followed by 7 digits."
-              : "Please enter the patient's R Number to fetch their details."
+              ? "Please enter the patient's KOMS patient number to fetch their details. It must start with 'R' and be followed by 7 digits."
+              : "Please enter the patient's KOMS patient number to fetch their details."
             }
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="grid items-center gap-1.5">
-            <Label htmlFor="r-number-prompt">R Number</Label>
+            <Label htmlFor="r-number-prompt">KOMS patient number</Label>
             <Input 
                 id="r-number-prompt"
                 type="text"
