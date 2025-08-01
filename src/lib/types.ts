@@ -1,4 +1,5 @@
 
+
 export interface ConsentForm {
   title: string;
   url: string;
@@ -37,4 +38,23 @@ export interface StaffMember {
     name: string;
     title: string;
     phone: string;
+}
+
+export interface KomsResponse {
+    fullName: string;
+    rNumber: string;
+    dob: string;
+    user: string;
+    fetched: string;
+    forename?: string;
+    surname?: string;
+    addr1?: string;
+    addr2?: string;
+    addr3?: string;
+    postcode?: string;
+    homePhone?: string;
+    gpName?: string;
+    nhsNumber?: string;
+    hospitalNumber?: string;
+    hospitalNumberMTW?: string;
 }
