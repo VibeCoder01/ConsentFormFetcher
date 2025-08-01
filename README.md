@@ -16,6 +16,8 @@ The application follows a client-server model built with Next.js, where the fron
 ### 2. Main User Interface (`src/app/page.tsx`)
 
 -   **Patient Details Form**: A form is displayed on the sidebar allowing the user to input patient details (name, DOB, address, etc.). The hospital name is a dropdown to ensure consistency. This data is managed in the main page's state.
+    -   **Initial Data Highlighting**: Fields populated with the initial dummy data are highlighted with a red background. This highlighting is removed as soon as a user edits the field or imports live data.
+    -   **Live Demographics Fetch**: A "Get Live Patient Demographics" button opens a pop-up where a user can enter a KOMS patient number. Pressing Enter or clicking the button fetches patient details from the KOMS service. On a successful import, only the dropdown menus (Clinician, Hospital, Macmillan Contact) are reset to their default values.
     -   **Age Verification**: If the entered Date of Birth indicates the patient is under 16, the input field is highlighted in red, and a warning dialog appears to ensure the correct consent procedures are followed.
 -   **Clinician and Macmillan Contact Selection**: Two dropdown menus in the sidebar allow the user to select a clinician and a Macmillan contact from the list managed in `staff.json`. These dropdowns are highlighted until a selection is made.
 -   **Form List**: The application reads `consent-forms.json` and displays the available forms in a categorized, accordion-style list.
