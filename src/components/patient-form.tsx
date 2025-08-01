@@ -261,7 +261,7 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
                 {identifierOptions.map(option => (
                     <div key={option.value} className="flex items-center space-x-2">
                         <RadioGroupItem value={option.value} id={option.value} />
-                        <Label htmlFor={option.value} className="font-normal">{option.label}</Label>
+                        <Label htmlFor={option.value}>{option.label}</Label>
                     </div>
                 ))}
             </RadioGroup>
