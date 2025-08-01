@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { useMemo, useState, useEffect } from 'react';
 import { AgeWarningDialog } from './age-warning-dialog';
 import { Button } from './ui/button';
+import { RNumberPromptDialog } from './r-number-prompt-dialog';
 
 interface PatientFormProps {
   patientData: PatientData;
@@ -32,6 +33,7 @@ const hospitalOptions = [
 
 export function PatientForm({ patientData, setPatientData, staffMembers }: PatientFormProps) {
   const [showAgeWarning, setShowAgeWarning] = useState(false);
+  const [showRNumberPrompt, setShowRNumberPrompt] = useState(false);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -62,6 +64,14 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
       });
   };
 
+  const handleRNumberSubmit = (rNumber: string) => {
+    setPatientData({
+      ...patientData,
+      rNumber: rNumber,
+    });
+    setShowRNumberPrompt(false);
+  }
+
   const isUnder16 = useMemo(() => {
     if (!patientData.dob) return false;
     const birthDate = new Date(patientData.dob);
@@ -87,7 +97,7 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
         <h2 className="text-lg font-semibold tracking-tight">
             Patient Details
         </h2>
-        <Button size="sm" disabled>Get Live Patient Demographics</Button>
+        <Button size="sm" onClick={() => setShowRNumberPrompt(true)}>Get Live Patient Demographics</Button>
        </div>
       <div className="space-y-4 px-2">
         <div className="grid w-full max-w-sm items-center gap-1.5">
@@ -210,6 +220,11 @@ export function PatientForm({ patientData, setPatientData, staffMembers }: Patie
         </div>
       </div>
       <AgeWarningDialog open={showAgeWarning} onOpenChange={setShowAgeWarning} />
+      <RNumberPromptDialog 
+        open={showRNumberPrompt} 
+        onOpenChange={setShowRNumberPrompt}
+        onSubmit={handleRNumberSubmit}
+      />
     </div>
   );
 }
