@@ -37,8 +37,8 @@ const initialPatientData: PatientData = {
   nhsNumber: "123 456 7890",
   hospitalNumber: "1234567",
   hospitalNumberMTW: "MTW123456",
-  selectedIdentifier: 'hospitalNumber',
-  uniqueIdentifierValue: '1234567',
+  selectedIdentifier: 'rNumber',
+  uniqueIdentifierValue: 'R1234567',
   macmillanContactId: null,
 };
 
