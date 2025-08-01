@@ -90,7 +90,7 @@ This is the most complex part of the application. A key design principle is that
         -   For most other keys, it checks if the normalized PDF field name *includes* a normalized mapping key.
     -   **Contextual Rules**:
         -   **Clinician Details**: A special rule handles a common pattern where a "Name" field is followed by a "Job Title" field. It correctly populates these with the selected clinician's details.
-        -   **Post-Clinician Blank Fields**: The logic is explicitly designed to leave the next `Name` field and the subsequent `Date` field blank after filling the clinician's name and job title. This prevents patient data from being entered into fields meant for a witness or second signatory.
+        -   **Post-Clinician Blank Fields**: In the final step before PDF generation (inside the `handlePdfSubmit` function), the logic explicitly finds the first "Name" field and the first "Date" field that appear after the clinician's job title and blanks them out. This robust, last-minute check prevents patient data from being entered into fields meant for a witness or second signatory.
         -   **Macmillan Contact**: If a field name includes "contact details" or "contact number," it's populated with the selected Macmillan contact's information.
 
 4.  **Final PDF Generation (`src/ai/flows/fill-pdf-flow.ts`)**: After the user reviews the form, the final data is sent to the `fillPdf` flow.
