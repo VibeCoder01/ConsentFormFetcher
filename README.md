@@ -24,7 +24,7 @@ The application follows a client-server model built with Next.js, where the fron
 
 This is the most complex part of the application's logic. When a user selects a form from the list, the following sequence occurs:
 
-1.  **Field Extraction (`src/ai/flows/get-pdf-fields-flow.ts`)**: A request is sent to a server-side flow. This flow downloads the selected PDF and uses the `pdf-lib` library to inspect its structure and extract a list of all fillable field names. Crucially, it filters out and **excludes checkboxes and fields containing "initials", "signature", "st", or "lt"** from this list.
+1.  **Field Extraction (`src/ai/flows/get-pdf-fields-flow.ts`)**: A request is sent to a server-side flow. This flow downloads the selected PDF and uses the `pdf-lib` library to inspect its structure and extract a list of all fillable field names. Crucially, it filters out and **excludes checkboxes, fields containing "initials" or "signature", and any fields that start with "st " or "lt "** from this list.
 
 2.  **Dynamic Form Rendering (`src/components/pdf-form.tsx`)**: The list of field names is sent back to the client. The main page then renders a dynamic form, creating a text input for each field name received from the backend. The UI clearly indicates which patient data was used to pre-fill each field (e.g., "matched with - Clinician Name + Title + Phone").
 
