@@ -214,7 +214,7 @@ export default function Home() {
     const newPdfFields: PdfField[] = [];
     const newPdfFormData: Record<string, string> = {};
 
-    const specialStartsWithKeys = ['name', 'date', 'hospital'];
+    const specialStartsWithKeys = ['name', 'date'];
     
     const clinicianRelatedKeys = ['clinician name', 'name of person', 'responsible consultant'];
 
@@ -225,6 +225,13 @@ export default function Home() {
         let fieldProcessed = false;
 
         const normalizedField = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        // Rule for "Name of hospital"
+        if (normalizedField === 'nameofhospital') {
+            newPdfFormData[fieldName] = patientData.hospitalName;
+            newPdfFields.push({ name: fieldName, matchedKey: 'Hospital Name'});
+            continue; // Skip to next field
+        }
         
         // Contextual rule for Clinician Name -> Job Title sequence
         if (normalizedField.startsWith('name') && i + 1 < fields.length) {
