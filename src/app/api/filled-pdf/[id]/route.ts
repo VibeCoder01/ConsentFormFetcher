@@ -1,12 +1,17 @@
+
 import { NextResponse } from 'next/server';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  const id = params.id;
+type RouteParams = {
+  params: {
+    id: string;
+  };
+};
+
+export async function GET(request: Request, { params }: RouteParams) {
+  const { id } = params;
+
   if (!id || !/^[a-zA-Z0-9-]+$/.test(id)) { // Basic validation
     return NextResponse.json({ error: 'Invalid PDF ID' }, { status: 400 });
   }
