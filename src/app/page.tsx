@@ -225,12 +225,13 @@ export default function Home() {
 
         const normalizedField = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
         
-        // Rule for Name -> Job Title -> Name (blank) -> Date (blank)
+        // Contextual rule for Clinician Name -> Job Title sequence
         if (normalizedField.startsWith('name') && i + 1 < fields.length) {
             const nextFieldName = fields[i + 1];
             const normalizedNextField = nextFieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
             if (normalizedNextField.includes('jobtitle') || normalizedNextField.includes('title')) {
-                // We found the Name -> Job Title pair for the clinician
+                // This looks like a clinician name/title pair.
                 if (selectedStaffMember) {
                     newPdfFormData[fieldName] = selectedStaffMember.name;
                     newPdfFields.push({ name: fieldName, matchedKey: 'Clinician Name' });
@@ -238,34 +239,25 @@ export default function Home() {
                     newPdfFormData[nextFieldName] = selectedStaffMember.title;
                     newPdfFields.push({ name: nextFieldName, matchedKey: 'Clinician Title' });
                 } else {
+                    // Leave blank if no clinician is selected
                     newPdfFormData[fieldName] = '';
                     newPdfFields.push({ name: fieldName, matchedKey: null });
                     newPdfFormData[nextFieldName] = '';
                     newPdfFields.push({ name: nextFieldName, matchedKey: null });
                 }
                 
-                i++; // Skip Job Title field in next iteration
+                i++; // Important: we've processed the next field, so skip it.
                 fieldProcessed = true;
 
-                // Check if the next field is a "Name" field, and leave it blank
+                // Now, check if the field *after* the job title is a 'Name' field.
                 if (i + 1 < fields.length) {
-                    const followingNameField = fields[i + 1];
-                    const normalizedFollowingName = followingNameField.toLowerCase().replace(/[^a-z0-9]/g, '');
-                    if (normalizedFollowingName.startsWith('name')) {
-                        newPdfFormData[followingNameField] = '';
-                        newPdfFields.push({ name: followingNameField, matchedKey: 'Intentionally left blank' });
-                        i++; // Skip the blank Name field
-
-                        // Check if the field after that is a "Date" field, and leave it blank
-                        if (i + 1 < fields.length) {
-                            const followingDateField = fields[i + 1];
-                            const normalizedFollowingDate = followingDateField.toLowerCase().replace(/[^a-z0-9]/g, '');
-                            if (normalizedFollowingDate.startsWith('date')) {
-                                newPdfFormData[followingDateField] = '';
-                                newPdfFields.push({ name: followingDateField, matchedKey: 'Intentionally left blank' });
-                                i++; // Skip the blank Date field
-                            }
-                        }
+                    const followingFieldName = fields[i+1];
+                    const normalizedFollowingField = followingFieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    if (normalizedFollowingField.startsWith('name')) {
+                        // It is, so leave it blank.
+                        newPdfFormData[followingFieldName] = '';
+                        newPdfFields.push({ name: followingFieldName, matchedKey: 'Intentionally left blank' });
+                        i++; // We've processed this field too, so skip it.
                     }
                 }
             }
@@ -526,5 +518,7 @@ export default function Home() {
     </div>
   );
 }
+
+    
 
     
