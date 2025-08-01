@@ -65,7 +65,7 @@ export default function Home() {
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
-  const handlePatientDataChange = (newData: PatientData) => {
+  const handlePatientDataChange = (newData: PatientData, fromDemographics = false) => {
     // Also update fullAddress if one of the address fields changes
     if (['addr1', 'addr2', 'addr3', 'postcode'].some(field => newData[field as keyof PatientData] !== patientData[field as keyof PatientData])) {
         newData.fullAddress = [newData.addr1, newData.addr2, newData.addr3, newData.postcode].filter(Boolean).join(', ');
@@ -80,6 +80,10 @@ export default function Home() {
     }
     
     setPatientData(newData);
+
+    if (fromDemographics) {
+        setSelectedStaffMember(null);
+    }
   };
 
   const handleStaffMemberChange = (staffId: string) => {
@@ -502,3 +506,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
