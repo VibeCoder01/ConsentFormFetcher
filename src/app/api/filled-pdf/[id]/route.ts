@@ -10,7 +10,10 @@ type RouteParams = {
 };
 
 export async function GET(request: Request, { params }: RouteParams) {
-  const { id } = params;
+  // To resolve the persistent "params should be awaited" error,
+  // we extract the ID from the URL directly.
+  const url = new URL(request.url);
+  const id = url.pathname.split('/').pop();
 
   if (!id || !/^[a-zA-Z0-9-]+$/.test(id)) { // Basic validation
     return NextResponse.json({ error: 'Invalid PDF ID' }, { status: 400 });
