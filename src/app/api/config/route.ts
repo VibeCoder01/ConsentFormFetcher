@@ -10,6 +10,7 @@ interface AppConfig {
     rcrConsentFormsUrl: string;
     rcrBaseUrl: string;
     validateRNumber: boolean;
+    previewPdfFields: boolean;
 }
 
 // Function to read the current config
