@@ -61,7 +61,9 @@ export default function Home() {
   const [isFetchingFields, setIsFetchingFields] = useState(false);
   const [pdfFormData, setPdfFormData] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [previewPdfFieldsConfig, setPreviewPdfFieldsConfig] = useState(false);
+  const [pdfOpenMethodConfig, setPdfOpenMethodConfig] = useState<'browser' | 'acrobat'>('browser');
   
   const isMobile = useIsMobile();
   const { toast } = useToast();
@@ -108,6 +110,7 @@ export default function Home() {
       setFormCategories(formsData);
       setStaffMembers(staffData);
       setPreviewPdfFieldsConfig(configData.previewPdfFields);
+      setPdfOpenMethodConfig(configData.pdfOpenMethod || 'browser');
     } catch (error) {
       console.error(error);
       toast({
@@ -423,7 +426,35 @@ export default function Home() {
       });
   
       if (result.success && result.pdfId) {
-        window.open(`/api/filled-pdf/${result.pdfId}`, '_blank');
+        if (pdfOpenMethodConfig === 'acrobat') {
+            const res = await fetch(`/api/filled-pdf/${result.pdfId}`);
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                // Sanitize form title for filename
+                const safeTitle = selectedForm.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                a.download = `${safeTitle}_filled.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                 toast({
+                    title: 'Download Started',
+                    description: 'Your PDF has been downloaded.',
+                });
+            } else {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Download Failed',
+                    description: 'Could not download the generated PDF.',
+                });
+            }
+        } else {
+            // Default to opening in browser
+            window.open(`/api/filled-pdf/${result.pdfId}`, '_blank');
+        }
       } else {
         toast({
           variant: 'destructive',
@@ -600,5 +631,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
