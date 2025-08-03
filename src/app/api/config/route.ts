@@ -32,19 +32,19 @@ export async function GET() {
 // POST handler to update the configuration
 export async function POST(request: Request) {
     try {
-        const { rcrConsentFormsUrl } = await request.json();
+        const updates: Partial<AppConfig> = await request.json();
 
-        if (typeof rcrConsentFormsUrl !== 'string' || !rcrConsentFormsUrl) {
-             return NextResponse.json({ message: "Invalid URL provided." }, { status: 400 });
+        if (typeof updates.rcrConsentFormsUrl === 'string' && !updates.rcrConsentFormsUrl) {
+             return NextResponse.json({ message: "URL cannot be empty." }, { status: 400 });
         }
 
         // Read the full config to avoid overwriting other values
         const currentConfig = await readConfig();
         
-        // Update only the specific field
+        // Merge the updates with the current config
         const updatedConfig: AppConfig = {
             ...currentConfig,
-            rcrConsentFormsUrl: rcrConsentFormsUrl,
+            ...updates
         };
 
         const jsonData = JSON.stringify(updatedConfig, null, 2);
