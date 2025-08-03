@@ -61,6 +61,7 @@ export default function Home() {
   const [isFetchingFields, setIsFetchingFields] = useState(false);
   const [pdfFormData, setPdfFormData] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewPdfFieldsConfig, setPreviewPdfFieldsConfig] = useState(false);
   
   const isMobile = useIsMobile();
   const { toast } = useToast();
@@ -94,16 +95,19 @@ export default function Home() {
   const fetchInitialData = async () => {
     setIsLoading(true);
     try {
-      const [formsRes, staffRes] = await Promise.all([
+      const [formsRes, staffRes, configRes] = await Promise.all([
         fetch("/api/consent-forms"),
-        fetch("/api/staff")
+        fetch("/api/staff"),
+        fetch("/api/config"),
       ]);
 
       const formsData: ConsentFormCategory[] = await formsRes.json();
       const staffData: StaffMember[] = await staffRes.json();
+      const configData = await configRes.json();
 
       setFormCategories(formsData);
       setStaffMembers(staffData);
+      setPreviewPdfFieldsConfig(configData.previewPdfFields);
     } catch (error) {
       console.error(error);
       toast({
@@ -210,7 +214,7 @@ export default function Home() {
 
   }, [patientData, selectedStaffMember, staffMembers]);
 
-  const prePopulateForm = (fields: string[]) => {
+  const prePopulateData = (fields: string[]): { finalFields: PdfField[], finalFormData: Record<string, string> } => {
     const newPdfFields: PdfField[] = [];
     const newPdfFormData: Record<string, string> = {};
 
@@ -321,21 +325,32 @@ export default function Home() {
         newPdfFields.push({ name: fieldName, matchedKey: matchedKeyDescription });
     }
     
-    setPdfFields(newPdfFields);
-    setPdfFormData(newPdfFormData);
+    return { finalFields: newPdfFields, finalFormData: newPdfFormData };
   };
 
 
   const handleSelectForm = async (form: ConsentForm) => {
     setSelectedForm(form);
     setPdfFields([]);
+    setPdfFormData({});
     setIsFetchingFields(true);
     if (isMobile) setSheetOpen(false);
 
     try {
       const result = await getPdfFields(form.url);
       if (result.success && result.fields) {
-        prePopulateForm(result.fields);
+        const { finalFields, finalFormData } = prePopulateData(result.fields);
+        
+        setPdfFields(finalFields); // Set fields for submit logic to use
+
+        if (previewPdfFieldsConfig) {
+          // Preview is ON: show the form
+          setPdfFormData(finalFormData);
+        } else {
+          // Preview is OFF: immediately submit
+          await handlePdfSubmit(finalFormData, finalFields);
+        }
+
       } else {
         toast({
           variant: "destructive",
@@ -355,14 +370,17 @@ export default function Home() {
     }
   };
 
-  const handlePdfSubmit = async (finalFormData: Record<string, string>) => {
+  const handlePdfSubmit = async (finalFormData: Record<string, string>, currentPdfFields?: PdfField[]) => {
     if (!selectedForm) return;
   
     setIsSubmitting(true);
   
+    // Use passed fields or state fields
+    const fieldsForProcessing = currentPdfFields || pdfFields;
+    const fieldNames = fieldsForProcessing.map(f => f.name);
+
     // Create a mutable copy of the data to modify
     const dataToFill = { ...finalFormData };
-    const fieldNames = pdfFields.map(f => f.name);
   
     // Find the index of the "Job Title" field
     const jobTitleFieldIndex = fieldNames.findIndex(name =>
@@ -519,14 +537,14 @@ export default function Home() {
         return <PdfFormSkeleton />;
     }
 
-    if (selectedForm && pdfFields.length > 0) {
+    if (selectedForm && Object.keys(pdfFormData).length > 0 && pdfFields.length > 0) {
         return (
             <PdfForm
                 formTitle={selectedForm.title}
                 fields={pdfFields}
                 initialData={pdfFormData}
                 isSubmitting={isSubmitting}
-                onSubmit={handlePdfSubmit}
+                onSubmit={(data) => handlePdfSubmit(data)}
             />
         );
     }
@@ -582,3 +600,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
