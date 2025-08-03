@@ -62,8 +62,9 @@ export default function Home() {
   const [pdfFormData, setPdfFormData] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [previewPdfFieldsConfig, setPreviewPdfFieldsConfig] = useState(false);
+  const [previewPdfFieldsConfig, setPreviewPdfFieldsConfig] = useState(true); // Default to true to prevent premature actions
   const [pdfOpenMethodConfig, setPdfOpenMethodConfig] = useState<'browser' | 'acrobat'>('browser');
+  const [isConfigLoading, setIsConfigLoading] = useState(true);
   
   const isMobile = useIsMobile();
   const { toast } = useToast();
@@ -96,6 +97,7 @@ export default function Home() {
 
   const fetchInitialData = async () => {
     setIsLoading(true);
+    setIsConfigLoading(true);
     try {
       const [formsRes, staffRes, configRes] = await Promise.all([
         fetch("/api/consent-forms"),
@@ -120,6 +122,7 @@ export default function Home() {
       });
     } finally {
       setIsLoading(false);
+      setIsConfigLoading(false);
     }
   };
 
@@ -497,6 +500,7 @@ export default function Home() {
       formCategories={formCategories}
       onSelectForm={handleSelectForm}
       selectedFormUrl={selectedForm?.url}
+      disabled={isConfigLoading}
     />
   );
   
@@ -559,7 +563,7 @@ export default function Home() {
           selectedStaffId={selectedStaffMember?.id}
           onStaffMemberChange={handleStaffMemberChange}
         />
-        {formListComponent}
+        {isConfigLoading ? loadingComponent : formListComponent}
       </>
     );
   };
@@ -632,3 +636,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
