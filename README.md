@@ -44,9 +44,9 @@ The application's behavior after you select a form is controlled by a setting on
     -   Once you select a form, its fillable fields will appear in the main content area.
     -   The application will intelligently pre-populate these fields based on the patient and clinician data you entered. The source of the pre-filled data (e.g., "matched with - Patient Full Name") is shown above each field.
     -   Review all fields for accuracy. You can edit any pre-filled information directly on this screen.
-    -   When you are satisfied, click the **"Submit & Open PDF"** button. A new browser tab will open with the finalized, filled-in PDF, ready for you to print or save.
+    -   When you are satisfied, click the **"Submit & Open PDF"** button. The application will then either open the PDF in a new browser tab or download it, depending on the "PDF Handling" setting on the Configuration page.
 -   **If "Preview PDF fields before generating" is OFF**:
-    -   When you click a form, the application will immediately generate the filled PDF and open it in a new tab, skipping the preview step.
+    -   When you click a form, the application will immediately generate the filled PDF and either open it in a new tab or download it, skipping the preview step.
 
 ### 6. Configuration
 
@@ -57,6 +57,9 @@ The application's behavior after you select a form is controlled by a setting on
 -   **Settings**:
     -   **Enable R Number format validation**: When enabled, the application will check that the KOMS patient number entered in the demographics pop-up matches the required format ('R' followed by 7 digits).
     -   **Preview PDF fields before generating**: This switch controls the workflow after selecting a form. If ON, you can review and edit fields before generating the PDF. If OFF, the PDF is generated and opened immediately. Defaults to OFF.
+-   **PDF Handling**: Choose how you want the final PDF to be opened.
+    -   **Open in Browser**: Opens the PDF in a new browser tab.
+    -   **Download for Adobe Acrobat**: Downloads the PDF to your computer, allowing you to open it in a dedicated application like Adobe Acrobat.
 -   **Update Forms**: Click **Check for Updated Forms** to manually trigger a scrape of the currently saved URL to refresh the list of available forms.
 -   **Staff Management**: Click **Edit Staff List** to navigate to a separate page where you can add, edit, or remove staff members. On this page, you can also:
     -   **Clear Staff List**: Removes all staff members from the list (a confirmation will appear).
@@ -104,4 +107,4 @@ This is the most complex part of the application. A key design principle is that
     -   **Trigger**: This is called either by the user clicking "Submit & Open PDF" (in preview mode) or automatically after field extraction (when preview is off).
     -   **Blanking Witness Fields**: Just before generation, the logic explicitly finds the first "Name" field and the first "Date" field that appear after the clinician's job title and blanks them out. This robust, last-minute check prevents patient data from being entered into fields meant for a witness or second signatory.
     -   **Filling**: The `fillPdf` flow uses `pdf-lib` to fill the original PDF with the final data.
-    -   **Serving**: The filled PDF is saved to a temporary file in the `/tmp` directory, and its unique ID is returned to the client. The client then opens a new tab pointing to an API route (`/api/filled-pdf/[id]`), which serves the generated PDF for viewing and printing.
+    -   **Serving**: The filled PDF is saved to a temporary file in the `/tmp` directory, and its unique ID is returned to the client. The client then opens a new tab pointing to an API route (`/api/filled-pdf/[id]`), which serves the generated PDF for viewing and printing. If the user has configured the app to download the file, it will be downloaded instead.

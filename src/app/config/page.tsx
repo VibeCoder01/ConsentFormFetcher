@@ -19,6 +19,7 @@ import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2 } from "lucide-re
 import { scrapeRcrForms } from "@/ai/flows/scrape-forms-flow";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const DEFAULT_RCR_URL = "https://www.rcr.ac.uk/our-services/management-service-delivery/national-radiotherapy-consent-forms/";
 
@@ -37,7 +38,11 @@ export default function ConfigPage() {
   const [previewPdfFields, setPreviewPdfFields] = useState(false);
   const [initialPreviewPdfFields, setInitialPreviewPdfFields] = useState(false);
 
-  const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields;
+  const [pdfOpenMethod, setPdfOpenMethod] = useState<'browser' | 'acrobat'>('browser');
+  const [initialPdfOpenMethod, setInitialPdfOpenMethod] = useState<'browser' | 'acrobat'>('browser');
+
+
+  const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields || pdfOpenMethod !== initialPdfOpenMethod;
 
   useEffect(() => {
     async function fetchConfig() {
@@ -52,6 +57,8 @@ export default function ConfigPage() {
         setInitialValidateRNumber(config.validateRNumber);
         setPreviewPdfFields(config.previewPdfFields);
         setInitialPreviewPdfFields(config.previewPdfFields);
+        setPdfOpenMethod(config.pdfOpenMethod || 'browser');
+        setInitialPdfOpenMethod(config.pdfOpenMethod || 'browser');
       } catch (error) {
          toast({
           variant: 'destructive',
@@ -76,6 +83,7 @@ export default function ConfigPage() {
         rcrConsentFormsUrl: rcrUrl,
         validateRNumber: validateRNumber,
         previewPdfFields: previewPdfFields,
+        pdfOpenMethod: pdfOpenMethod,
       };
 
        const response = await fetch('/api/config', {
@@ -97,6 +105,7 @@ export default function ConfigPage() {
       setInitialRcrUrl(newConfig.rcrConsentFormsUrl);
       setInitialValidateRNumber(newConfig.validateRNumber);
       setInitialPreviewPdfFields(newConfig.previewPdfFields);
+      setInitialPdfOpenMethod(newConfig.pdfOpenMethod);
 
       toast({
         title: 'Success',
@@ -215,6 +224,39 @@ export default function ConfigPage() {
         </CardContent>
     )
   }
+  
+  const pdfHandlingCardContent = () => {
+     if (isLoadingConfig) {
+      return (
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-6 w-1/2" />
+          </div>
+        </CardContent>
+      )
+    }
+    return (
+        <CardContent>
+          <RadioGroup 
+            value={pdfOpenMethod} 
+            onValueChange={(value) => setPdfOpenMethod(value as 'browser' | 'acrobat')}
+            className="space-y-2"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="browser" id="open-browser" />
+              <Label htmlFor="open-browser">Open in Browser</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="acrobat" id="open-acrobat" />
+              <Label htmlFor="open-acrobat">Download for Adobe Acrobat</Label>
+            </div>
+          </RadioGroup>
+        </CardContent>
+    )
+  }
+
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -258,6 +300,16 @@ export default function ConfigPage() {
                 </CardDescription>
             </CardHeader>
             {settingsCardContent()}
+          </Card>
+
+           <Card>
+            <CardHeader>
+                <CardTitle>PDF Handling</CardTitle>
+                <CardDescription>
+                    Choose how to open the generated PDF file.
+                </CardDescription>
+            </CardHeader>
+            {pdfHandlingCardContent()}
           </Card>
           
           <Card>
