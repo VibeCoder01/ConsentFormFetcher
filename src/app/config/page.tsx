@@ -246,7 +246,7 @@ export default function ConfigPage() {
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="browser" id="open-browser" />
-              <Label htmlFor="open-browser">Open in Browser</Label>
+              <Label htmlFor="open-browser">Automatically open in Browser</Label>
             </div>
             <div className="flex flex-col space-y-2">
               <div className="flex items-center space-x-2">
