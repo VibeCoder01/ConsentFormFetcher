@@ -34,7 +34,10 @@ export default function ConfigPage() {
   const [validateRNumber, setValidateRNumber] = useState(false);
   const [initialValidateRNumber, setInitialValidateRNumber] = useState(false);
 
-  const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber;
+  const [previewPdfFields, setPreviewPdfFields] = useState(false);
+  const [initialPreviewPdfFields, setInitialPreviewPdfFields] = useState(false);
+
+  const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields;
 
   useEffect(() => {
     async function fetchConfig() {
@@ -47,6 +50,8 @@ export default function ConfigPage() {
         setInitialRcrUrl(config.rcrConsentFormsUrl);
         setValidateRNumber(config.validateRNumber);
         setInitialValidateRNumber(config.validateRNumber);
+        setPreviewPdfFields(config.previewPdfFields);
+        setInitialPreviewPdfFields(config.previewPdfFields);
       } catch (error) {
          toast({
           variant: 'destructive',
@@ -70,6 +75,7 @@ export default function ConfigPage() {
       const updates = {
         rcrConsentFormsUrl: rcrUrl,
         validateRNumber: validateRNumber,
+        previewPdfFields: previewPdfFields,
       };
 
        const response = await fetch('/api/config', {
@@ -90,6 +96,7 @@ export default function ConfigPage() {
       // Update initial state to match saved state
       setInitialRcrUrl(newConfig.rcrConsentFormsUrl);
       setInitialValidateRNumber(newConfig.validateRNumber);
+      setInitialPreviewPdfFields(newConfig.previewPdfFields);
 
       toast({
         title: 'Success',
@@ -172,19 +179,23 @@ export default function ConfigPage() {
     )
   }
 
-  const validationCardContent = () => {
+  const settingsCardContent = () => {
      if (isLoadingConfig) {
       return (
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="flex items-center space-x-2">
             <Skeleton className="h-6 w-6 rounded-full" />
             <Skeleton className="h-4 w-[250px]" />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-6 w-6 rounded-full" />
+            <Skeleton className="h-4 w-[200px]" />
           </div>
         </CardContent>
       )
     }
     return (
-        <CardContent>
+        <CardContent className="space-y-4">
             <div className="flex items-center space-x-2">
                 <Switch 
                     id="validate-r-number" 
@@ -192,6 +203,14 @@ export default function ConfigPage() {
                     onCheckedChange={setValidateRNumber}
                 />
                 <Label htmlFor="validate-r-number">Enable R Number format validation</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+                <Switch 
+                    id="preview-pdf-fields" 
+                    checked={previewPdfFields}
+                    onCheckedChange={setPreviewPdfFields}
+                />
+                <Label htmlFor="preview-pdf-fields">Preview PDF fields before generating</Label>
             </div>
         </CardContent>
     )
@@ -238,7 +257,7 @@ export default function ConfigPage() {
                     Adjust application behavior and validation rules.
                 </CardDescription>
             </CardHeader>
-            {validationCardContent()}
+            {settingsCardContent()}
           </Card>
           
           <Card>
