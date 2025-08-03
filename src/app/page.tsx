@@ -436,7 +436,7 @@ export default function Home() {
                 // Sanitize form title for filename
                 const safeTitle = selectedForm.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
                 const patientId = patientData.uniqueIdentifierValue.replace(/[^a-z0-9]/gi, '_');
-                a.download = `${safeTitle}_${patientId}_filled.pdf`;
+                a.download = `${patientId}_${safeTitle}_filled.pdf`;
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
