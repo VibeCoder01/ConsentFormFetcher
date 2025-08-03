@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ConsentForm, ConsentFormCategory } from "@/lib/types";
@@ -14,15 +15,16 @@ interface FormListProps {
   formCategories: ConsentFormCategory[];
   onSelectForm: (form: ConsentForm) => void;
   selectedFormUrl?: string | null;
+  disabled?: boolean;
 }
 
-export function FormList({ formCategories, onSelectForm, selectedFormUrl }: FormListProps) {
+export function FormList({ formCategories, onSelectForm, selectedFormUrl, disabled = false }: FormListProps) {
   return (
       <div className="p-2 md:p-4 h-full">
         <h2 className="px-2 text-lg font-semibold tracking-tight mb-2">
           Available Forms
         </h2>
-        <Accordion type="multiple" className="w-full">
+        <Accordion type="multiple" className="w-full" disabled={disabled}>
           {formCategories.map((category) => (
             <AccordionItem value={category.category} key={category.category}>
               <AccordionTrigger className="hover:no-underline text-base px-2">
@@ -40,6 +42,7 @@ export function FormList({ formCategories, onSelectForm, selectedFormUrl }: Form
                            selectedFormUrl === form.url && "font-bold"
                         )}
                         onClick={() => onSelectForm(form)}
+                        disabled={disabled}
                       >
                         {form.title}
                       </Button>
@@ -53,3 +56,5 @@ export function FormList({ formCategories, onSelectForm, selectedFormUrl }: Form
       </div>
   );
 }
+
+    
