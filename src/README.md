@@ -58,7 +58,10 @@ The application's behavior after you select a form is controlled by a setting on
     -   **Enable R Number format validation**: When enabled, the application will check that the KOMS patient number entered in the demographics pop-up matches the required format ('R' followed by 7 digits).
     -   **Preview PDF fields before generating**: This switch controls the workflow after selecting a form. If ON, you can review and edit fields before generating the PDF. If OFF, the PDF is generated and opened immediately. Defaults to OFF.
 -   **Update Forms**: Click **Check for Updated Forms** to manually trigger a scrape of the currently saved URL to refresh the list of available forms.
--   **Staff Management**: Click **Edit Staff List** to navigate to a separate page where you can add, edit, or remove staff members from the dropdown lists.
+-   **Staff Management**: Click **Edit Staff List** to navigate to a separate page where you can add, edit, or remove staff members. On this page, you can also:
+    -   **Clear Staff List**: Removes all staff members from the list (a confirmation will appear).
+    -   **Export Staff List**: Downloads the current list as a JSON file, which can be backed up or shared.
+    -   **Import Staff List**: Replaces the current list with data from a JSON file you select. The file must be in the correct format.
 
 ---
 
@@ -89,7 +92,7 @@ This is the most complex part of the application. A key design principle is that
 2.  **Field Extraction (`src/ai/flows/get-pdf-fields-flow.ts`)**: When a user selects a form, this flow is called. It downloads the PDF from its live URL on the RCR website and uses the `pdf-lib` library to inspect it and extract the names of all fillable fields. It intentionally filters out checkboxes and fields related to signatures or initials to reduce clutter. To handle protected forms from the RCR website, the application instructs `pdf-lib` to ignore encryption when loading the document.
 
 3.  **Intelligent Pre-population (`prePopulateData` in `page.tsx`)**: The application tries to intelligently match and pre-fill the PDF fields using the available patient and staff data.
-    -   **Normalization**: It normalizes both the PDF field names and the mapping keys (from the `patientMappings` object) by converting them to lowercase and remove special characters to increase the likelihood of a match.
+    -   **Normalization**: It normalizes both the PDF field names and the mapping keys (from the `patientMappings` object) by converting them to lowercase and removing special characters to increase the likelihood of a match.
     -   **Matching Strategy**:
         -   It uses a precise `startsWith` check for keys like 'name', 'date', and 'hospital' to avoid incorrect matches (e.g., to prevent "Name of hospital" from matching the patient's "name").
         -   For most other keys, it checks if the normalized PDF field name *includes* a normalized mapping key.
