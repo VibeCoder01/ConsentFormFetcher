@@ -11,6 +11,7 @@ interface AppConfig {
     rcrBaseUrl: string;
     validateRNumber: boolean;
     previewPdfFields: boolean;
+    pdfOpenMethod: 'browser' | 'acrobat';
 }
 
 // Function to read the current config
