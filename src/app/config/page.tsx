@@ -248,9 +248,19 @@ export default function ConfigPage() {
               <RadioGroupItem value="browser" id="open-browser" />
               <Label htmlFor="open-browser">Open in Browser</Label>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="acrobat" id="open-acrobat" />
-              <Label htmlFor="open-acrobat">Download for Adobe Acrobat</Label>
+            <div className="flex flex-col space-y-2">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="acrobat" id="open-acrobat" />
+                <Label htmlFor="open-acrobat">Download for Adobe Acrobat</Label>
+              </div>
+              {pdfOpenMethod === 'acrobat' && (
+                <div className="pl-6 text-xs text-muted-foreground space-y-1">
+                  <p className="font-semibold">To automatically open PDFs in Acrobat:</p>
+                  <p>1. After downloading, find the file in your browser's downloads list.</p>
+                  <p>2. Click the options menu (e.g., three dots or an arrow) next to the file.</p>
+                  <p>3. Select an option like "Always open files of this type" or "Show in folder," then set the default app for .pdf files to Adobe Acrobat in your OS.</p>
+                </div>
+              )}
             </div>
           </RadioGroup>
         </CardContent>
