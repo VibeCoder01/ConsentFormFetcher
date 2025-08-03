@@ -3,5 +3,5 @@
   "rcrBaseUrl": "https://www.rcr.ac.uk",
   "validateRNumber": false,
   "previewPdfFields": false,
-  "pdfOpenMethod": "browser"
+  "pdfOpenMethod": "acrobat"
 }
