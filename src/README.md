@@ -34,24 +34,27 @@ Below the patient details, you will find two dropdown menus:
 ### 4. Selecting a Consent Form
 
 -   The **"Available Forms"** section on the left sidebar lists all consent forms scraped from the RCR website, organized by category.
--   Click on a form title to select it.
+-   Click on a form title to select it. The application's next step depends on the **"Preview PDF Fields"** setting on the Configuration page.
 
 ### 5. Reviewing and Generating the PDF
 
--   Once you select a form, its fillable fields will appear in the main content area.
--   The application will intelligently pre-populate these fields based on the patient and clinician data you entered. The source of the pre-filled data (e.g., "matched with - Patient Full Name") is shown above each field.
--   Review all fields for accuracy. You can edit any pre-filled information directly on this screen.
--   When you are satisfied, click the **"Submit & Open PDF"** button. A new browser tab will open with the finalized, filled-in PDF, ready for you to print or save.
+-   **If "Preview PDF Fields" is ON**:
+    -   Once you select a form, its fillable fields will appear in the main content area.
+    -   The application will intelligently pre-populate these fields based on the patient and clinician data you entered. The source of the pre-filled data (e.g., "matched with - Patient Full Name") is shown above each field.
+    -   Review all fields for accuracy. You can edit any pre-filled information directly on this screen.
+    -   When you are satisfied, click the **"Submit & Open PDF"** button. A new browser tab will open with the finalized, filled-in PDF, ready for you to print or save.
+-   **If "Preview PDF Fields" is OFF**:
+    -   When you click a form, the application will immediately generate the filled PDF and open it in a new tab, skipping the preview step.
 
 ### 6. Configuration
 
 -   Click the **Settings** icon (⚙️) in the top-right corner to go to the Configuration page.
--   From here, you can manage the application's data sources and staff list.
+-   From here, you can manage the application's data sources, settings, and staff list.
 
--   **Data Source URL**: You can view and edit the URL from which the application scrapes consent forms.
-    -   To change it, simply type the new URL into the input field.
-    -   Click **Save Changes** to make your new URL active.
-    -   Click **Restore Default** to revert to the original RCR website URL.
+-   **Data Source**: You can view and edit the URL from which the application scrapes consent forms. Click **Save Changes** to apply, or **Restore Default** to revert.
+-   **Settings**:
+    -   **Preview PDF Fields**: This switch controls the workflow after selecting a form. If ON, you can review and edit fields before generating the PDF. If OFF, the PDF is generated and opened immediately. Defaults to OFF.
+    -   **Enable R Number format validation**: When enabled, the application will check that the KOMS patient number entered in the demographics pop-up matches the required format ('R' followed by 7 digits).
 -   **Update Forms**: Click **Check for Updated Forms** to manually trigger a scrape of the currently saved URL to refresh the list of available forms.
 -   **Staff Management**: Click **Edit Staff List** to navigate to a separate page where you can add, edit, or remove staff members from the dropdown lists.
 
