@@ -34,16 +34,18 @@ Below the patient details, you will find two dropdown menus:
 ### 4. Selecting a Consent Form
 
 -   The **"Available Forms"** section on the left sidebar lists all consent forms scraped from the RCR website, organized by category.
--   Click on a form title to select it. The application's next step depends on the **"Preview PDF Fields"** setting on the Configuration page.
+-   Click on a form title to select it. The application's next step depends on the **"Preview PDF fields before generating"** setting on the Configuration page.
 
 ### 5. Reviewing and Generating the PDF
 
--   **If "Preview PDF Fields" is ON**:
+The application's behavior after you select a form is controlled by a setting on the Configuration page.
+
+-   **If "Preview PDF fields before generating" is ON**:
     -   Once you select a form, its fillable fields will appear in the main content area.
     -   The application will intelligently pre-populate these fields based on the patient and clinician data you entered. The source of the pre-filled data (e.g., "matched with - Patient Full Name") is shown above each field.
     -   Review all fields for accuracy. You can edit any pre-filled information directly on this screen.
     -   When you are satisfied, click the **"Submit & Open PDF"** button. A new browser tab will open with the finalized, filled-in PDF, ready for you to print or save.
--   **If "Preview PDF Fields" is OFF**:
+-   **If "Preview PDF fields before generating" is OFF**:
     -   When you click a form, the application will immediately generate the filled PDF and open it in a new tab, skipping the preview step.
 
 ### 6. Configuration
@@ -53,8 +55,8 @@ Below the patient details, you will find two dropdown menus:
 
 -   **Data Source**: You can view and edit the URL from which the application scrapes consent forms. Click **Save Changes** to apply, or **Restore Default** to revert.
 -   **Settings**:
-    -   **Preview PDF Fields**: This switch controls the workflow after selecting a form. If ON, you can review and edit fields before generating the PDF. If OFF, the PDF is generated and opened immediately. Defaults to OFF.
     -   **Enable R Number format validation**: When enabled, the application will check that the KOMS patient number entered in the demographics pop-up matches the required format ('R' followed by 7 digits).
+    -   **Preview PDF fields before generating**: This switch controls the workflow after selecting a form. If ON, you can review and edit fields before generating the PDF. If OFF, the PDF is generated and opened immediately. Defaults to OFF.
 -   **Update Forms**: Click **Check for Updated Forms** to manually trigger a scrape of the currently saved URL to refresh the list of available forms.
 -   **Staff Management**: Click **Edit Staff List** to navigate to a separate page where you can add, edit, or remove staff members from the dropdown lists.
 
@@ -73,7 +75,7 @@ The application is a client-server model built with Next.js. The frontend is a R
 
 ### 2. Data Management and Scraping
 
--   **Data Source**: The URL for the RCR consent form page is defined in `src/config/app.json`. This URL can be modified by the user via the configuration page UI, which uses an API endpoint at `/api/config` to update the file.
+-   **Data Source & Configuration**: Application settings, including the RCR URL, are defined in `src/config/app.json`. These settings can be modified by the user via the configuration page UI, which uses an API endpoint at `/api/config` to update the file.
 -   **Scraping**: The `scrapeRcrForms` flow (`src/ai/flows/scrape-forms-flow.ts`) is triggered from the `/config` page. It uses `cheerio` to parse the RCR webpage and extract the title and URL of all PDF forms.
 -   **Data Storage**: The scraped form data is stored in `public/consent-forms.json`. The application automatically checks if this file is outdated compared to the live website on startup and prompts the user to update if necessary via the `checkForFormUpdates` flow (`src/ai/flows/update-check-flow.ts`).
 -   **Staff Data**: Staff members are stored in `src/config/staff.json`. A dedicated UI at `/config/staff` allows for managing this list, which is served via a simple API endpoint at `/api/staff`.
@@ -82,21 +84,21 @@ The application is a client-server model built with Next.js. The frontend is a R
 
 This is the most complex part of the application. A key design principle is that the application **always uses the latest version of a form** by downloading the PDF directly from the RCR website on-demand, rather than using a locally cached copy.
 
-1.  **Field Extraction (`src/ai/flows/get-pdf-fields-flow.ts`)**: When a user selects a form, this flow is called. It downloads the PDF from its live URL on the RCR website and uses the `pdf-lib` library to inspect it and extract the names of all fillable fields. It intentionally filters out checkboxes and fields related to signatures or initials to reduce clutter. To handle protected forms from the RCR website, the application instructs `pdf-lib` to ignore encryption when loading the document.
+1.  **Workflow Control (`previewPdfFields` config)**: The user's workflow is determined by the `previewPdfFields` setting. The `page.tsx` component fetches this setting and uses it to decide whether to show the preview form or to proceed directly to PDF generation.
 
-2.  **Dynamic Form Rendering (`src/components/pdf-form.tsx`)**: The list of field names is returned to the client, which then renders a dynamic form with a text input for each field.
+2.  **Field Extraction (`src/ai/flows/get-pdf-fields-flow.ts`)**: When a user selects a form, this flow is called. It downloads the PDF from its live URL on the RCR website and uses the `pdf-lib` library to inspect it and extract the names of all fillable fields. It intentionally filters out checkboxes and fields related to signatures or initials to reduce clutter. To handle protected forms from the RCR website, the application instructs `pdf-lib` to ignore encryption when loading the document.
 
-3.  **Intelligent Pre-population (`prePopulateForm` in `page.tsx`)**: Before rendering, the application tries to intelligently match and pre-fill the PDF fields using the available patient and staff data.
-    -   **Normalization**: It normalizes both the PDF field names and the mapping keys (from the `patientMappings` object) by converting them to lowercase and removing special characters to increase the likelihood of a match.
+3.  **Intelligent Pre-population (`prePopulateData` in `page.tsx`)**: The application tries to intelligently match and pre-fill the PDF fields using the available patient and staff data.
+    -   **Normalization**: It normalizes both the PDF field names and the mapping keys (from the `patientMappings` object) by converting them to lowercase and remove special characters to increase the likelihood of a match.
     -   **Matching Strategy**:
         -   It uses a precise `startsWith` check for keys like 'name', 'date', and 'hospital' to avoid incorrect matches (e.g., to prevent "Name of hospital" from matching the patient's "name").
         -   For most other keys, it checks if the normalized PDF field name *includes* a normalized mapping key.
     -   **Contextual Rules**:
         -   **Clinician Details**: A special rule handles a common pattern where a "Name" field is followed by a "Job Title" field. It correctly populates these with the selected clinician's details.
-        -   **Post-Clinician Blank Fields**: In the final step before PDF generation (inside the `handlePdfSubmit` function), the logic explicitly finds the first "Name" field and the first "Date" field that appear after the clinician's job title and blanks them out. This robust, last-minute check prevents patient data from being entered into fields meant for a witness or second signatory.
         -   **Macmillan Contact**: If a field name includes "contact details" or "contact number," it's populated with the selected Macmillan contact's information.
 
-4.  **Final PDF Generation (`src/ai/flows/fill-pdf-flow.ts`)**: After the user reviews the form, the final data is sent to the `fillPdf` flow.
-    -   This flow uses `pdf-lib` to fill the original PDF with the final data.
-    -   The filled PDF is saved to a temporary file in the `/tmp` directory, and its unique ID is returned to the client.
-    -   The client then opens a new tab pointing to an API route (`/api/filled-pdf/[id]`), which serves the generated PDF for viewing and printing.
+4.  **Final PDF Generation (`src/ai/flows/fill-pdf-flow.ts`)**:
+    -   **Trigger**: This is called either by the user clicking "Submit & Open PDF" (in preview mode) or automatically after field extraction (when preview is off).
+    -   **Blanking Witness Fields**: Just before generation, the logic explicitly finds the first "Name" field and the first "Date" field that appear after the clinician's job title and blanks them out. This robust, last-minute check prevents patient data from being entered into fields meant for a witness or second signatory.
+    -   **Filling**: The `fillPdf` flow uses `pdf-lib` to fill the original PDF with the final data.
+    -   **Serving**: The filled PDF is saved to a temporary file in the `/tmp` directory, and its unique ID is returned to the client. The client then opens a new tab pointing to an API route (`/api/filled-pdf/[id]`), which serves the generated PDF for viewing and printing.
