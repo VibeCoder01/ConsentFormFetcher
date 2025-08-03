@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import config from "@/config/app.json";
 
 interface RNumberPromptDialogProps {
   open: boolean;
@@ -27,6 +26,31 @@ interface RNumberPromptDialogProps {
 
 export function RNumberPromptDialog({ open, onOpenChange, onSubmit, isSubmitting }: RNumberPromptDialogProps) {
   const [rNumber, setRNumber] = useState("");
+  const [config, setConfig] = useState({ validateRNumber: false });
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+
+  useEffect(() => {
+    async function fetchConfig() {
+      if (open) {
+        setIsLoadingConfig(true);
+        try {
+          const res = await fetch('/api/config');
+          if (res.ok) {
+            const appConfig = await res.json();
+            setConfig(appConfig);
+          }
+        } catch (error) {
+          console.error("Failed to fetch config for dialog:", error);
+          // Use default config on error
+          setConfig({ validateRNumber: false });
+        } finally {
+          setIsLoadingConfig(false);
+        }
+      }
+    }
+    fetchConfig();
+  }, [open]);
+
   const isRNumberValid = !config.validateRNumber || (!!rNumber && /^R\d{7}$/i.test(rNumber));
 
   const handleSubmit = () => {
@@ -68,7 +92,7 @@ export function RNumberPromptDialog({ open, onOpenChange, onSubmit, isSubmitting
                 onChange={(e) => setRNumber(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="e.g., R1234567"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoadingConfig}
             />
         </div>
         <AlertDialogFooter>
@@ -76,7 +100,7 @@ export function RNumberPromptDialog({ open, onOpenChange, onSubmit, isSubmitting
             <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>Cancel</Button>
           </AlertDialogCancel>
           <AlertDialogAction asChild>
-            <Button onClick={handleSubmit} disabled={!rNumber || isSubmitting || !isRNumberValid}>
+            <Button onClick={handleSubmit} disabled={!rNumber || isSubmitting || !isRNumberValid || isLoadingConfig}>
                 {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Get Demographics
             </Button>
