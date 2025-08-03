@@ -58,7 +58,10 @@ The application's behavior after you select a form is controlled by a setting on
     -   **Enable R Number format validation**: When enabled, the application will check that the KOMS patient number entered in the demographics pop-up matches the required format ('R' followed by 7 digits).
     -   **Preview PDF fields before generating**: This switch controls the workflow after selecting a form. If ON, you can review and edit fields before generating the PDF. If OFF, the PDF is generated and opened immediately. Defaults to OFF.
 -   **Update Forms**: Click **Check for Updated Forms** to manually trigger a scrape of the currently saved URL to refresh the list of available forms.
--   **Staff Management**: Click **Edit Staff List** to navigate to a separate page where you can add, edit, or remove staff members from the dropdown lists.
+-   **Staff Management**: Click **Edit Staff List** to navigate to a separate page where you can add, edit, or remove staff members. On this page, you can also:
+    -   **Clear Staff List**: Removes all staff members from the list (a confirmation will appear).
+    -   **Export Staff List**: Downloads the current list as a JSON file, which can be backed up or shared.
+    -   **Import Staff List**: Replaces the current list with data from a JSON file you select. The file must be in the correct format.
 
 ---
 
