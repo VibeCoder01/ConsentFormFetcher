@@ -62,7 +62,7 @@ export default function Home() {
   const [pdfFormData, setPdfFormData] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [previewPdfFieldsConfig, setPreviewPdfFieldsConfig] = useState(true); // Default to true to prevent premature actions
+  const [previewPdfFieldsConfig, setPreviewPdfFieldsConfig] = useState(false);
   const [pdfOpenMethodConfig, setPdfOpenMethodConfig] = useState<'browser' | 'acrobat'>('browser');
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   
@@ -347,7 +347,7 @@ export default function Home() {
       if (result.success && result.fields) {
         const { finalFields, finalFormData } = prePopulateData(result.fields);
         
-        setPdfFields(finalFields); // Set fields for submit logic to use
+        setPdfFields(finalFields);
 
         if (previewPdfFieldsConfig) {
           // Preview is ON: show the form
@@ -651,5 +651,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
