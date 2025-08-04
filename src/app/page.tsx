@@ -378,7 +378,12 @@ export default function Home() {
 
   const handlePdfSubmit = async (finalFormData: Record<string, string>, currentPdfFields?: PdfField[]) => {
     if (!selectedForm) return;
-  
+
+    let pendingWindow: Window | null = null;
+    if (pdfOpenMethodConfig === 'browser') {
+        pendingWindow = window.open('', '_blank');
+    }
+
     setIsSubmitting(true);
   
     // Use passed fields or state fields
@@ -457,9 +462,16 @@ export default function Home() {
             }
         } else {
             // Default to opening in browser
-            window.open(`/api/filled-pdf/${result.pdfId}`, '_blank');
+            if (pendingWindow) {
+                pendingWindow.location.href = `/api/filled-pdf/${result.pdfId}`;
+            } else {
+                window.open(`/api/filled-pdf/${result.pdfId}`, '_blank');
+            }
         }
       } else {
+        if (pendingWindow) {
+            pendingWindow.close();
+        }
         toast({
           variant: 'destructive',
           title: 'PDF Generation Failed',
@@ -467,6 +479,9 @@ export default function Home() {
         });
       }
     } catch (error) {
+      if (pendingWindow) {
+          pendingWindow.close();
+      }
       const errorMessage = error instanceof Error ? error.message : String(error);
       toast({
         variant: 'destructive',
