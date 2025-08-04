@@ -87,6 +87,16 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
             throw new Error(errorMsg);
         }
         
+        // Check for placeholder response which indicates user is not logged into KOMS
+        if (data.forename === '${forename}') {
+            toast({
+                variant: "destructive",
+                title: "Login Required",
+                description: "Received placeholder data. Please ensure you are logged into KOMS to access patient information.",
+            });
+            return; // Stop execution
+        }
+
         setDemographicsLoaded(true);
 
         // We have good data, update the form
