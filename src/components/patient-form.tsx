@@ -92,7 +92,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
             toast({
                 variant: "destructive",
                 title: "Login Required",
-                description: "Received placeholder data. Please ensure you are logged into KOMS to access patient information.",
+                description: "Please ensure you are logged into KOMS to access patient information.",
             });
             return; // Stop execution
         }
