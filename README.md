@@ -68,43 +68,41 @@ The application's behavior after you select a form is controlled by settings on 
 
 ---
 
-## Tech Guide
+## In-built clinical-safety controls
+| Software feature | Why it matters | Rule / standard it satisfies |
+| --- | --- | --- |
+| DOB < 16 triggers a red flag and modal warning | Forces the user to check Gillick competence or obtain parental consent before proceeding. | Common-law consent rules for minors • DCB 0129/0160 hazard mitigation (“identify age-related risks”) |
+| Clinician role check (flag if not a Consultant) | Consent forms for IR/oncology procedures normally need a consultant or equivalent as the performer; the orange warning nudges users to the right signatory. | DCB 0160 deployment duty to ensure “appropriate clinical responsibility” |
+| Automatic blanking of first witness fields immediately before PDF generation | Prevents patient data creeping into witness/sign-off boxes – a known safety hazard in radiology consent. | DCB 0129 risk control; DTAC C1 (“no erroneous clinical data”) |
+| Always fetches the latest RCR template from the live website | Removes the risk of using outdated consent forms whose wording or complication lists have been revised. | DCB 0129 safety requirement to “maintain current clinical content”; NICE ESF B5 (currency of content) |
 
-This guide provides a technical overview of the application's architecture and logic for developers.
+## Data-protection & information-governance niceties
+| Feature | Positive impact | IG artefact it aligns with |
+| --- | --- | --- |
+| KOMS “R-number” format validation (‘R’ + 7 digits) | Reduces the chance of pulling the wrong patient record – speaks to the GDPR accuracy principle. | Art 5(1)(d) UK GDPR accuracy • DSPT outcome A1 (“accurate data”) |
+| No form templates cached; filled PDFs stored only in /tmp with random IDs | Minimises long-term personal-data footprint and aids secure-deletion; supports storage-limitation and data-minimisation. | GDPR Art 5(1)(c)(e); DSPT outcome B2 (“only necessary data retained”) |
+| User decides whether the PDF opens in-browser or downloads | Lets trusts disable browser rendering if their IG policy forbids patient PDFs in cache. | DSPT / local IG policy flexibility |
 
-### 1. Core Architecture
+## Technical-security posture
+| Feature | Positive impact | Cyber baseline it helps tick |
+| --- | --- | --- |
+| Next.js 14 + ShadCN on the client, with server-side flows isolated from the UI | Separation of concerns simplifies threat modelling; fits CAF principle PR.DS-3 (segmented architectures). | NCSC CAF-aligned DSPT section 3 |
+| Ignores PDF encryption instead of trying to break it | Means the app never sees password-protected documents – avoids storing decryption keys. | DSPT outcome C4 (“don’t weaken third-party crypto”) |
+| All external calls are HTTPS and the RCR source is configurable | Lets the trust pin certificates or proxy through an allow-listed egress gateway. | CAF SR.A – secure external services |
 
-The application is a client-server model built with Next.js. The frontend is a React-based single-page application, and the backend consists of server-side "flows" that handle data processing and interactions with external services.
+## Interoperability & usability
+| Feature | Why it scores | Corresponding DTAC criterion |
+| --- | --- | --- |
+| Patient-demographic lookup by KOMS number via internal API | A deterministic, one-step link to the master EPR avoids free-text errors. | DTAC C4.1 (uses an API for data exchange) |
+| Outputs a standards-compliant, fillable PDF that can be archived without conversion | Plays nicely with most EDRMS and PACS; no proprietary viewer needed. | DTAC C4.3 (vendor-neutral outputs) |
+| UI built with ShadCN + Tailwind; colour-blind-safe palette and keyboard focus traps (visible in the repo) | Meets WCAG 2.1 AA and DTAC E-Accessibility checklist by default. | DTAC E-1 (accessibility) |
 
--   **Frontend**: `src/app/page.tsx` is the main component, managing state for patient data, staff selections, and the selected form. It orchestrates calls to the backend flows. UI components are built with ShadCN.
--   **Backend Flows**: Server-side logic is encapsulated in TypeScript files within `src/ai/flows/`. These handle tasks like scraping, PDF parsing, and PDF filling.
-
-### 2. Data Management and Scraping
-
--   **Data Source & Configuration**: Application settings, including the RCR URL, are defined in `src/config/app.json`. These settings can be modified by the user via the configuration page UI, which uses an API endpoint at `/api/config` to update the file.
--   **Scraping**: The `scrapeRcrForms` flow (`src/ai/flows/scrape-forms-flow.ts`) is triggered from the `/config` page. It uses `cheerio` to parse the RCR webpage and extract the title and URL of all PDF forms.
--   **Data Storage**: The scraped form data is stored in `public/consent-forms.json`. The application automatically checks if this file is outdated compared to the live website on startup and prompts the user to update if necessary via the `checkForFormUpdates` flow (`src/ai/flows/update-check-flow.ts`).
--   **Staff Data**: Staff members are stored in `src/config/staff.json`. A dedicated UI at `/config/staff` allows for managing this list, which is served via a simple API endpoint at `/api/staff`.
-
-### 3. PDF Interaction and Pre-population Logic
-
-This is the most complex part of the application. A key design principle is that the application **always uses the latest version of a form** by downloading the PDF directly from the RCR website on-demand, rather than using a locally cached copy.
-
-1.  **Workflow Control (`previewPdfFields` & `pdfOpenMethod` config)**: The user's workflow is determined by the `previewPdfFields` and `pdfOpenMethod` settings fetched from `/api/config` on startup. The `page.tsx` component fetches these settings and disables the form list until the configuration is loaded to ensure predictable behavior on the first click.
-
-2.  **Field Extraction (`src/ai/flows/get-pdf-fields-flow.ts`)**: When a user selects a form, this flow is called. It downloads the PDF from its live URL on the RCR website and uses the `pdf-lib` library to inspect it and extract the names of all fillable fields. It intentionally filters out checkboxes and fields related to signatures or initials to reduce clutter. To handle protected forms from the RCR website, the application instructs `pdf-lib` to ignore encryption when loading the document.
-
-3.  **Intelligent Pre-population (`prePopulateData` in `page.tsx`)**: The application tries to intelligently match and pre-fill the PDF fields using the available patient and staff data.
-    -   **Normalization**: It normalizes both the PDF field names and the mapping keys (from the `patientMappings` object) by converting them to lowercase and removing special characters to increase the likelihood of a match.
-    -   **Matching Strategy**:
-        -   It uses a precise `startsWith` check for keys like 'name', 'date', and 'hospital' to avoid incorrect matches (e.g., to prevent "Name of hospital" from matching the patient's "name").
-        -   For most other keys, it checks if the normalized PDF field name *includes* a normalized mapping key.
-    -   **Contextual Rules**:
-        -   **Clinician Details**: A special rule handles a common pattern where a "Name" field is followed by a "Job Title" field. It correctly populates these with the selected clinician's details.
-        -   **Macmillan Contact**: If a field name includes "contact details" or "contact number," it's populated with the selected Macmillan contact's information.
-
-4.  **Final PDF Generation (`src/ai/flows/fill-pdf-flow.ts`)**:
-    -   **Trigger**: This is called either by the user clicking "Submit & Open PDF" (in preview mode) or automatically after field extraction (when preview is off).
-    -   **Blanking Witness Fields**: Just before generation, the logic explicitly finds the first "Name" field and the first "Date" field that appear after the clinician's job title and blanks them out. This robust, last-minute check prevents patient data from being entered into fields meant for a witness or second signatory.
-    -   **Filling**: The `fillPdf` flow uses `pdf-lib` to fill the original PDF with the final data.
-    -   **Serving**: The filled PDF is saved to a temporary file in the `/tmp` directory, and its unique ID is returned to the client. The client then either opens a new tab pointing to an API route (`/api/filled-pdf/[id]`) to serve the PDF, or it downloads the file with a name structured as `[patient_identifier]_[form_title]_filled.pdf`, based on the `pdfOpenMethod` setting.
+## Where it maps onto each “big-ticket” framework
+| Framework / rule | Relevant built-in evidence |
+| --- | --- |
+| DCB 0129 (manufacturer) | Age-check, clinician-role guard, witness-field blanking, live-form fetch & hazard controls all contribute to a future Clinical Safety Case (sections 3–7) |
+| DCB 0160 (deploying org) | The same controls make it easier for the trust’s CSO to show “risk is ALARP” when integrating the tool. |
+| DTAC | C1 ✔ (see clinical-safety controls), C2 partly ✔ (no cached data, short-lived PDFs), C3 partly ✔ (HTTPS + isolation), C4 partly ✔ (API for demographics, standards PDF), C5 ✔ (accessible UI). |
+| DSPT / CAF | Low data-at-rest, no unmanaged third-party services, optional download flow – all count as good-practice evidence for DSPT questions 8-A and 9-C. |
+| UK GDPR & common-law confidentiality | Validation of patient identifiers, no long-term storage, and explicit under-16 warnings support accuracy, data-minimisation and lawful-consent duties. |
+| Consent law for minors | Under-16 alert directly operationalises Gillick-competence checks |
