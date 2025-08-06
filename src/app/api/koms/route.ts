@@ -95,20 +95,22 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[KOMS_API_ERROR]', error); // Log the actual error to the server console
+    // Log the full error object to the server console for detailed debugging.
+    console.error('[KOMS_API_ERROR]', error); 
 
     let message = 'An unknown network error occurred';
     if (error instanceof Error) {
+        // The actual error code (e.g., UND_ERR_CONNECT_TIMEOUT) is often nested in the 'cause' property.
         const cause = (error as any).cause;
 
         if (cause?.code === 'UND_ERR_CONNECT_TIMEOUT') {
              message = 'Connection to KOMS timed out. Please ensure you are logged into KOMS and try again.';
         } else if (cause && typeof cause.code === 'string') {
-            message = cause.code; // e.g., 'ECONNREFUSED', 'ENOTFOUND'
+            message = `Failed to connect to KOMS service: ${cause.code}`;
         } else {
             message = error.message;
         }
     }
-    return Response.json({ error: `Failed to connect to KOMS service: ${message}` }, { status: 504 }); // Gateway Timeout
+    return Response.json({ error: message }, { status: 504 }); // Gateway Timeout
   }
 }
