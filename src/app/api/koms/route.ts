@@ -95,8 +95,11 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    // Log the full error object to the server console for detailed debugging.
-    console.error('[KOMS_API_ERROR]', error); 
+    // Log the full error object and any nested cause for detailed debugging.
+    console.error('[KOMS_API_ERROR]', error);
+    if (error instanceof Error && error.cause) {
+      console.error('[KOMS_API_ERROR_CAUSE]', error.cause);
+    }
 
     let message = 'An unknown network error occurred';
     if (error instanceof Error) {
