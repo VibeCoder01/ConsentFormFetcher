@@ -95,6 +95,8 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
+    console.error('[KOMS_API_ERROR]', error); // Log the actual error to the server console
+
     let message = 'An unknown network error occurred';
     if (error instanceof Error) {
         const cause = (error as any).cause;
