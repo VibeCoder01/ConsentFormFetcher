@@ -9,22 +9,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, PlusCircle, Save, Trash2, Loader2, Download, Upload, Eraser } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Save, Trash2, Loader2, Eraser } from 'lucide-react';
 import type { StaffMember } from '@/lib/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-
-function isValidStaffList(data: any): data is StaffMember[] {
-    if (!Array.isArray(data)) return false;
-    return data.every(item =>
-        typeof item === 'object' &&
-        item !== null &&
-        typeof item.id === 'string' &&
-        typeof item.name === 'string' &&
-        typeof item.title === 'string' &&
-        typeof item.phone === 'string'
-    );
-}
 
 export default function StaffConfigPage() {
   const { toast } = useToast();
@@ -33,7 +21,6 @@ export default function StaffConfigPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const importFileRef = useRef<HTMLInputElement>(null);
 
   const isModified = JSON.stringify(staff) !== JSON.stringify(initialStaff);
 
@@ -118,67 +105,6 @@ export default function StaffConfigPage() {
       });
   };
   
-  const handleExportList = () => {
-      if(staff.length === 0) {
-          toast({ variant: 'destructive', title: 'Cannot Export', description: 'Staff list is empty.'});
-          return;
-      }
-      const jsonData = JSON.stringify(staff, null, 2);
-      const blob = new Blob([jsonData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'staff-export.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast({ title: 'Success', description: 'Staff list exported.'});
-  };
-
-  const handleImportClick = () => {
-      importFileRef.current?.click();
-  };
-
-  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-          try {
-              const text = e.target?.result;
-              if (typeof text !== 'string') throw new Error("File content is not readable.");
-              const importedData = JSON.parse(text);
-
-              if (!isValidStaffList(importedData)) {
-                  throw new Error("Invalid file format. The file should be an array of staff members with id, name, title, and phone fields.");
-              }
-              
-              setStaff(importedData);
-              toast({
-                  title: 'Import Successful',
-                  description: "Staff list has been replaced. Click 'Save All Changes' to make it permanent.",
-              });
-
-          } catch (error) {
-               const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-               toast({
-                   variant: 'destructive',
-                   title: 'Import Failed',
-                   description: errorMessage,
-               });
-          }
-      };
-      reader.onerror = () => {
-          toast({ variant: 'destructive', title: 'Error', description: 'Failed to read the file.'});
-      }
-      reader.readAsText(file);
-
-      // Reset file input value to allow re-importing the same file
-      event.target.value = '';
-  };
-  
   const loadingSkeleton = (
     <div className="space-y-6">
         {[...Array(2)].map((_, i) => (
@@ -221,7 +147,7 @@ export default function StaffConfigPage() {
                 <div className="inline-block"> 
                     <Button onClick={addStaffMember} disabled={isLastMemberEmpty()}>
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        Add New
+                        Add New Staff Member
                     </Button>
                 </div>
             </TooltipTrigger>
@@ -246,6 +172,11 @@ export default function StaffConfigPage() {
             <h1 className="ml-4 text-xl font-bold">Edit Staff List</h1>
          </div>
          <div className="flex items-center gap-2">
+            {addStaffButton}
+             <Button variant="outline" onClick={() => setShowClearConfirm(true)} disabled={staff.length === 0}>
+                <Eraser className="mr-2 h-4 w-4" />
+                Clear List
+            </Button>
             <Button onClick={handleSaveChanges} disabled={isSaving || !isModified}>
               {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
               Save Changes
@@ -254,35 +185,6 @@ export default function StaffConfigPage() {
       </header>
       <main className="flex-1 p-4 md:p-8 lg:p-12">
         <div className="mx-auto max-w-4xl space-y-8">
-          <Card>
-            <CardHeader>
-                <CardTitle>Staff Management Actions</CardTitle>
-                <CardDescription>Use these actions to manage the entire staff list.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-                {addStaffButton}
-                 <Button variant="outline" onClick={() => setShowClearConfirm(true)} disabled={staff.length === 0}>
-                    <Eraser className="mr-2 h-4 w-4" />
-                    Clear Staff List
-                </Button>
-                <Button variant="outline" onClick={handleExportList} disabled={staff.length === 0}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Export Staff List
-                </Button>
-                <Button variant="outline" onClick={handleImportClick}>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Import Staff List
-                </Button>
-                <input
-                    type="file"
-                    ref={importFileRef}
-                    onChange={handleFileImport}
-                    accept="application/json"
-                    className="hidden"
-                />
-            </CardContent>
-          </Card>
-          
           {isLoading ? loadingSkeleton : (
             <div className="space-y-6">
                 {staff.map((member, index) => (
@@ -321,7 +223,7 @@ export default function StaffConfigPage() {
                         <CardTitle>The Staff List is Empty</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-muted-foreground">Add a new staff member or import a list to get started.</p>
+                        <p className="text-muted-foreground">Add a new staff member to get started.</p>
                     </CardContent>
                 </Card>
             )}
