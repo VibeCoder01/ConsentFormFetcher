@@ -164,7 +164,7 @@ export default function ConfigPage() {
 
   const handleExport = async () => {
     try {
-        const res = await fetch('/api/config/all');
+        const res = await fetch('/api/config');
         if (!res.ok) throw new Error('Failed to fetch configuration for export.');
         const data = await res.json();
         
@@ -173,12 +173,12 @@ export default function ConfigPage() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'config-backup.json';
+        a.download = 'app-settings.json';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        toast({ title: 'Success', description: 'All settings have been exported.'});
+        toast({ title: 'Success', description: 'Application settings have been exported.'});
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
         toast({ variant: 'destructive', title: 'Export Failed', description: errorMessage });
@@ -200,7 +200,7 @@ export default function ConfigPage() {
               if (typeof text !== 'string') throw new Error("File content is not readable.");
               const importedData = JSON.parse(text);
               
-              const response = await fetch('/api/config/all', {
+              const response = await fetch('/api/config', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(importedData)
@@ -208,12 +208,12 @@ export default function ConfigPage() {
               
               const result = await response.json();
               if (!response.ok) {
-                  throw new Error(result.error || 'Failed to import settings.');
+                  throw new Error(result.message || 'Failed to import settings.');
               }
               
               toast({
                   title: 'Import Successful',
-                  description: "All settings have been restored. The page will now reload.",
+                  description: "App settings have been restored. The page will now reload.",
               });
               
               // Reload the page to apply all changes
@@ -455,17 +455,17 @@ export default function ConfigPage() {
 
            <Card>
             <CardHeader>
-                <CardTitle>Backup & Restore</CardTitle>
-                <CardDescription>Export or import all application settings, including the staff list, as a single file.</CardDescription>
+                <CardTitle>Backup & Restore Settings</CardTitle>
+                <CardDescription>Export or import application settings. The staff list can be managed separately.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={handleExport}>
                     <Download className="mr-2 h-4 w-4" />
-                    Export All Settings
+                    Export App Settings
                 </Button>
                 <Button variant="outline" onClick={handleImportClick}>
                     <Upload className="mr-2 h-4 w-4" />
-                    Import All Settings
+                    Import App Settings
                 </Button>
                 <input
                     type="file"

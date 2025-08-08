@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, PlusCircle, Save, Trash2, Loader2, Eraser } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Save, Trash2, Loader2, Eraser, Upload, Download } from 'lucide-react';
 import type { StaffMember } from '@/lib/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -21,11 +21,11 @@ export default function StaffConfigPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const importFileRef = useRef<HTMLInputElement>(null);
 
   const isModified = JSON.stringify(staff) !== JSON.stringify(initialStaff);
 
-  useEffect(() => {
-    async function fetchStaff() {
+  const fetchStaff = async () => {
       setIsLoading(true);
       try {
         const res = await fetch('/api/staff');
@@ -43,6 +43,8 @@ export default function StaffConfigPage() {
         setIsLoading(false);
       }
     }
+
+  useEffect(() => {
     fetchStaff();
   }, [toast]);
 
@@ -103,6 +105,69 @@ export default function StaffConfigPage() {
           title: "List Cleared",
           description: "Click 'Save All Changes' to make it permanent.",
       });
+  };
+
+  const handleExport = async () => {
+    const dataToExport = staff.filter(member => member.name || member.title || member.phone);
+    if (dataToExport.length === 0) {
+        toast({ title: 'Nothing to Export', description: 'The staff list is empty.' });
+        return;
+    }
+    const jsonData = JSON.stringify(dataToExport, null, 2);
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'staff-list.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast({ title: 'Success', description: 'The current staff list has been exported.'});
+  };
+
+  const handleImportClick = () => {
+    importFileRef.current?.click();
+  };
+
+  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+          try {
+              const text = e.target?.result;
+              if (typeof text !== 'string') throw new Error("File content is not readable.");
+              const importedData = JSON.parse(text);
+
+              if (!Array.isArray(importedData)) {
+                  throw new Error("Invalid file format. The file should contain a list of staff members.");
+              }
+
+              // Overwrite current staff state with imported data
+              setStaff(importedData);
+              toast({
+                  title: 'Import Successful',
+                  description: "The staff list has been updated. Click 'Save Changes' to make it permanent.",
+              });
+
+          } catch (error) {
+               const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+               toast({
+                   variant: 'destructive',
+                   title: 'Import Failed',
+                   description: errorMessage,
+               });
+          }
+      };
+      reader.onerror = () => {
+          toast({ variant: 'destructive', title: 'Error', description: 'Failed to read the file.'});
+      }
+      reader.readAsText(file);
+
+      // Reset file input value to allow re-importing the same file
+      event.target.value = '';
   };
   
   const loadingSkeleton = (
@@ -185,6 +250,30 @@ export default function StaffConfigPage() {
       </header>
       <main className="flex-1 p-4 md:p-8 lg:p-12">
         <div className="mx-auto max-w-4xl space-y-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Data Management</CardTitle>
+                    <CardDescription>Export the current staff list or import a new list from a file.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-wrap gap-2">
+                    <Button variant="outline" onClick={handleExport} disabled={staff.length === 0}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Export Staff List
+                    </Button>
+                    <Button variant="outline" onClick={handleImportClick}>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Import Staff List
+                    </Button>
+                    <input
+                        type="file"
+                        ref={importFileRef}
+                        onChange={handleFileImport}
+                        accept="application/json"
+                        className="hidden"
+                    />
+                </CardContent>
+            </Card>
+
           {isLoading ? loadingSkeleton : (
             <div className="space-y-6">
                 {staff.map((member, index) => (
