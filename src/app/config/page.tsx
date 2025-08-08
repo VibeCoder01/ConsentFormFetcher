@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2, Download, Upload } from "lucide-react";
+import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2, Download, Upload, Mail } from "lucide-react";
 import { scrapeRcrForms } from "@/ai/flows/scrape-forms-flow";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -448,6 +448,23 @@ export default function ConfigPage() {
                   <Button variant="outline">
                     <Users className="mr-2 h-4 w-4" />
                     Edit Staff List
+                  </Button>
+               </Link>
+            </CardFooter>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Email Management</CardTitle>
+              <CardDescription>
+                Configure settings for sending email notifications.
+              </CardDescription>
+            </CardHeader>
+            <CardFooter>
+               <Link href="/config/email" passHref>
+                  <Button variant="outline">
+                    <Mail className="mr-2 h-4 w-4" />
+                    Edit Email Config
                   </Button>
                </Link>
             </CardFooter>
