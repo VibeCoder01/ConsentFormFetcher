@@ -72,11 +72,9 @@ After the consent form has been generated, downloaded, and signed by both the pa
     -   **Automatically open in Browser**: Opens the PDF in a new browser tab.
     -   **Download for Adobe Acrobat**: Downloads the PDF to your computer, allowing you to open it in a dedicated application like Adobe Acrobat.
 -   **Update Forms**: Click **Check for Updated Forms** to manually trigger a scrape of the currently saved URL to refresh the list of available forms.
--   **Backup & Restore Settings**: You can export the application's settings (excluding the staff list) to a JSON file for backup. You can also import a settings file to restore a previous configuration.
--   **Staff Management**: Click **Edit Staff List** to navigate to a separate page where you can add, edit, or remove staff members. On this page, you can also:
-    -   **Clear Staff List**: Removes all staff members from the list (a confirmation will appear).
-    -   **Export Staff List**: Downloads the current list as a JSON file, which can be backed up or shared.
-    -   **Import Staff List**: Replaces the current list with data from a JSON file you select. The file must be in the correct format.
+-   **Backup & Restore Settings**: You can export the application's settings (including the email list, but excluding the staff list) to a JSON file for backup. You can also import a settings file to restore a previous configuration.
+-   **Staff Management**: Click **Edit Staff List** to navigate to a separate page where you can add, edit, or remove staff members. On this page, you can also import and export the staff list independently of the main application settings.
+-   **Email Management**: Click **Edit Email Config** to navigate to a page where you can manage a list of email recipients. Emails must be in a valid format and unique.
 
 ---
 
