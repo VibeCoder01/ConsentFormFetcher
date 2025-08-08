@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import type { ConsentForm, ConsentFormCategory, PatientData, IdentifierType, StaffMember } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AppHeader } from "@/components/app-header";
@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { PdfForm, PdfFormSkeleton, PdfField } from "@/components/pdf-form";
 import { format } from 'date-fns';
+import { UploadConfirmationDialog } from "@/components/upload-confirmation-dialog";
 
 const initialPatientData: PatientData = {
   forename: "John",
@@ -66,6 +67,10 @@ export default function Home() {
   const [pdfOpenMethodConfig, setPdfOpenMethodConfig] = useState<'browser' | 'acrobat'>('browser');
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   
+  const [fileToOverwrite, setFileToOverwrite] = useState<File | null>(null);
+  const [isUploadConfirmationOpen, setUploadConfirmationOpen] = useState(false);
+  
+  const uploadInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
@@ -509,6 +514,70 @@ export default function Home() {
       setUpdateAvailable(null);
     }
   };
+  
+  const handleUploadClick = () => {
+    uploadInputRef.current?.click();
+  };
+
+  const handleFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleUpload(file);
+    }
+    // Reset file input to allow uploading the same file again
+    event.target.value = '';
+  };
+  
+  const handleUpload = async (file: File, overwrite = false) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    let url = "/api/upload";
+    if (overwrite) {
+        url += "?overwrite=true";
+    }
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData,
+        });
+
+        const result = await response.json();
+
+        if (response.status === 409) { // 409 Conflict - file exists
+            setFileToOverwrite(file);
+            setUploadConfirmationOpen(true);
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Upload failed');
+        }
+
+        toast({
+            title: "Upload Successful",
+            description: `${file.name} has been submitted.`,
+        });
+
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'An unknown error occurred.';
+        toast({
+            variant: "destructive",
+            title: "Upload Error",
+            description: message,
+        });
+    }
+  };
+
+  const confirmOverwrite = () => {
+    if (fileToOverwrite) {
+        handleUpload(fileToOverwrite, true);
+    }
+    setUploadConfirmationOpen(false);
+    setFileToOverwrite(null);
+  };
+  
 
   const formListComponent = (
     <FormList
@@ -616,6 +685,14 @@ export default function Home() {
       <AppHeader
         isMobile={isMobile}
         onMenuClick={() => setSheetOpen(true)}
+        onUploadClick={handleUploadClick}
+      />
+       <input
+        type="file"
+        ref={uploadInputRef}
+        onChange={handleFileSelected}
+        accept="application/pdf"
+        className="hidden"
       />
       <main className="flex flex-1 overflow-hidden">
         {/* Desktop Sidebar */}
@@ -647,6 +724,13 @@ export default function Home() {
         isUpdating={isUpdating}
         onConfirm={handleConfirmUpdate}
         onCancel={() => setShowAlert(false)}
+      />
+      
+       <UploadConfirmationDialog
+        open={isUploadConfirmationOpen}
+        onOpenChange={setUploadConfirmationOpen}
+        onConfirm={confirmOverwrite}
+        fileName={fileToOverwrite?.name || ""}
       />
     </div>
   );

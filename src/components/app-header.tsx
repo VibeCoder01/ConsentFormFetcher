@@ -2,15 +2,16 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, Settings, FileText } from "lucide-react";
+import { Menu, Settings, FileText, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface AppHeaderProps {
   isMobile: boolean;
   onMenuClick: () => void;
+  onUploadClick: () => void;
 }
 
-export function AppHeader({ isMobile, onMenuClick }: AppHeaderProps) {
+export function AppHeader({ isMobile, onMenuClick, onUploadClick }: AppHeaderProps) {
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-6 z-10 bg-card">
       <div className="flex items-center gap-2 sm:gap-4">
@@ -27,7 +28,10 @@ export function AppHeader({ isMobile, onMenuClick }: AppHeaderProps) {
         </Link>
       </div>
       <div className="flex items-center gap-2">
-        <Button disabled>SUBMIT</Button>
+        <Button onClick={onUploadClick}>
+            <Upload className="mr-2 h-4 w-4" />
+            SUBMIT
+        </Button>
         <Link href="/config" aria-label="Go to configuration page">
           <Button variant="ghost" size="icon">
             <Settings className="h-6 w-6" />
