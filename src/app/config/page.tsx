@@ -41,8 +41,11 @@ export default function ConfigPage() {
   const [pdfOpenMethod, setPdfOpenMethod] = useState<'browser' | 'acrobat'>('browser');
   const [initialPdfOpenMethod, setInitialPdfOpenMethod] = useState<'browser' | 'acrobat'>('browser');
 
+  const [rtConsentFolder, setRtConsentFolder] = useState("");
+  const [initialRtConsentFolder, setInitialRtConsentFolder] = useState("");
 
-  const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields || pdfOpenMethod !== initialPdfOpenMethod;
+
+  const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields || pdfOpenMethod !== initialPdfOpenMethod || rtConsentFolder !== initialRtConsentFolder;
 
   useEffect(() => {
     async function fetchConfig() {
@@ -59,6 +62,8 @@ export default function ConfigPage() {
         setInitialPreviewPdfFields(config.previewPdfFields);
         setPdfOpenMethod(config.pdfOpenMethod || 'browser');
         setInitialPdfOpenMethod(config.pdfOpenMethod || 'browser');
+        setRtConsentFolder(config.rtConsentFolder || "");
+        setInitialRtConsentFolder(config.rtConsentFolder || "");
       } catch (error) {
          toast({
           variant: 'destructive',
@@ -84,6 +89,7 @@ export default function ConfigPage() {
         validateRNumber: validateRNumber,
         previewPdfFields: previewPdfFields,
         pdfOpenMethod: pdfOpenMethod,
+        rtConsentFolder: rtConsentFolder,
       };
 
        const response = await fetch('/api/config', {
@@ -106,6 +112,7 @@ export default function ConfigPage() {
       setInitialValidateRNumber(newConfig.validateRNumber);
       setInitialPreviewPdfFields(newConfig.previewPdfFields);
       setInitialPdfOpenMethod(newConfig.pdfOpenMethod);
+      setInitialRtConsentFolder(newConfig.rtConsentFolder);
 
       toast({
         title: 'Success',
@@ -258,6 +265,34 @@ export default function ConfigPage() {
         </CardContent>
     )
   }
+  
+  const rtFolderCardContent = () => {
+    if (isLoadingConfig) {
+      return (
+        <CardContent>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-1/4" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </CardContent>
+      )
+    }
+    return (
+      <CardContent>
+         <div className="space-y-2">
+          <Label htmlFor="rtConsentFolder">RT Consent Folder</Label>
+          <Input 
+              id="rtConsentFolder"
+              value={rtConsentFolder}
+              onChange={(e) => setRtConsentFolder(e.target.value)}
+              aria-label="RT Consent Folder Path"
+              className="font-mono text-sm"
+              placeholder="e.g., /path/to/consent/forms"
+          />
+         </div>
+      </CardContent>
+    )
+  }
 
 
   return (
@@ -292,6 +327,16 @@ export default function ConfigPage() {
               </CardDescription>
             </CardHeader>
             {dataSourceCardContent()}
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>File Paths</CardTitle>
+              <CardDescription>
+                Set the destination folder for completed RT consent forms.
+              </CardDescription>
+            </CardHeader>
+            {rtFolderCardContent()}
           </Card>
 
           <Card>
