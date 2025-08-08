@@ -12,6 +12,7 @@ interface AppConfig {
     validateRNumber: boolean;
     previewPdfFields: boolean;
     pdfOpenMethod: 'browser' | 'acrobat';
+    rtConsentFolder: string;
 }
 
 // Function to read the current config
