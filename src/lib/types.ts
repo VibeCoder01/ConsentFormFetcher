@@ -58,3 +58,8 @@ export interface KomsResponse {
     hospitalNumber?: string;
     hospitalNumberMTW?: string;
 }
+
+export interface EmailContact {
+    id: string;
+    email: string;
+}
