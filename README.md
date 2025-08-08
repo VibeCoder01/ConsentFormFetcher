@@ -6,7 +6,7 @@ This is a Next.js application designed to fetch, display, and intelligently pre-
 
 ## User Guide
 
-This guide explains how to use the application to prepare a consent form.
+This guide explains how to use the application to prepare and submit a consent form.
 
 ### 1. The Main Screen
 
@@ -48,12 +48,23 @@ The application's behavior after you select a form is controlled by settings on 
 -   **If "Preview PDF fields before generating" is OFF**:
     -   When you click a form, the application will immediately generate the filled PDF and either open it in a new tab or download it, skipping the preview step. The downloaded file will be named using the format `[patient_identifier]_[form_title]_filled.pdf`.
 
-### 6. Configuration
+### 6. Submitting the Signed Form
+
+After the consent form has been generated, downloaded, and signed by both the patient and clinician, it can be submitted back to the system.
+
+-   Click the **SUBMIT** button in the top-right corner of the application.
+-   This will open a file dialog, allowing you to select the completed PDF from your computer.
+-   The application will then upload the file to the server, storing it in the location specified by the "RT Consent Folder" setting on the Configuration page.
+-   **Automatic Renaming**: If a file with the same name already exists in the destination folder, the application will automatically rename the uploaded file by appending a number (e.g., `filename_1.pdf`) to prevent accidental overwrites.
+
+### 7. Configuration
 
 -   Click the **Settings** icon (⚙️) in the top-right corner to go to the Configuration page.
 -   From here, you can manage the application's data sources, settings, and staff list.
 
 -   **Data Source**: You can view and edit the URL from which the application scrapes consent forms. Click **Save Changes** to apply, or **Restore Default** to revert.
+-   **File Paths**:
+    -   **RT Consent Folder**: Set the full server-side path where successfully uploaded and signed consent forms should be stored (e.g., `C:\VC01\RT_Consent`).
 -   **Settings**:
     -   **Enable R Number format validation**: When enabled, the application will check that the KOMS patient number entered in the demographics pop-up matches the required format ('R' followed by 7 digits).
     -   **Preview PDF fields before generating**: This switch controls the workflow after selecting a form. If ON, you can review and edit fields before generating the PDF. If OFF, the PDF is generated and opened immediately. Defaults to OFF.
