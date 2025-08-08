@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2 } from "lucide-react";
+import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2, Download, Upload } from "lucide-react";
 import { scrapeRcrForms } from "@/ai/flows/scrape-forms-flow";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -28,6 +28,7 @@ export default function ConfigPage() {
   const [isScraping, setIsScraping] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+  const importFileRef = useRef<HTMLInputElement>(null);
   
   const [rcrUrl, setRcrUrl] = useState("");
   const [initialRcrUrl, setInitialRcrUrl] = useState("");
@@ -47,33 +48,34 @@ export default function ConfigPage() {
 
   const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields || pdfOpenMethod !== initialPdfOpenMethod || rtConsentFolder !== initialRtConsentFolder;
 
-  useEffect(() => {
-    async function fetchConfig() {
-      setIsLoadingConfig(true);
-      try {
-        const res = await fetch('/api/config');
-        if (!res.ok) throw new Error('Failed to fetch config');
-        const config = await res.json();
-        setRcrUrl(config.rcrConsentFormsUrl);
-        setInitialRcrUrl(config.rcrConsentFormsUrl);
-        setValidateRNumber(config.validateRNumber);
-        setInitialValidateRNumber(config.validateRNumber);
-        setPreviewPdfFields(config.previewPdfFields);
-        setInitialPreviewPdfFields(config.previewPdfFields);
-        setPdfOpenMethod(config.pdfOpenMethod || 'browser');
-        setInitialPdfOpenMethod(config.pdfOpenMethod || 'browser');
-        setRtConsentFolder(config.rtConsentFolder || "");
-        setInitialRtConsentFolder(config.rtConsentFolder || "");
-      } catch (error) {
-         toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Could not load app configuration.',
-        });
-      } finally {
-        setIsLoadingConfig(false);
-      }
+  const fetchConfig = async () => {
+    setIsLoadingConfig(true);
+    try {
+      const res = await fetch('/api/config');
+      if (!res.ok) throw new Error('Failed to fetch config');
+      const config = await res.json();
+      setRcrUrl(config.rcrConsentFormsUrl);
+      setInitialRcrUrl(config.rcrConsentFormsUrl);
+      setValidateRNumber(config.validateRNumber);
+      setInitialValidateRNumber(config.validateRNumber);
+      setPreviewPdfFields(config.previewPdfFields);
+      setInitialPreviewPdfFields(config.previewPdfFields);
+      setPdfOpenMethod(config.pdfOpenMethod || 'browser');
+      setInitialPdfOpenMethod(config.pdfOpenMethod || 'browser');
+      setRtConsentFolder(config.rtConsentFolder || "");
+      setInitialRtConsentFolder(config.rtConsentFolder || "");
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not load app configuration.',
+      });
+    } finally {
+      setIsLoadingConfig(false);
     }
+  }
+
+  useEffect(() => {
     fetchConfig();
   }, [toast]);
 
@@ -158,6 +160,81 @@ export default function ConfigPage() {
     } finally {
       setIsScraping(false);
     }
+  };
+
+  const handleExport = async () => {
+    try {
+        const res = await fetch('/api/config/all');
+        if (!res.ok) throw new Error('Failed to fetch configuration for export.');
+        const data = await res.json();
+        
+        const jsonData = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'config-backup.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast({ title: 'Success', description: 'All settings have been exported.'});
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+        toast({ variant: 'destructive', title: 'Export Failed', description: errorMessage });
+    }
+  };
+
+  const handleImportClick = () => {
+    importFileRef.current?.click();
+  };
+  
+  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+          try {
+              const text = e.target?.result;
+              if (typeof text !== 'string') throw new Error("File content is not readable.");
+              const importedData = JSON.parse(text);
+              
+              const response = await fetch('/api/config/all', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(importedData)
+              });
+              
+              const result = await response.json();
+              if (!response.ok) {
+                  throw new Error(result.error || 'Failed to import settings.');
+              }
+              
+              toast({
+                  title: 'Import Successful',
+                  description: "All settings have been restored. The page will now reload.",
+              });
+              
+              // Reload the page to apply all changes
+              setTimeout(() => window.location.reload(), 2000);
+
+          } catch (error) {
+               const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+               toast({
+                   variant: 'destructive',
+                   title: 'Import Failed',
+                   description: errorMessage,
+               });
+          }
+      };
+      reader.onerror = () => {
+          toast({ variant: 'destructive', title: 'Error', description: 'Failed to read the file.'});
+      }
+      reader.readAsText(file);
+
+      // Reset file input value to allow re-importing the same file
+      event.target.value = '';
   };
 
   const dataSourceCardContent = () => {
@@ -374,6 +451,30 @@ export default function ConfigPage() {
                   </Button>
                </Link>
             </CardFooter>
+          </Card>
+
+           <Card>
+            <CardHeader>
+                <CardTitle>Backup & Restore</CardTitle>
+                <CardDescription>Export or import all application settings, including the staff list, as a single file.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={handleExport}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Export All Settings
+                </Button>
+                <Button variant="outline" onClick={handleImportClick}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Import All Settings
+                </Button>
+                <input
+                    type="file"
+                    ref={importFileRef}
+                    onChange={handleFileImport}
+                    accept="application/json"
+                    className="hidden"
+                />
+            </CardContent>
           </Card>
 
         </div>
