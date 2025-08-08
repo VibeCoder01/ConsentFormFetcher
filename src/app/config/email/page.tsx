@@ -12,6 +12,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, PlusCircle, Save, Trash2, Loader2, Eraser } from 'lucide-react';
 import type { EmailContact } from '@/lib/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { cn } from '@/lib/utils';
+
+// Basic email validation regex
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function EmailConfigPage() {
   const { toast } = useToast();
@@ -20,6 +24,7 @@ export default function EmailConfigPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [errors, setErrors] = useState<Record<number, string>>({});
 
   const isModified = JSON.stringify(emails) !== JSON.stringify(initialEmails);
 
@@ -50,6 +55,12 @@ export default function EmailConfigPage() {
     const updatedEmails = [...emails];
     updatedEmails[index] = { ...updatedEmails[index], email: value };
     setEmails(updatedEmails);
+    // Clear error for this field on change
+    if (errors[index]) {
+        const newErrors = { ...errors };
+        delete newErrors[index];
+        setErrors(newErrors);
+    }
   };
 
   const addEmail = () => {
@@ -61,7 +72,47 @@ export default function EmailConfigPage() {
     setEmails(updatedEmails);
   };
 
+  const validateEmails = (): boolean => {
+      const newErrors: Record<number, string> = {};
+      const seenEmails = new Set<string>();
+      let hasError = false;
+
+      const validEmails = emails.filter(contact => contact.email.trim() !== '');
+
+      if(validEmails.length === 0) {
+        setEmails([]); // If all were empty, just clear the list
+        return true;
+      }
+
+      emails.forEach((contact, index) => {
+        const email = contact.email.trim();
+        // Skip validation for completely empty rows that will be stripped out
+        if (!email) return;
+
+        if (!emailRegex.test(email)) {
+            newErrors[index] = 'Invalid email format.';
+            hasError = true;
+        } else if (seenEmails.has(email)) {
+            newErrors[index] = 'This email address is already in the list.';
+            hasError = true;
+        }
+        seenEmails.add(email);
+      });
+
+      setErrors(newErrors);
+      return !hasError;
+  }
+
   const handleSaveChanges = async () => {
+    if (!validateEmails()) {
+        toast({
+            variant: "destructive",
+            title: "Validation Failed",
+            description: "Please correct the errors before saving.",
+        });
+        return;
+    }
+
     setIsSaving(true);
     const validEmails = emails.filter(contact => contact.email.trim() !== '');
     try {
@@ -82,6 +133,7 @@ export default function EmailConfigPage() {
       });
       setEmails(validEmails);
       setInitialEmails(validEmails);
+      setErrors({});
     } catch (error) {
        const errorMessage = error instanceof Error ? error.message : String(error);
        toast({
@@ -96,10 +148,11 @@ export default function EmailConfigPage() {
   
   const handleClearList = () => {
       setEmails([]);
+      setErrors({});
       setShowClearConfirm(false);
       toast({
           title: "List Cleared",
-          description: "Click 'Save All Changes' to make it permanent.",
+          description: "Click 'Save Changes' to make it permanent.",
       });
   };
 
@@ -161,7 +214,7 @@ export default function EmailConfigPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Email Recipients</CardTitle>
-                    <CardDescription>Manage the list of email addresses for notifications.</CardDescription>
+                    <CardDescription>Manage the list of email addresses for notifications. Empty entries will be removed on save.</CardDescription>
                 </CardHeader>
             </Card>
 
@@ -172,7 +225,15 @@ export default function EmailConfigPage() {
                         <CardContent className="pt-6">
                             <div className="space-y-1.5">
                                 <Label htmlFor={`email-${index}`}>Email Address #{index + 1}</Label>
-                                <Input id={`email-${index}`} value={contact.email} onChange={(e) => handleFieldChange(index, e.target.value)} placeholder="e.g., user@example.com" type="email"/>
+                                <Input 
+                                    id={`email-${index}`} 
+                                    value={contact.email} 
+                                    onChange={(e) => handleFieldChange(index, e.target.value)} 
+                                    placeholder="e.g., user@example.com" 
+                                    type="email"
+                                    className={cn(errors[index] && "border-destructive focus-visible:ring-destructive")}
+                                />
+                                {errors[index] && <p className="text-sm text-destructive mt-1">{errors[index]}</p>}
                             </div>
                         </CardContent>
                         <CardFooter>
