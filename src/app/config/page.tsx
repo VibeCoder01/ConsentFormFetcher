@@ -164,7 +164,7 @@ export default function ConfigPage() {
 
   const handleExport = async () => {
     try {
-        const res = await fetch('/api/config');
+        const res = await fetch('/api/config/backup');
         if (!res.ok) throw new Error('Failed to fetch configuration for export.');
         const data = await res.json();
         
@@ -173,7 +173,7 @@ export default function ConfigPage() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'app-settings.json';
+        a.download = 'app-settings-backup.json';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -200,7 +200,7 @@ export default function ConfigPage() {
               if (typeof text !== 'string') throw new Error("File content is not readable.");
               const importedData = JSON.parse(text);
               
-              const response = await fetch('/api/config', {
+              const response = await fetch('/api/config/backup', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(importedData)
