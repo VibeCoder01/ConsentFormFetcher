@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -25,11 +26,14 @@ export function AppHeader({ isMobile, onMenuClick }: AppHeaderProps) {
             </h1>
         </Link>
       </div>
-      <Link href="/config" aria-label="Go to configuration page">
-        <Button variant="ghost" size="icon">
-          <Settings className="h-6 w-6" />
-        </Button>
-      </Link>
+      <div className="flex items-center gap-2">
+        <Button disabled>SUBMIT</Button>
+        <Link href="/config" aria-label="Go to configuration page">
+          <Button variant="ghost" size="icon">
+            <Settings className="h-6 w-6" />
+          </Button>
+        </Link>
+      </div>
     </header>
   );
 }
