@@ -20,7 +20,6 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { PdfForm, PdfFormSkeleton, PdfField } from "@/components/pdf-form";
 import { format } from 'date-fns';
-import { UploadConfirmationDialog } from "@/components/upload-confirmation-dialog";
 
 const initialPatientData: PatientData = {
   forename: "John",
@@ -66,9 +65,6 @@ export default function Home() {
   const [previewPdfFieldsConfig, setPreviewPdfFieldsConfig] = useState(false);
   const [pdfOpenMethodConfig, setPdfOpenMethodConfig] = useState<'browser' | 'acrobat'>('browser');
   const [isConfigLoading, setIsConfigLoading] = useState(true);
-  
-  const [fileToOverwrite, setFileToOverwrite] = useState<File | null>(null);
-  const [isUploadConfirmationOpen, setUploadConfirmationOpen] = useState(false);
   
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
@@ -528,28 +524,17 @@ export default function Home() {
     event.target.value = '';
   };
   
-  const handleUpload = async (file: File, overwrite = false) => {
+  const handleUpload = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    let url = "/api/upload";
-    if (overwrite) {
-        url += "?overwrite=true";
-    }
-
     try {
-        const response = await fetch(url, {
+        const response = await fetch('/api/upload', {
             method: 'POST',
             body: formData,
         });
 
         const result = await response.json();
-
-        if (response.status === 409) { // 409 Conflict - file exists
-            setFileToOverwrite(file);
-            setUploadConfirmationOpen(true);
-            return;
-        }
 
         if (!response.ok) {
             throw new Error(result.error || 'Upload failed');
@@ -557,7 +542,7 @@ export default function Home() {
 
         toast({
             title: "Upload Successful",
-            description: `${file.name} has been submitted.`,
+            description: result.message || `${file.name} has been submitted.`,
         });
 
     } catch (error) {
@@ -568,14 +553,6 @@ export default function Home() {
             description: message,
         });
     }
-  };
-
-  const confirmOverwrite = () => {
-    if (fileToOverwrite) {
-        handleUpload(fileToOverwrite, true);
-    }
-    setUploadConfirmationOpen(false);
-    setFileToOverwrite(null);
   };
   
 
@@ -726,12 +703,6 @@ export default function Home() {
         onCancel={() => setShowAlert(false)}
       />
       
-       <UploadConfirmationDialog
-        open={isUploadConfirmationOpen}
-        onOpenChange={setUploadConfirmationOpen}
-        onConfirm={confirmOverwrite}
-        fileName={fileToOverwrite?.name || ""}
-      />
     </div>
   );
 }
