@@ -4,5 +4,5 @@
   "validateRNumber": false,
   "previewPdfFields": false,
   "pdfOpenMethod": "acrobat",
-  "rtConsentFolder": ""
+  "rtConsentFolder": "c:\\VC01\\RT_Consent"
 }
