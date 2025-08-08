@@ -6,6 +6,9 @@ import { EmailContact } from '@/lib/types';
 
 const emailConfigPath = path.join(process.cwd(), 'src', 'config', 'email.json');
 
+// Basic email validation regex
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function GET() {
   try {
     const jsonData = await fs.readFile(emailConfigPath, 'utf-8');
@@ -27,6 +30,17 @@ export async function POST(request: Request) {
         
         if (!Array.isArray(updatedEmails)) {
             return NextResponse.json({ message: "Invalid data format. Expected an array of email contacts." }, { status: 400 });
+        }
+
+        const seenEmails = new Set<string>();
+        for (const contact of updatedEmails) {
+            if (!contact.email || !emailRegex.test(contact.email)) {
+                 return NextResponse.json({ message: `Invalid email format: "${contact.email || ''}"` }, { status: 400 });
+            }
+            if (seenEmails.has(contact.email)) {
+                 return NextResponse.json({ message: `Duplicate email found: "${contact.email}"` }, { status: 400 });
+            }
+            seenEmails.add(contact.email);
         }
 
         const jsonData = JSON.stringify(updatedEmails, null, 2);
