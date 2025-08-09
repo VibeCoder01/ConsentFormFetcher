@@ -21,7 +21,7 @@ import Link from "next/link";
 import { PdfForm, PdfFormSkeleton, PdfField } from "@/components/pdf-form";
 import { format } from 'date-fns';
 
-const initialPatientData: PatientData = {
+const fakePatientData: PatientData = {
   forename: "John",
   surname: "Smith",
   dob: "1970-01-01",
@@ -42,6 +42,27 @@ const initialPatientData: PatientData = {
   macmillanContactId: null,
 };
 
+const emptyPatientData: PatientData = {
+  forename: "",
+  surname: "",
+  dob: "",
+  addr1: "",
+  addr2: "",
+  addr3: "",
+  postcode: "",
+  fullAddress: "",
+  homePhone: "",
+  gpName: "",
+  hospitalName: "",
+  rNumber: "",
+  nhsNumber: "",
+  hospitalNumber: "",
+  hospitalNumberMTW: "",
+  selectedIdentifier: 'rNumber',
+  uniqueIdentifierValue: '',
+  macmillanContactId: null,
+};
+
 
 export default function Home() {
   const [formCategories, setFormCategories] = useState<ConsentFormCategory[]>([]);
@@ -51,7 +72,8 @@ export default function Home() {
   const [updateAvailable, setUpdateAvailable] = useState<ConsentFormCategory[] | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
-  const [patientData, setPatientData] = useState<PatientData>(initialPatientData);
+  const [patientData, setPatientData] = useState<PatientData>(emptyPatientData);
+  const [initialPatientData, setInitialPatientData] = useState<PatientData>(emptyPatientData);
   const [selectedForm, setSelectedForm] = useState<ConsentForm | null>(null);
 
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
@@ -114,6 +136,11 @@ export default function Home() {
       setStaffMembers(staffData);
       setPreviewPdfFieldsConfig(configData.previewPdfFields);
       setPdfOpenMethodConfig(configData.pdfOpenMethod || 'browser');
+
+      const initialData = configData.prepopulateWithFakeData ? fakePatientData : emptyPatientData;
+      setPatientData(initialData);
+      setInitialPatientData(initialData);
+
     } catch (error) {
       console.error(error);
       toast({

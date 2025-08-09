@@ -155,7 +155,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
   }, [isUnder16]);
   
   const isInitialValue = (fieldName: keyof PatientData) => {
-    return !demographicsLoaded && patientData[fieldName] === initialData[fieldName];
+    return !demographicsLoaded && patientData[fieldName] === initialData[fieldName] && initialData[fieldName] !== '';
   };
 
   const showMacmillanWarning = useMemo(() => {
@@ -232,7 +232,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
           >
             <SelectTrigger 
                 id="hospitalName" 
-                className={cn(!patientData.hospitalName && "bg-red-100 dark:bg-red-900/30")}
+                className={cn(!patientData.hospitalName && isInitialValue('hospitalName') && "bg-red-100 dark:bg-red-900/30")}
             >
               <SelectValue placeholder="Make a selection" />
             </SelectTrigger>
@@ -252,7 +252,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
               <SelectTrigger 
                 id="macmillanContact" 
                 className={cn(
-                  !patientData.macmillanContactId && "bg-red-100 dark:bg-red-900/30",
+                  !patientData.macmillanContactId && isInitialValue('macmillanContactId') && "bg-red-100 dark:bg-red-900/30",
                   showMacmillanWarning && "bg-orange-200 dark:bg-orange-800/50"
                   )}
               >
