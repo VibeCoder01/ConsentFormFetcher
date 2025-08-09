@@ -5,5 +5,5 @@
   "previewPdfFields": false,
   "pdfOpenMethod": "acrobat",
   "rtConsentFolder": "c:\\VC01\\RT_Consent",
-  "prepopulateWithFakeData": true
+  "prepopulateWithFakeData": false
 }
