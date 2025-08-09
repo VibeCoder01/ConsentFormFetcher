@@ -16,9 +16,9 @@ The application is divided into two main sections:
 
 ### 2. Entering Patient Details
 
-On the left sidebar, you will find a "Patient Details" form.
+On the left sidebar, you will find a "Patient Details" form. The initial state of this form depends on the **"Pre-populate form with dummy data"** setting on the Configuration page.
 
--   **Initial Data**: The form starts with dummy data ("John Smith"). Fields with this initial data have a red background. This red highlight disappears as soon as you edit a field or import live data.
+-   **Initial Data**: If pre-population is enabled, the form starts with dummy data ("John Smith"). If it is disabled, the form will be empty. In both cases, fields that require your attention will have a red background. This red highlight disappears as soon as you edit a field or import live data.
 -   **Manual Entry**: You can manually type the patient's information into each field.
 -   **Fetch Live Data**: To import data automatically, click the **"Get Live Patient Demographics"** button. A pop-up will appear where you can enter a patient's **KOMS patient number**. Pressing Enter or clicking the button will fetch the patient's details and populate the form.
     -   When live data is loaded, dropdown menus like "Name of Hospital" are reset, requiring a manual selection.
@@ -68,6 +68,7 @@ After the consent form has been generated, downloaded, and signed by both the pa
 -   **Settings**:
     -   **Enable R Number format validation**: When enabled, the application will check that the KOMS patient number entered in the demographics pop-up matches the required format ('R' followed by 7 digits).
     -   **Preview PDF fields before generating**: This switch controls the workflow after selecting a form. If ON, you can review and edit fields before generating the PDF. If OFF, the PDF is generated and opened immediately. Defaults to OFF.
+    -   **Pre-populate form with dummy data**: Controls whether the patient form is initialized with "John Smith" data or starts empty.
 -   **PDF Handling**: Choose how you want the final PDF to be opened.
     -   **Automatically open in Browser**: Opens the PDF in a new browser tab.
     -   **Download for Adobe Acrobat**: Downloads the PDF to your computer, allowing you to open it in a dedicated application like Adobe Acrobat.
@@ -116,3 +117,5 @@ After the consent form has been generated, downloaded, and signed by both the pa
 | DSPT / CAF | Low data-at-rest, no unmanaged third-party services, optional download flow – all count as good-practice evidence for DSPT questions 8-A and 9-C. |
 | UK GDPR & common-law confidentiality | Validation of patient identifiers, no long-term storage, and explicit under-16 warnings support accuracy, data-minimisation and lawful-consent duties. |
 | Consent law for minors | Under-16 alert directly operationalises Gillick-competence checks |
+
+    
