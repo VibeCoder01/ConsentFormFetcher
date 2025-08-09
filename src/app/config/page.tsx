@@ -45,8 +45,11 @@ export default function ConfigPage() {
   const [rtConsentFolder, setRtConsentFolder] = useState("");
   const [initialRtConsentFolder, setInitialRtConsentFolder] = useState("");
 
+  const [prepopulateWithFakeData, setPrepopulateWithFakeData] = useState(true);
+  const [initialPrepopulateWithFakeData, setInitialPrepopulateWithFakeData] = useState(true);
 
-  const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields || pdfOpenMethod !== initialPdfOpenMethod || rtConsentFolder !== initialRtConsentFolder;
+
+  const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields || pdfOpenMethod !== initialPdfOpenMethod || rtConsentFolder !== initialRtConsentFolder || prepopulateWithFakeData !== initialPrepopulateWithFakeData;
 
   const fetchConfig = async () => {
     setIsLoadingConfig(true);
@@ -64,6 +67,8 @@ export default function ConfigPage() {
       setInitialPdfOpenMethod(config.pdfOpenMethod || 'browser');
       setRtConsentFolder(config.rtConsentFolder || "");
       setInitialRtConsentFolder(config.rtConsentFolder || "");
+      setPrepopulateWithFakeData(config.prepopulateWithFakeData);
+      setInitialPrepopulateWithFakeData(config.prepopulateWithFakeData);
     } catch (error) {
        toast({
         variant: 'destructive',
@@ -92,6 +97,7 @@ export default function ConfigPage() {
         previewPdfFields: previewPdfFields,
         pdfOpenMethod: pdfOpenMethod,
         rtConsentFolder: rtConsentFolder,
+        prepopulateWithFakeData: prepopulateWithFakeData,
       };
 
        const response = await fetch('/api/config', {
@@ -115,6 +121,7 @@ export default function ConfigPage() {
       setInitialPreviewPdfFields(newConfig.previewPdfFields);
       setInitialPdfOpenMethod(newConfig.pdfOpenMethod);
       setInitialRtConsentFolder(newConfig.rtConsentFolder);
+      setInitialPrepopulateWithFakeData(newConfig.prepopulateWithFakeData);
 
       toast({
         title: 'Success',
@@ -284,6 +291,10 @@ export default function ConfigPage() {
             <Skeleton className="h-6 w-6 rounded-full" />
             <Skeleton className="h-4 w-[200px]" />
           </div>
+           <div className="flex items-center space-x-2">
+            <Skeleton className="h-6 w-6 rounded-full" />
+            <Skeleton className="h-4 w-[280px]" />
+          </div>
         </CardContent>
       )
     }
@@ -304,6 +315,14 @@ export default function ConfigPage() {
                     onCheckedChange={setPreviewPdfFields}
                 />
                 <Label htmlFor="preview-pdf-fields">Preview PDF fields before generating</Label>
+            </div>
+             <div className="flex items-center space-x-2">
+                <Switch 
+                    id="prepopulate-with-fake-data" 
+                    checked={prepopulateWithFakeData}
+                    onCheckedChange={setPrepopulateWithFakeData}
+                />
+                <Label htmlFor="prepopulate-with-fake-data">Pre-populate form with dummy data</Label>
             </div>
         </CardContent>
     )

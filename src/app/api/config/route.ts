@@ -13,6 +13,7 @@ interface AppConfig {
     previewPdfFields: boolean;
     pdfOpenMethod: 'browser' | 'acrobat';
     rtConsentFolder: string;
+    prepopulateWithFakeData: boolean;
 }
 
 // Function to read the current config
