@@ -13,6 +13,7 @@ import { Button } from './ui/button';
 import { RNumberPromptDialog } from './r-number-prompt-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface PatientFormProps {
   patientData: PatientData;
@@ -179,10 +180,19 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
         <h2 className="text-lg font-semibold tracking-tight">
             Patient Details
         </h2>
-        <Button size="sm" onClick={() => setShowRNumberPrompt(true)} disabled={isFetchingDemographics}>
-            {isFetchingDemographics ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Get Live Patient Demographics
-        </Button>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button size="sm" onClick={() => setShowRNumberPrompt(true)} disabled={isFetchingDemographics}>
+                        {isFetchingDemographics ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Get Live Patient Demographics
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Fetch patient details from KOMS</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
        </div>
       <div className="space-y-4 px-2">
         <div className="grid w-full max-w-sm items-center gap-1.5">
