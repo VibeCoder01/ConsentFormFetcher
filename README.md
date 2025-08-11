@@ -14,6 +14,8 @@ The application is divided into two main sections:
 -   **Left Sidebar**: Contains the patient and clinician details forms, and the list of available consent forms.
 -   **Main Area**: Displays the fields of the selected PDF form for review and editing.
 
+In the top-right corner, you will find controls for submitting a signed form, changing the theme (light/dark mode), and accessing the configuration page.
+
 ### 2. Entering Patient Details
 
 On the left sidebar, you will find a "Patient Details" form. The initial state of this form depends on the **"Pre-populate form with dummy data"** setting on the Configuration page.
