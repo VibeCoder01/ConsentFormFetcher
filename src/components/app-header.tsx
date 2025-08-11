@@ -40,10 +40,19 @@ export function AppHeader({ isMobile, onMenuClick, onUploadClick }: AppHeaderPro
         </TooltipProvider>
       </div>
       <div className="flex items-center gap-2">
-        <Button onClick={onUploadClick}>
-            <Upload className="mr-2 h-4 w-4" />
-            SUBMIT
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button onClick={onUploadClick}>
+                  <Upload className="mr-2 h-4 w-4" />
+                  SUBMIT
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Submit a signed consent form</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <ThemeToggle />
         <Link href="/config" aria-label="Go to configuration page">
           <Button variant="ghost" size="icon">
