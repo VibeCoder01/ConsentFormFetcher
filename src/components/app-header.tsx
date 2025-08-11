@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { Menu, Settings, FileText, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "./theme-toggle";
 
 interface AppHeaderProps {
   isMobile: boolean;
@@ -32,6 +33,7 @@ export function AppHeader({ isMobile, onMenuClick, onUploadClick }: AppHeaderPro
             <Upload className="mr-2 h-4 w-4" />
             SUBMIT
         </Button>
+        <ThemeToggle />
         <Link href="/config" aria-label="Go to configuration page">
           <Button variant="ghost" size="icon">
             <Settings className="h-6 w-6" />
