@@ -49,7 +49,8 @@ export function AppHeader({ isMobile, onMenuClick, onUploadClick }: AppHeaderPro
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Submit a signed consent form</p>
+              <p>Submit a signed consent form.</p>
+              <p>PDF will be uploaded to RT Consent Form folder.</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
