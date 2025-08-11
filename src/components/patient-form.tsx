@@ -189,7 +189,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                    <p>Fetch patient details from KOMS</p>
+                    <p>Fetch patient details from KOMS. You must be logged into KOMS for this to work.</p>
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>
