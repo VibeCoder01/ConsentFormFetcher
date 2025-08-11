@@ -54,11 +54,20 @@ export function AppHeader({ isMobile, onMenuClick, onUploadClick }: AppHeaderPro
           </Tooltip>
         </TooltipProvider>
         <ThemeToggle />
-        <Link href="/config" aria-label="Go to configuration page">
-          <Button variant="ghost" size="icon">
-            <Settings className="h-6 w-6" />
-          </Button>
-        </Link>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link href="/config" aria-label="Go to configuration page">
+                <Button variant="ghost" size="icon">
+                  <Settings className="h-6 w-6" />
+                </Button>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Go to configuration page</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </header>
   );
