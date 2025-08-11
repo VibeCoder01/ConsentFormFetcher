@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Menu, Settings, FileText, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { version } from "../../package.json";
 
 interface AppHeaderProps {
   isMobile: boolean;
@@ -21,12 +23,21 @@ export function AppHeader({ isMobile, onMenuClick, onUploadClick }: AppHeaderPro
             <Menu className="h-6 w-6" />
           </Button>
         )}
-        <Link href="/" className="flex items-center gap-2">
-            <FileText className="h-7 w-7 text-primary" />
-            <h1 className="text-xl font-bold tracking-tight text-foreground">
-              ConsentForm Fetcher
-            </h1>
-        </Link>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Link href="/" className="flex items-center gap-2">
+                        <FileText className="h-7 w-7 text-primary" />
+                        <h1 className="text-xl font-bold tracking-tight text-foreground">
+                          ConsentForm Fetcher
+                        </h1>
+                    </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Version {version}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
       </div>
       <div className="flex items-center gap-2">
         <Button onClick={onUploadClick}>
