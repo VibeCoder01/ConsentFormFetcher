@@ -78,6 +78,7 @@ After the consent form has been generated, downloaded, and signed by both the pa
     -   **Enable R Number format validation**: When enabled, the application will check that the KOMS patient number entered in the demographics pop-up matches the required format ('R' followed by 7 digits).
     -   **Preview PDF fields before generating**: This switch controls the workflow after selecting a form. If ON, you can review and edit fields before generating the PDF. If OFF, the PDF is generated and opened immediately. Defaults to OFF.
     -   **Pre-populate form with dummy data**: Controls whether the patient form is initialized with "John Smith" data or starts empty.
+    -   **Display Welsh PDF forms**: If enabled, consent forms available in Welsh will be included in the "Available Forms" list.
 -   **PDF Handling**: Choose how you want the final PDF to be opened.
     -   **Automatically open in Browser**: Opens the PDF in a new browser tab.
     -   **Download for Adobe Acrobat**: Downloads the PDF to your computer, allowing you to open it in a dedicated application like Adobe Acrobat.
