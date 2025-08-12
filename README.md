@@ -27,10 +27,10 @@ In the top-right corner, you will find several controls, each with a helpful too
 On the left sidebar, you will find a "Patient Details" form. The initial state of this form depends on the **"Pre-populate form with dummy data"** setting on the Configuration page.
 
 -   **Initial Data**: If pre-population is enabled, the form starts with dummy data ("John Smith"). If it is disabled, the form will be empty. In both cases, fields that require your attention will have a red background. This red highlight disappears as soon as you edit a field or import live data.
--   **Manual Entry**: You can manually type the patient's information into each field.
+-   **Manual Entry**: You can manually type the patient's information into each field. The "Name of Hospital" field is pre-filled with "Kent Oncology Centre" but can be edited.
 -   **Fetch Live Data**: To import data automatically, click the **"Get Live Patient Demographics"** button. A pop-up will appear where you can enter a patient's **KOMS patient number**. Pressing Enter or clicking the button will fetch the patient's details and populate the form.
     -   A tooltip on this button reminds you that you must be logged into KOMS for this feature to work.
-    -   When live data is loaded, dropdown menus like "Name of Hospital" are reset, requiring a manual selection.
+    -   When live data is loaded, dropdown menus like the Macmillan Contact are reset, requiring a manual selection. The "Name of Hospital" text field will retain its current value.
 -   **Age Warning**: If you enter a Date of Birth for a patient who is under 16, the field will turn red, and a warning dialog will appear. This is to ensure correct consent procedures are followed for minors.
 
 ### 3. Selecting Staff Members
@@ -83,8 +83,9 @@ After the consent form has been generated, downloaded, and signed by both the pa
     -   **Automatically open in Browser**: Opens the PDF in a new browser tab.
     -   **Download for Adobe Acrobat**: Downloads the PDF to your computer, allowing you to open it in a dedicated application like Adobe Acrobat.
 -   **Update Forms**: Click **Check for Updated Forms** to manually trigger a scrape of the currently saved URL to refresh the list of available forms.
--   **Backup & Restore Settings**: You can export the application's settings (including the email list, but excluding the staff list) to a JSON file for backup. You can also import a settings file to restore a previous configuration.
--   **Staff Management**: Click **Edit Staff List** to navigate to a separate page where you can add, edit, or remove staff members. On this page, you can also import and export the staff list independently of the main application settings.
+-   **Backup & Restore Settings**: You can export the application's entire configuration (including settings, emails, staff, and tumour sites) to a single JSON file for backup. You can also import a settings file to restore a previous configuration.
+-   **Staff Management**: Click **Edit Staff List** to navigate to a separate page where you can add, edit, or remove staff members, including their tumour site specialities. On this page, you can also import and export the staff list independently of the main application settings.
+-   **Tumour Site Management**: Click **Edit Tumour Sites** to manage the list of tumour sites that can be assigned as specialities to staff members.
 -   **Email Management**: Click **Edit Email Config** to navigate to a page where you can manage a list of email recipients. Emails must be in a valid format and unique.
 
 ---
