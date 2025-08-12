@@ -53,7 +53,7 @@ const emptyPatientData: PatientData = {
   fullAddress: "",
   homePhone: "",
   gpName: "",
-  hospitalName: "",
+  hospitalName: "Kent Oncology Centre",
   rNumber: "",
   nhsNumber: "",
   hospitalNumber: "",
@@ -745,3 +745,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
