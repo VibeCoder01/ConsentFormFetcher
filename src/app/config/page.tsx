@@ -528,7 +528,7 @@ export default function ConfigPage() {
            <Card>
             <CardHeader>
                 <CardTitle>Backup & Restore Settings</CardTitle>
-                <CardDescription>Export or import application settings. The staff list can be managed separately.</CardDescription>
+                <CardDescription>Export or import the full application configuration (including staff). The staff list can also be managed separately.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={handleExport}>
