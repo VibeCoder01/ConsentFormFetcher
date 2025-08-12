@@ -63,3 +63,8 @@ export interface EmailContact {
     id: string;
     email: string;
 }
+
+export interface TumourGroup {
+    id: string;
+    name: string;
+}
