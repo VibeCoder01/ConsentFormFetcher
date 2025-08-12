@@ -64,7 +64,7 @@ export interface EmailContact {
     email: string;
 }
 
-export interface TumourGroup {
+export interface TumourSite {
     id: string;
     name: string;
 }
