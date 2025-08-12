@@ -86,6 +86,7 @@ export default function Home() {
   
   const [previewPdfFieldsConfig, setPreviewPdfFieldsConfig] = useState(false);
   const [pdfOpenMethodConfig, setPdfOpenMethodConfig] = useState<'browser' | 'acrobat'>('browser');
+  const [showWelshFormsConfig, setShowWelshFormsConfig] = useState(false);
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   
   const uploadInputRef = useRef<HTMLInputElement>(null);
@@ -136,6 +137,7 @@ export default function Home() {
       setStaffMembers(staffData);
       setPreviewPdfFieldsConfig(configData.previewPdfFields);
       setPdfOpenMethodConfig(configData.pdfOpenMethod || 'browser');
+      setShowWelshFormsConfig(configData.showWelshForms);
 
       const initialData = configData.prepopulateWithFakeData ? fakePatientData : emptyPatientData;
       setPatientData(initialData);
@@ -153,6 +155,16 @@ export default function Home() {
       setIsConfigLoading(false);
     }
   };
+
+  const filteredFormCategories = useMemo(() => {
+    if (showWelshFormsConfig) {
+      return formCategories;
+    }
+    return formCategories.map(category => ({
+      ...category,
+      forms: category.forms.filter(form => !form.title.toLowerCase().includes('welsh language'))
+    })).filter(category => category.forms.length > 0);
+  }, [formCategories, showWelshFormsConfig]);
 
 
   useEffect(() => {
@@ -585,7 +597,7 @@ export default function Home() {
 
   const formListComponent = (
     <FormList
-      formCategories={formCategories}
+      formCategories={filteredFormCategories}
       onSelectForm={handleSelectForm}
       selectedFormUrl={selectedForm?.url}
       disabled={isConfigLoading}
