@@ -29,12 +29,6 @@ const identifierOptions: { value: IdentifierType; label: string }[] = [
     { value: 'hospitalNumberMTW', label: 'Hospital Number (MTW)' },
 ];
 
-const hospitalOptions = [
-    "Kent Oncology Centre",
-    "Kent Oncology Centre - Maidstone Hospital",
-    "Kent Oncology Centre - Kent & Canterbury Hospital"
-];
-
 export function PatientForm({ patientData, initialData, setPatientData, staffMembers }: PatientFormProps) {
   const [showAgeWarning, setShowAgeWarning] = useState(false);
   const [showRNumberPrompt, setShowRNumberPrompt] = useState(false);
@@ -54,13 +48,6 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
     setPatientData({
         ...patientData,
         selectedIdentifier: value as IdentifierType,
-    });
-  };
-
-  const handleHospitalChange = (value: string) => {
-    setPatientData({
-      ...patientData,
-      hospitalName: value,
     });
   };
   
@@ -116,7 +103,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
             nhsNumber: data.nhsNumber || '',
             hospitalNumber: data.hospitalNumber || '',
             hospitalNumberMTW: data.hospitalNumberMTW || '',
-            hospitalName: '', // Reset hospital dropdown
+            hospitalName: patientData.hospitalName, // Keep existing hospital name
             macmillanContactId: null, // Reset macmillan dropdown
         }, true); // Pass true to indicate it's from demographics fetch
 
@@ -243,22 +230,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="hospitalName">Name of Hospital</Label>
-           <Select
-            value={patientData.hospitalName}
-            onValueChange={handleHospitalChange}
-          >
-            <SelectTrigger 
-                id="hospitalName" 
-                className={cn(!patientData.hospitalName && "bg-red-100 dark:bg-red-900/30")}
-            >
-              <SelectValue placeholder="Make a selection" />
-            </SelectTrigger>
-            <SelectContent>
-              {hospitalOptions.map(option => (
-                <SelectItem key={option} value={option}>{option}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input type="text" id="hospitalName" name="hospitalName" value={patientData.hospitalName} onChange={handleChange} className={cn(isInitialValue('hospitalName') && "bg-red-100 dark:bg-red-900/30")}/>
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="macmillanContact">Macmillan Contact</Label>
@@ -330,3 +302,5 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
     </div>
   );
 }
+
+    
