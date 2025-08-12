@@ -14,6 +14,7 @@ interface AppConfig {
     pdfOpenMethod: 'browser' | 'acrobat';
     rtConsentFolder: string;
     prepopulateWithFakeData: boolean;
+    showWelshForms: boolean;
 }
 
 // Function to read the current config

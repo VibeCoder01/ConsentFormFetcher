@@ -48,8 +48,11 @@ export default function ConfigPage() {
   const [prepopulateWithFakeData, setPrepopulateWithFakeData] = useState(true);
   const [initialPrepopulateWithFakeData, setInitialPrepopulateWithFakeData] = useState(true);
 
+  const [showWelshForms, setShowWelshForms] = useState(false);
+  const [initialShowWelshForms, setInitialShowWelshForms] = useState(false);
 
-  const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields || pdfOpenMethod !== initialPdfOpenMethod || rtConsentFolder !== initialRtConsentFolder || prepopulateWithFakeData !== initialPrepopulateWithFakeData;
+
+  const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields || pdfOpenMethod !== initialPdfOpenMethod || rtConsentFolder !== initialRtConsentFolder || prepopulateWithFakeData !== initialPrepopulateWithFakeData || showWelshForms !== initialShowWelshForms;
 
   const fetchConfig = async () => {
     setIsLoadingConfig(true);
@@ -69,6 +72,8 @@ export default function ConfigPage() {
       setInitialRtConsentFolder(config.rtConsentFolder || "");
       setPrepopulateWithFakeData(config.prepopulateWithFakeData);
       setInitialPrepopulateWithFakeData(config.prepopulateWithFakeData);
+      setShowWelshForms(config.showWelshForms);
+      setInitialShowWelshForms(config.showWelshForms);
     } catch (error) {
        toast({
         variant: 'destructive',
@@ -98,6 +103,7 @@ export default function ConfigPage() {
         pdfOpenMethod: pdfOpenMethod,
         rtConsentFolder: rtConsentFolder,
         prepopulateWithFakeData: prepopulateWithFakeData,
+        showWelshForms: showWelshForms,
       };
 
        const response = await fetch('/api/config', {
@@ -122,6 +128,7 @@ export default function ConfigPage() {
       setInitialPdfOpenMethod(newConfig.pdfOpenMethod);
       setInitialRtConsentFolder(newConfig.rtConsentFolder);
       setInitialPrepopulateWithFakeData(newConfig.prepopulateWithFakeData);
+      setInitialShowWelshForms(newConfig.showWelshForms);
 
       toast({
         title: 'Success',
@@ -295,6 +302,10 @@ export default function ConfigPage() {
             <Skeleton className="h-6 w-6 rounded-full" />
             <Skeleton className="h-4 w-[280px]" />
           </div>
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-6 w-6 rounded-full" />
+            <Skeleton className="h-4 w-[220px]" />
+          </div>
         </CardContent>
       )
     }
@@ -323,6 +334,14 @@ export default function ConfigPage() {
                     onCheckedChange={setPrepopulateWithFakeData}
                 />
                 <Label htmlFor="prepopulate-with-fake-data">Pre-populate form with dummy data</Label>
+            </div>
+             <div className="flex items-center space-x-2">
+                <Switch 
+                    id="show-welsh-forms" 
+                    checked={showWelshForms}
+                    onCheckedChange={setShowWelshForms}
+                />
+                <Label htmlFor="show-welsh-forms">Display Welsh PDF forms</Label>
             </div>
         </CardContent>
     )
