@@ -38,6 +38,9 @@ export interface StaffMember {
     name: string;
     title: string;
     phone: string;
+    speciality1?: string | null;
+    speciality2?: string | null;
+    speciality3?: string | null;
 }
 
 export interface KomsResponse {
@@ -65,6 +68,11 @@ export interface EmailContact {
 }
 
 export interface TumourSite {
+    id: string;
+    name: string;
+}
+
+export interface TumourGroup {
     id: string;
     name: string;
 }

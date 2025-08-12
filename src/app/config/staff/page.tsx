@@ -9,15 +9,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, PlusCircle, Save, Trash2, Loader2, Eraser, Upload, Download } from 'lucide-react';
-import type { StaffMember } from '@/lib/types';
+import { ArrowLeft, PlusCircle, Save, Trash2, Loader2, Eraser, Upload, Download, X } from 'lucide-react';
+import type { StaffMember, TumourSite } from '@/lib/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function StaffConfigPage() {
   const { toast } = useToast();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [initialStaff, setInitialStaff] = useState<StaffMember[]>([]);
+  const [tumourSites, setTumourSites] = useState<TumourSite[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -25,19 +27,27 @@ export default function StaffConfigPage() {
 
   const isModified = JSON.stringify(staff) !== JSON.stringify(initialStaff);
 
-  const fetchStaff = async () => {
+  const fetchInitialData = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch('/api/staff');
-        if (!res.ok) throw new Error('Failed to fetch staff');
-        const data: StaffMember[] = await res.json();
-        setStaff(data);
-        setInitialStaff(data);
+        const [staffRes, sitesRes] = await Promise.all([
+          fetch('/api/staff'),
+          fetch('/api/tumour-sites')
+        ]);
+        if (!staffRes.ok) throw new Error('Failed to fetch staff');
+        if (!sitesRes.ok) throw new Error('Failed to fetch tumour sites');
+        
+        const staffData: StaffMember[] = await staffRes.json();
+        const sitesData: TumourSite[] = await sitesRes.json();
+
+        setStaff(staffData);
+        setInitialStaff(staffData);
+        setTumourSites(sitesData);
       } catch (error) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Could not load staff data.',
+          description: 'Could not load initial page data.',
         });
       } finally {
         setIsLoading(false);
@@ -45,17 +55,17 @@ export default function StaffConfigPage() {
     }
 
   useEffect(() => {
-    fetchStaff();
+    fetchInitialData();
   }, [toast]);
 
-  const handleFieldChange = (index: number, field: keyof Omit<StaffMember, 'id'>, value: string) => {
+  const handleFieldChange = (index: number, field: keyof Omit<StaffMember, 'id'>, value: string | null) => {
     const updatedStaff = [...staff];
     updatedStaff[index] = { ...updatedStaff[index], [field]: value };
     setStaff(updatedStaff);
   };
 
   const addStaffMember = () => {
-    setStaff([...staff, { id: `new_${Date.now()}`, name: '', title: '', phone: '' }]);
+    setStaff([...staff, { id: `new_${Date.now()}`, name: '', title: '', phone: '', speciality1: null, speciality2: null, speciality3: null }]);
   };
 
   const removeStaffMember = (index: number) => {
@@ -225,6 +235,35 @@ export default function StaffConfigPage() {
     </TooltipProvider>
   );
 
+  const SpecialitySelector = ({ index, field }: { index: number, field: 'speciality1' | 'speciality2' | 'speciality3' }) => (
+    <div className="space-y-1.5 relative">
+        <Label htmlFor={`${field}-${index}`}>Tumour Site Speciality</Label>
+        <Select
+            value={staff[index][field] || ''}
+            onValueChange={(value) => handleFieldChange(index, field, value)}
+        >
+            <SelectTrigger id={`${field}-${index}`}>
+                <SelectValue placeholder="Select speciality..." />
+            </SelectTrigger>
+            <SelectContent>
+                {tumourSites.map(site => (
+                    <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
+        {staff[index][field] && (
+            <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-6 right-8 h-6 w-6"
+                onClick={() => handleFieldChange(index, field, null)}
+            >
+                <X className="h-4 w-4" />
+            </Button>
+        )}
+    </div>
+  );
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="flex h-16 items-center border-b bg-card px-4 md:px-6 justify-between">
@@ -294,6 +333,9 @@ export default function StaffConfigPage() {
                                 <Label htmlFor={`phone-${index}`}>Phone/Bleep</Label>
                                 <Input id={`phone-${index}`} value={member.phone} onChange={(e) => handleFieldChange(index, 'phone', e.target.value)} placeholder="e.g., 1234"/>
                             </div>
+                             <SpecialitySelector index={index} field="speciality1" />
+                             <SpecialitySelector index={index} field="speciality2" />
+                             <SpecialitySelector index={index} field="speciality3" />
                         </CardContent>
                         <CardFooter>
                             <Button variant="destructive" size="sm" onClick={() => removeStaffMember(index)}>

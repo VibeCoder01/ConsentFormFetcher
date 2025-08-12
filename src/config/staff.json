@@ -3,54 +3,81 @@
     "id": "jane_doe",
     "name": "Dr. Jane Brown",
     "title": "Consultant Clinical Oncologist",
-    "phone": "01227 866383"
+    "phone": "01227 866383",
+    "speciality1": null,
+    "speciality2": null,
+    "speciality3": null
   },
   {
     "id": "peter_jones",
     "name": "Dr. Russell Burcombe",
     "title": "Consultant Clinical Oncologist",
-    "phone": "01622 225023"
+    "phone": "01622 225023",
+    "speciality1": null,
+    "speciality2": null,
+    "speciality3": null
   },
   {
     "id": "new_1753975744207",
     "name": "Dr Jennifer Glendenning",
     "title": "Consultant Clinical Oncologist",
-    "phone": "01622 225089"
+    "phone": "01622 225089",
+    "speciality1": null,
+    "speciality2": null,
+    "speciality3": null
   },
   {
     "id": "new_1753975930790",
     "name": "Dr Julia Hall",
     "title": "Consultant Clinical Oncologist",
-    "phone": "01622 477629"
+    "phone": "01622 477629",
+    "speciality1": null,
+    "speciality2": null,
+    "speciality3": null
   },
   {
     "id": "new_1753975974083",
     "name": "Dr Gemma Hegarty",
     "title": "Consultant Clinical Oncologist",
-    "phone": "01622 228449"
+    "phone": "01622 228449",
+    "speciality1": null,
+    "speciality2": null,
+    "speciality3": null
   },
   {
     "id": "new_1753976011781",
     "name": "Dr Rema Jyothirmayi",
     "title": "Consultant Clinical Oncologist",
-    "phone": "01622 225111"
+    "phone": "01622 225111",
+    "speciality1": null,
+    "speciality2": null,
+    "speciality3": null
   },
   {
     "id": "new_1753976050533",
     "name": "Dr Aswin Kumar",
     "title": "Consultant Clinical Oncologist",
-    "phone": "01622 225288"
+    "phone": "01622 225288",
+    "speciality1": null,
+    "speciality2": null,
+    "speciality3": null
   },
   {
     "id": "new_1753976082500",
     "name": "Sarah Egan",
     "title": "Macmillan Radiographer",
-    "phone": "01622 227311"
+    "phone": "01622 227311",
+    "speciality1": null,
+    "speciality2": null,
+    "speciality3": null
   },
   {
     "id": "new_1753976116093",
     "name": "Memory Masamba",
     "title": "Macmillan Radiographer",
-    "phone": "01227 864311"
+    "phone": "01227 864311",
+    "speciality1": null,
+    "speciality2": null,
+    "speciality3": null
   }
 ]
