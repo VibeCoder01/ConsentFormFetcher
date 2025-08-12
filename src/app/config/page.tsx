@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2, Download, Upload, Mail, ClipboardList } from "lucide-react";
+import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2, Download, Upload, Mail, MapPin } from "lucide-react";
 import { scrapeRcrForms } from "@/ai/flows/scrape-forms-flow";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -493,16 +493,16 @@ export default function ConfigPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Tumour Group Management</CardTitle>
+              <CardTitle>Tumour Site Management</CardTitle>
               <CardDescription>
-                Manage the list of tumour groups used in the application.
+                Manage the list of tumour sites used in the application.
               </CardDescription>
             </CardHeader>
             <CardFooter>
-               <Link href="/config/tumour-groups" passHref>
+               <Link href="/config/tumour-sites" passHref>
                   <Button variant="outline">
-                    <ClipboardList className="mr-2 h-4 w-4" />
-                    Edit Tumour Groups
+                    <MapPin className="mr-2 h-4 w-4" />
+                    Edit Tumour Sites
                   </Button>
                </Link>
             </CardFooter>
