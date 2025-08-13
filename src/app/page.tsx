@@ -729,7 +729,7 @@ export default function Home() {
         <Card className="w-full max-w-2xl">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <ListOrdered className="mr-2 h-6 w-6" />
+              <ListOrdered className="mr-2 h-6 w-6 text-primary" />
               Workflow Guide
             </CardTitle>
             <CardDescription>
@@ -739,28 +739,28 @@ export default function Home() {
           <CardContent>
             <ol className="list-decimal list-inside space-y-3 text-sm text-muted-foreground">
               <li>
-                **Get Patient Details:** Use the form on the left or the "Get Live Patient Demographics" button to enter patient information.
+                <strong>Get Patient Details:</strong> Use the form on the left or the "Get Live Patient Demographics" button to enter patient information.
               </li>
               <li>
-                **Select Macmillan Contact:** Choose the appropriate Macmillan contact from the dropdown menu.
+                <strong>Select Macmillan Contact:</strong> Choose the appropriate Macmillan contact from the dropdown menu.
               </li>
               <li>
-                **Select Clinician:** First filter by tumour site, then select the responsible clinician.
+                <strong>Select Clinician:</strong> First filter by tumour site, then select the responsible clinician.
               </li>
               <li>
-                **Check Details:** Ensure all entered information is correct.
+                <strong>Check Details:</strong> Ensure all entered information is correct.
               </li>
               <li>
-                **Select Consent Form:** Choose the appropriate form from the "Available Forms" list. The pre-filled PDF will be generated.
+                <strong>Select Consent Form:</strong> Choose the appropriate form from the "Available Forms" list. The pre-filled PDF will be generated.
               </li>
               <li>
-                **Fill & Sign PDF:** Open the downloaded PDF in an application like Adobe Acrobat to complete any remaining fields and obtain signatures.
+                <strong>Fill & Sign PDF:</strong> Open the downloaded PDF in an application like Adobe Acrobat to complete any remaining fields and obtain signatures.
               </li>
               <li>
-                **Save the File:** Save the completed and signed PDF to your computer.
+                <strong>Save the File:</strong> Save the completed and signed PDF to your computer.
               </li>
               <li>
-                **Submit:** Use the **SUBMIT** button in the top-right corner to upload the final PDF to the configured "RT Consent" folder.
+                <strong>Submit:</strong> Use the <strong>SUBMIT</strong> button in the top-right corner to upload the final PDF to the configured "RT Consent" folder.
               </li>
             </ol>
           </CardContent>
