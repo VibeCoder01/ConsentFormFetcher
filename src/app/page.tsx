@@ -754,7 +754,7 @@ export default function Home() {
                 <strong>Select Consent Form:</strong> Choose the appropriate form from the "Available Forms" list. The pre-filled PDF will be generated.
               </li>
               <li>
-                <strong>Fill & Sign PDF:</strong> Open the downloaded PDF in an application like Adobe Acrobat to complete any remaining fields and obtain signatures.
+                <strong>Fill & Sign PDF:</strong> Open the downloaded PDF from your browsers download folder in Acrobat Reader to complete any remaining fields and obtain signatures.
               </li>
               <li>
                 <strong>Save the File:</strong> Save the completed and signed PDF to your computer.
