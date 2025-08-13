@@ -132,6 +132,3 @@ After the consent form has been generated, downloaded, and signed by both the pa
 | DSPT / CAF | Low data-at-rest, no unmanaged third-party services, optional download flow – all count as good-practice evidence for DSPT questions 8-A and 9-C. |
 | UK GDPR & common-law confidentiality | Validation of patient identifiers, no long-term storage, and explicit under-16 warnings support accuracy, data-minimisation and lawful-consent duties. |
 | Consent law for minors | Under-16 alert directly operationalises Gillick-competence checks |
-
-
-    
