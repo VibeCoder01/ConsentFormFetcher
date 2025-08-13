@@ -39,13 +39,13 @@ export function ClinicianForm({ staffMembers, tumourSites, selectedStaffId, onSt
     }, [selectedTumourSiteId, staffMembers]);
 
     const handleTumourSiteChange = (siteId: string) => {
-        setSelectedTumourSiteId(siteId);
+        // "all" is a special value to clear the filter
+        if (siteId === 'all') {
+            setSelectedTumourSiteId(null);
+        } else {
+            setSelectedTumourSiteId(siteId);
+        }
         onStaffMemberChange(null); // Reset clinician selection when site changes
-    };
-
-    const clearFilter = () => {
-        setSelectedTumourSiteId(null);
-        onStaffMemberChange(null);
     };
 
     if (!staffMembers || staffMembers.length === 0) {
@@ -69,23 +69,19 @@ export function ClinicianForm({ staffMembers, tumourSites, selectedStaffId, onSt
                     <Label htmlFor="tumourSite">Filter by Tumour Site</Label>
                     <div className="flex items-center gap-2">
                         <Select
-                            value={selectedTumourSiteId || ''}
+                            value={selectedTumourSiteId || 'all'}
                             onValueChange={handleTumourSiteChange}
                         >
                             <SelectTrigger id="tumourSite">
                                 <SelectValue placeholder="Select a tumour site..." />
                             </SelectTrigger>
                             <SelectContent>
+                                <SelectItem value="all">Show All Clinicians</SelectItem>
                                 {tumourSites.map(site => (
                                     <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
-                        {selectedTumourSiteId && (
-                            <Button variant="ghost" size="icon" onClick={clearFilter}>
-                                <X className="h-4 w-4" />
-                            </Button>
-                        )}
                     </div>
                 </div>
 
@@ -94,7 +90,6 @@ export function ClinicianForm({ staffMembers, tumourSites, selectedStaffId, onSt
                     <Select
                         value={selectedStaffId || ''}
                         onValueChange={onStaffMemberChange}
-                        disabled={!selectedTumourSiteId}
                     >
                         <SelectTrigger 
                             id="clinicianName"
@@ -103,7 +98,7 @@ export function ClinicianForm({ staffMembers, tumourSites, selectedStaffId, onSt
                                  showConsultantWarning && "bg-orange-200 dark:bg-orange-800/50"
                              )}
                         >
-                            <SelectValue placeholder={selectedTumourSiteId ? "Make a selection" : "Select a site first"} />
+                            <SelectValue placeholder={selectedTumourSiteId ? "Select a matching clinician" : "Select a clinician"} />
                         </SelectTrigger>
                         <SelectContent>
                             {filteredStaffMembers.map(staff => (
