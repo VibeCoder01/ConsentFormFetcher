@@ -5,6 +5,6 @@
   "previewPdfFields": false,
   "pdfOpenMethod": "browser",
   "rtConsentFolder": "c:\\VC01\\RT_Consent",
-  "prepopulateWithFakeData": false,
+  "prepopulateWithFakeData": true,
   "showWelshForms": false
 }
