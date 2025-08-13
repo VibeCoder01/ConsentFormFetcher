@@ -35,14 +35,17 @@ On the left sidebar, you will find a "Patient Details" form. The initial state o
 
 ### 3. Selecting Staff Members
 
-Below the patient details, you will find two dropdown menus:
+Below the patient details, you will find a two-step process for selecting the responsible clinician:
 
--   **Select Clinician**: Choose the responsible clinician from this list. If you select a staff member whose title does not contain "Consultant," the field will turn orange as a warning.
--   **Macmillan Contact**: This is part of the patient form. Choose the appropriate Macmillan contact. If the selected person's title does not contain "Macmillan," the field will turn orange.
+1.  **Filter by Tumour Site**: First, use this dropdown to filter the list of clinicians by their speciality. This makes it easier to find the right person for the procedure. You can also select "Show All Clinicians" to see the complete staff list.
+2.  **Select Clinician**: Once a tumour site is selected (or "Show All" is chosen), this dropdown will be populated with the relevant staff members. If you select a staff member whose title does not contain "Consultant," the field will turn orange as a warning.
+
+Below the clinician selection, there is a separate dropdown for the **Macmillan Contact**. If the selected person's title does not contain "Macmillan," the field will turn orange.
 
 ### 4. Selecting a Consent Form
 
 -   The **"Available Forms"** section on the left sidebar lists all consent forms scraped from the RCR website, organized by category.
+-   Administrative documents, such as "Supporting Documents" and "Project acknowledgements," are automatically hidden from this list.
 -   Click on a form title to select it. The application's next step depends on the **"Preview PDF fields before generating"** setting on the Configuration page.
 
 ### 5. Reviewing and Generating the PDF
@@ -96,6 +99,7 @@ After the consent form has been generated, downloaded, and signed by both the pa
 | DOB < 16 triggers a red flag and modal warning | Forces the user to check Gillick competence or obtain parental consent before proceeding. | Common-law consent rules for minors • DCB 0129/0160 hazard mitigation (“identify age-related risks”) |
 | Clinician role check (flag if not a Consultant) | Consent forms for IR/oncology procedures normally need a consultant or equivalent as the performer; the orange warning nudges users to the right signatory. | DCB 0160 deployment duty to ensure “appropriate clinical responsibility” |
 | Automatic blanking of first witness fields immediately before PDF generation | Prevents patient data creeping into witness/sign-off boxes – a known safety hazard in radiology consent. | DCB 0129 risk control; DTAC C1 (“no erroneous clinical data”) |
+| Automatic blanking of final date fields | Prevents auto-population of witness signature dates, reducing the risk of a user overlooking a required manual entry. | DCB 0129 risk control; DTAC C1 (“no erroneous clinical data”) |
 | Always fetches the latest RCR template from the live website | Removes the risk of using outdated consent forms whose wording or complication lists have been revised. | DCB 0129 safety requirement to “maintain current clinical content”; NICE ESF B5 (currency of content) |
 
 ## Data-protection & information-governance niceties
@@ -128,3 +132,6 @@ After the consent form has been generated, downloaded, and signed by both the pa
 | DSPT / CAF | Low data-at-rest, no unmanaged third-party services, optional download flow – all count as good-practice evidence for DSPT questions 8-A and 9-C. |
 | UK GDPR & common-law confidentiality | Validation of patient identifiers, no long-term storage, and explicit under-16 warnings support accuracy, data-minimisation and lawful-consent duties. |
 | Consent law for minors | Under-16 alert directly operationalises Gillick-competence checks |
+
+
+    
