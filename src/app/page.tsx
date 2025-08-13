@@ -15,11 +15,12 @@ import { PatientForm } from "@/components/patient-form";
 import { ClinicianForm } from "@/components/clinician-form";
 import { fillPdf } from "@/ai/flows/fill-pdf-flow";
 import { getPdfFields } from "@/ai/flows/get-pdf-fields-flow";
-import { Loader2 } from "lucide-react";
+import { ListOrdered } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { PdfForm, PdfFormSkeleton, PdfField } from "@/components/pdf-form";
 import { format } from 'date-fns';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const fakePatientData: PatientData = {
   forename: "John",
@@ -724,11 +725,46 @@ export default function Home() {
     }
 
     return (
-      <div className="flex-1 w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-        <div className="text-center text-muted-foreground">
-          <p>Select a form to begin.</p>
-          <p className="text-sm">The form's fields will appear here for you to edit.</p>
-        </div>
+      <div className="flex-1 w-full h-full flex items-center justify-center bg-gray-100/40 dark:bg-gray-800/20 p-4">
+        <Card className="w-full max-w-2xl">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <ListOrdered className="mr-2 h-6 w-6" />
+              Workflow Guide
+            </CardTitle>
+            <CardDescription>
+              Follow these steps to generate and submit a consent form.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ol className="list-decimal list-inside space-y-3 text-sm text-muted-foreground">
+              <li>
+                **Get Patient Details:** Use the form on the left or the "Get Live Patient Demographics" button to enter patient information.
+              </li>
+              <li>
+                **Select Macmillan Contact:** Choose the appropriate Macmillan contact from the dropdown menu.
+              </li>
+              <li>
+                **Select Clinician:** First filter by tumour site, then select the responsible clinician.
+              </li>
+              <li>
+                **Check Details:** Ensure all entered information is correct.
+              </li>
+              <li>
+                **Select Consent Form:** Choose the appropriate form from the "Available Forms" list. The pre-filled PDF will be generated.
+              </li>
+              <li>
+                **Fill & Sign PDF:** Open the downloaded PDF in an application like Adobe Acrobat to complete any remaining fields and obtain signatures.
+              </li>
+              <li>
+                **Save the File:** Save the completed and signed PDF to your computer.
+              </li>
+              <li>
+                **Submit:** Use the **SUBMIT** button in the top-right corner to upload the final PDF to the configured "RT Consent" folder.
+              </li>
+            </ol>
+          </CardContent>
+        </Card>
       </div>
     );
   };
@@ -783,5 +819,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
