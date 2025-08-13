@@ -163,13 +163,15 @@ export default function Home() {
   };
 
   const filteredFormCategories = useMemo(() => {
-    if (showWelshFormsConfig) {
-      return formCategories;
-    }
-    return formCategories.map(category => ({
-      ...category,
-      forms: category.forms.filter(form => !form.title.toLowerCase().includes('welsh language'))
-    })).filter(category => category.forms.length > 0);
+    return formCategories
+      .filter(category => category.category.toLowerCase() !== 'supporting documents')
+      .map(category => ({
+        ...category,
+        forms: showWelshFormsConfig
+          ? category.forms
+          : category.forms.filter(form => !form.title.toLowerCase().includes('welsh language'))
+      }))
+      .filter(category => category.forms.length > 0);
   }, [formCategories, showWelshFormsConfig]);
 
 
