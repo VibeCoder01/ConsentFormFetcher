@@ -1,14 +1,75 @@
 [
   {
-    "id": "new_1755033998049",
-    "name": "Left Elbow"
+    "id": "ts_brain",
+    "name": "Brain"
   },
   {
-    "id": "new_1755034008360",
-    "name": "Left eyelash"
+    "id": "ts_ugi",
+    "name": "UGI"
   },
   {
-    "id": "new_1755034035875",
-    "name": "Left Boot"
+    "id": "ts_breast",
+    "name": "Breast"
+  },
+  {
+    "id": "ts_lung",
+    "name": "Lung"
+  },
+  {
+    "id": "ts_lymphoma",
+    "name": "Lymphoma"
+  },
+  {
+    "id": "ts_thyroid",
+    "name": "Thyroid"
+  },
+  {
+    "id": "ts_urology",
+    "name": "Urology"
+  },
+  {
+    "id": "ts_sarcoma",
+    "name": "Sarcoma"
+  },
+  {
+    "id": "ts_gynae",
+    "name": "Gynae"
+  },
+  {
+    "id": "ts_melanoma",
+    "name": "Melanoma"
+  },
+  {
+    "id": "ts_brachy",
+    "name": "Brachy"
+  },
+  {
+    "id": "ts_lgi",
+    "name": "LGI"
+  },
+  {
+    "id": "ts_netgist",
+    "name": "NET GIST"
+  },
+  {
+    "id": "ts_head_and_neck",
+    "name": "Head and Neck"
+  },
+  {
+    "id": "ts_skin",
+    "name": "Skin"
+  },
+  {
+    "id": "ts_sabr",
+    "name": "SABR"
+  },
+  {
+    "id": "ts_palliative_care",
+    "name": "Palliative Care"
+  },
+  {
+    "id": "ts_testis",
+    "name": "Testis"
   }
 ]
+    
