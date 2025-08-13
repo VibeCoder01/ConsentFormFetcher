@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import type { ConsentForm, ConsentFormCategory, PatientData, IdentifierType, StaffMember } from "@/lib/types";
+import type { ConsentForm, ConsentFormCategory, PatientData, IdentifierType, StaffMember, TumourSite } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AppHeader } from "@/components/app-header";
 import { FormList } from "@/components/form-list";
@@ -78,6 +78,8 @@ export default function Home() {
 
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
   const [selectedStaffMember, setSelectedStaffMember] = useState<StaffMember | null>(null);
+  const [tumourSites, setTumourSites] = useState<TumourSite[]>([]);
+
 
   const [pdfFields, setPdfFields] = useState<PdfField[]>([]);
   const [isFetchingFields, setIsFetchingFields] = useState(false);
@@ -114,7 +116,7 @@ export default function Home() {
     }
   };
 
-  const handleStaffMemberChange = (staffId: string) => {
+  const handleStaffMemberChange = (staffId: string | null) => {
     const selected = staffMembers.find(s => s.id === staffId) || null;
     setSelectedStaffMember(selected);
   };
@@ -123,18 +125,22 @@ export default function Home() {
     setIsLoading(true);
     setIsConfigLoading(true);
     try {
-      const [formsRes, staffRes, configRes] = await Promise.all([
+      const [formsRes, staffRes, configRes, sitesRes] = await Promise.all([
         fetch("/api/consent-forms"),
         fetch("/api/staff"),
         fetch("/api/config"),
+        fetch("/api/tumour-sites"),
       ]);
 
       const formsData: ConsentFormCategory[] = await formsRes.json();
       const staffData: StaffMember[] = await staffRes.json();
       const configData = await configRes.json();
+      const sitesData: TumourSite[] = await sitesRes.json();
+
 
       setFormCategories(formsData);
       setStaffMembers(staffData);
+      setTumourSites(sitesData);
       setPreviewPdfFieldsConfig(configData.previewPdfFields);
       setPdfOpenMethodConfig(configData.pdfOpenMethod || 'browser');
       setShowWelshFormsConfig(configData.showWelshForms);
@@ -660,6 +666,7 @@ export default function Home() {
         />
         <ClinicianForm 
           staffMembers={staffMembers}
+          tumourSites={tumourSites}
           selectedStaffId={selectedStaffMember?.id}
           onStaffMemberChange={handleStaffMemberChange}
         />
