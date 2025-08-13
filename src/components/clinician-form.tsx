@@ -24,7 +24,8 @@ export function ClinicianForm({ staffMembers, tumourSites, selectedStaffId, onSt
         if (!selectedStaffId) return false;
         const selectedStaff = staffMembers.find(s => s.id === selectedStaffId);
         if (!selectedStaff) return false;
-        return !selectedStaff.title.toLowerCase().includes('consultant');
+        const lowerCaseTitle = selectedStaff.title.toLowerCase();
+        return !lowerCaseTitle.includes('consultant') && !lowerCaseTitle.includes('doctor');
     }, [selectedStaffId, staffMembers]);
 
     const filteredStaffMembers = useMemo(() => {
