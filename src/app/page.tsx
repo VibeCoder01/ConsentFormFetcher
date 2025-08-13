@@ -277,11 +277,13 @@ export default function Home() {
 
   const prePopulateData = (fields: string[]): { finalFields: PdfField[], finalFormData: Record<string, string> } => {
     const newPdfFields: PdfField[] = [];
-    const newPdfFormData: Record<string, string> = {};
+    let newPdfFormData: Record<string, string> = {};
 
     const specialStartsWithKeys = ['name', 'date'];
     
     const clinicianRelatedKeys = ['clinician name', 'name of person', 'responsible consultant'];
+    
+    const dateFields: string[] = [];
 
     for (let i = 0; i < fields.length; i++) {
         const fieldName = fields[i];
@@ -290,6 +292,10 @@ export default function Home() {
         let fieldProcessed = false;
 
         const normalizedField = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        if (normalizedField.includes('date')) {
+            dateFields.push(fieldName);
+        }
 
         // Rule for "Name of hospital"
         if (normalizedField === 'nameofhospital') {
@@ -384,6 +390,22 @@ export default function Home() {
         
         newPdfFormData[fieldName] = prefilledValue;
         newPdfFields.push({ name: fieldName, matchedKey: matchedKeyDescription });
+    }
+    
+    // Clear the last three date fields that were auto-populated
+    const autoPopulatedDateFields = dateFields.filter(df => 
+        newPdfFormData[df] && newPdfFields.find(f => f.name === df)?.matchedKey === 'Todays Date'
+    );
+    
+    if (autoPopulatedDateFields.length >= 3) {
+        const fieldsToClear = autoPopulatedDateFields.slice(-3);
+        fieldsToClear.forEach(fieldName => {
+            newPdfFormData[fieldName] = '';
+            const fieldToUpdate = newPdfFields.find(f => f.name === fieldName);
+            if (fieldToUpdate) {
+                fieldToUpdate.matchedKey = 'Intentionally left blank';
+            }
+        });
     }
     
     return { finalFields: newPdfFields, finalFormData: newPdfFormData };
@@ -761,3 +783,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
