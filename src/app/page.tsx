@@ -167,9 +167,16 @@ export default function Home() {
       .filter(category => category.category.toLowerCase() !== 'supporting documents')
       .map(category => ({
         ...category,
-        forms: showWelshFormsConfig
-          ? category.forms
-          : category.forms.filter(form => !form.title.toLowerCase().includes('welsh language'))
+        forms: category.forms.filter(form => {
+            const lowerCaseTitle = form.title.toLowerCase();
+            if (lowerCaseTitle.includes('project acknowledgements')) {
+                return false;
+            }
+            if (!showWelshFormsConfig && lowerCaseTitle.includes('welsh language')) {
+                return false;
+            }
+            return true;
+        })
       }))
       .filter(category => category.forms.length > 0);
   }, [formCategories, showWelshFormsConfig]);
@@ -754,5 +761,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
