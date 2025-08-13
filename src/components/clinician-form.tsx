@@ -1,26 +1,52 @@
 
 'use client';
 
-import { useMemo } from 'react';
-import { StaffMember } from '@/lib/types';
+import { useMemo, useState } from 'react';
+import { StaffMember, TumourSite } from '@/lib/types';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
+import { X } from 'lucide-react';
 
 interface ClinicianFormProps {
   staffMembers: StaffMember[];
+  tumourSites: TumourSite[];
   selectedStaffId?: string | null;
-  onStaffMemberChange: (staffId: string) => void;
+  onStaffMemberChange: (staffId: string | null) => void;
 }
 
-export function ClinicianForm({ staffMembers, selectedStaffId, onStaffMemberChange }: ClinicianFormProps) {
+export function ClinicianForm({ staffMembers, tumourSites, selectedStaffId, onStaffMemberChange }: ClinicianFormProps) {
+    const [selectedTumourSiteId, setSelectedTumourSiteId] = useState<string | null>(null);
+
     const showConsultantWarning = useMemo(() => {
         if (!selectedStaffId) return false;
         const selectedStaff = staffMembers.find(s => s.id === selectedStaffId);
         if (!selectedStaff) return false;
         return !selectedStaff.title.toLowerCase().includes('consultant');
     }, [selectedStaffId, staffMembers]);
+
+    const filteredStaffMembers = useMemo(() => {
+        if (!selectedTumourSiteId) {
+            return staffMembers;
+        }
+        return staffMembers.filter(staff => 
+            staff.speciality1 === selectedTumourSiteId ||
+            staff.speciality2 === selectedTumourSiteId ||
+            staff.speciality3 === selectedTumourSiteId
+        );
+    }, [selectedTumourSiteId, staffMembers]);
+
+    const handleTumourSiteChange = (siteId: string) => {
+        setSelectedTumourSiteId(siteId);
+        onStaffMemberChange(null); // Reset clinician selection when site changes
+    };
+
+    const clearFilter = () => {
+        setSelectedTumourSiteId(null);
+        onStaffMemberChange(null);
+    };
 
     if (!staffMembers || staffMembers.length === 0) {
         return (
@@ -40,10 +66,35 @@ export function ClinicianForm({ staffMembers, selectedStaffId, onStaffMemberChan
             </h2>
             <div className="space-y-4 px-2">
                 <div className="grid w-full max-w-sm items-center gap-1.5">
+                    <Label htmlFor="tumourSite">Filter by Tumour Site</Label>
+                    <div className="flex items-center gap-2">
+                        <Select
+                            value={selectedTumourSiteId || ''}
+                            onValueChange={handleTumourSiteChange}
+                        >
+                            <SelectTrigger id="tumourSite">
+                                <SelectValue placeholder="Select a tumour site..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {tumourSites.map(site => (
+                                    <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {selectedTumourSiteId && (
+                            <Button variant="ghost" size="icon" onClick={clearFilter}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                <div className="grid w-full max-w-sm items-center gap-1.5">
                     <Label htmlFor="clinicianName">Select Clinician</Label>
                     <Select
                         value={selectedStaffId || ''}
                         onValueChange={onStaffMemberChange}
+                        disabled={!selectedTumourSiteId}
                     >
                         <SelectTrigger 
                             id="clinicianName"
@@ -52,10 +103,10 @@ export function ClinicianForm({ staffMembers, selectedStaffId, onStaffMemberChan
                                  showConsultantWarning && "bg-orange-200 dark:bg-orange-800/50"
                              )}
                         >
-                            <SelectValue placeholder="Make a selection" />
+                            <SelectValue placeholder={selectedTumourSiteId ? "Make a selection" : "Select a site first"} />
                         </SelectTrigger>
                         <SelectContent>
-                            {staffMembers.map(staff => (
+                            {filteredStaffMembers.map(staff => (
                                 <SelectItem key={staff.id} value={staff.id}>{staff.name} - {staff.title}</SelectItem>
                             ))}
                         </SelectContent>
@@ -65,5 +116,3 @@ export function ClinicianForm({ staffMembers, selectedStaffId, onStaffMemberChan
         </div>
     );
 }
-
-    
