@@ -37,6 +37,9 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
             const field = form.getField(fieldName);
             
             if (field instanceof PDFTextField) {
+                if (fieldName.toLowerCase().includes('contact')) {
+                    field.setFontSize(8); // Set a smaller font size
+                }
                 field.setText(value.toString());
             } else if (field instanceof PDFDropdown && !field.isMultiselect()) {
                 const options = field.getOptions();
