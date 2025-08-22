@@ -34,7 +34,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
   const [showRNumberPrompt, setShowRNumberPrompt] = useState(false);
   const [isFetchingDemographics, setIsFetchingDemographics] = useState(false);
   const [demographicsLoaded, setDemographicsLoaded] = useState(false);
-  const [macmillanFilter, setMacmillanFilter] = useState<'macmillan' | 'other' | null>(null);
+  const [macmillanFilter, setMacmillanFilter] = useState<'macmillan' | 'other' | null>('macmillan');
   const { toast } = useToast();
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -337,5 +337,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
     </div>
   );
 }
+
+    
 
     
