@@ -1,23 +1,4 @@
-
 [
-  {
-    "id": "new_1753976082500",
-    "name": "Sarah Egan",
-    "title": "Macmillan Radiographer",
-    "phone": "01622 227311",
-    "speciality1": null,
-    "speciality2": null,
-    "speciality3": null
-  },
-  {
-    "id": "new_1753976116093",
-    "name": "Memory Masamba",
-    "title": "Macmillan Radiographer",
-    "phone": "01227 864311",
-    "speciality1": null,
-    "speciality2": null,
-    "speciality3": null
-  },
   {
     "id": "new_sam_forner",
     "name": "Dr. Sam FORNER",
@@ -658,6 +639,3 @@
     "speciality3": null
   }
 ]
-    
-
-    

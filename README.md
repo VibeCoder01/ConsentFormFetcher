@@ -38,9 +38,12 @@ On the left sidebar, you will find a "Patient Details" form. The initial state o
 Below the patient details, you will find a two-step process for selecting the responsible clinician:
 
 1.  **Filter by Tumour Site**: First, use this dropdown to filter the list of clinicians by their speciality. This makes it easier to find the right person for the procedure. You can also select "Show All Clinicians" to see the complete staff list.
-2.  **Select Clinician**: Once a tumour site is selected (or "Show All" is chosen), this dropdown will be populated with the relevant staff members. If you select a staff member whose title does not contain "Consultant," the field will turn orange as a warning.
+2.  **Select Clinician**: Once a tumour site is selected (or "Show All" is chosen), this dropdown will be populated with the relevant staff members. If you select a staff member whose title does not contain "Consultant" or "Doctor," the field will turn orange as a warning.
 
-Below the clinician selection, there is a separate dropdown for the **Macmillan Contact**. If the selected person's title does not contain "Macmillan," the field will turn orange.
+Below the clinician selection, there is a separate process for the **Macmillan Contact**:
+
+1.  **Filter by Contact Type**: A dropdown, defaulted to "Macmillan", allows you to filter contacts. You can choose "Macmillan" to see only Macmillan-affiliated staff or "Other" for all other contacts.
+2.  **Select Contact**: Based on your filter, select the appropriate contact from the list. If the selected person's title does not contain "Macmillan," the field will turn orange.
 
 ### 4. Selecting a Consent Form
 
@@ -55,6 +58,7 @@ The application's behavior after you select a form is controlled by settings on 
 -   **If "Preview PDF fields before generating" is ON**:
     -   Once you select a form, its fillable fields will appear in the main content area.
     -   The application will intelligently pre-populate these fields based on the patient and clinician data you entered. The source of the pre-filled data (e.g., "matched with - Patient Full Name") is shown above each field.
+    -   The font size for the "Contact details" field is automatically reduced to ensure long names and titles are not truncated.
     -   Review all fields for accuracy. You can edit any pre-filled information directly on this screen.
     -   When you are satisfied, click the **"Submit & Open PDF"** button. The application will then either open the PDF in a new browser tab or download it, depending on the "PDF Handling" setting on the Configuration page.
 -   **If "Preview PDF fields before generating" is OFF**:
@@ -97,7 +101,7 @@ After the consent form has been generated, downloaded, and signed by both the pa
 | Software feature | Why it matters | Rule / standard it satisfies |
 | --- | --- | --- |
 | DOB < 16 triggers a red flag and modal warning | Forces the user to check Gillick competence or obtain parental consent before proceeding. | Common-law consent rules for minors • DCB 0129/0160 hazard mitigation (“identify age-related risks”) |
-| Clinician role check (flag if not a Consultant) | Consent forms for IR/oncology procedures normally need a consultant or equivalent as the performer; the orange warning nudges users to the right signatory. | DCB 0160 deployment duty to ensure “appropriate clinical responsibility” |
+| Clinician role check (flag if not a Consultant/Doctor) | Consent forms for IR/oncology procedures normally need a consultant or equivalent as the performer; the orange warning nudges users to the right signatory. | DCB 0160 deployment duty to ensure “appropriate clinical responsibility” |
 | Automatic blanking of first witness fields immediately before PDF generation | Prevents patient data creeping into witness/sign-off boxes – a known safety hazard in radiology consent. | DCB 0129 risk control; DTAC C1 (“no erroneous clinical data”) |
 | Automatic blanking of final date fields | Prevents auto-population of witness signature dates, reducing the risk of a user overlooking a required manual entry. | DCB 0129 risk control; DTAC C1 (“no erroneous clinical data”) |
 | Always fetches the latest RCR template from the live website | Removes the risk of using outdated consent forms whose wording or complication lists have been revised. | DCB 0129 safety requirement to “maintain current clinical content”; NICE ESF B5 (currency of content) |
@@ -132,3 +136,4 @@ After the consent form has been generated, downloaded, and signed by both the pa
 | DSPT / CAF | Low data-at-rest, no unmanaged third-party services, optional download flow – all count as good-practice evidence for DSPT questions 8-A and 9-C. |
 | UK GDPR & common-law confidentiality | Validation of patient identifiers, no long-term storage, and explicit under-16 warnings support accuracy, data-minimisation and lawful-consent duties. |
 | Consent law for minors | Under-16 alert directly operationalises Gillick-competence checks |
+
