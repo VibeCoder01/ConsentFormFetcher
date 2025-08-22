@@ -34,6 +34,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
   const [showRNumberPrompt, setShowRNumberPrompt] = useState(false);
   const [isFetchingDemographics, setIsFetchingDemographics] = useState(false);
   const [demographicsLoaded, setDemographicsLoaded] = useState(false);
+  const [macmillanFilter, setMacmillanFilter] = useState<'macmillan' | 'other' | null>(null);
   const { toast } = useToast();
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,6 +58,21 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
           macmillanContactId: value
       });
   };
+
+  const handleMacmillanFilterChange = (value: 'macmillan' | 'other') => {
+      setMacmillanFilter(value);
+      // Reset the contact selection when the filter changes
+      handleMacmillanChange('');
+  }
+
+  const filteredMacmillanContacts = useMemo(() => {
+    if (!macmillanFilter) return staffMembers; // Show all if no filter is selected yet
+    if (macmillanFilter === 'macmillan') {
+        return staffMembers.filter(s => s.title.toLowerCase().includes('macmillan'));
+    }
+    // "other"
+    return staffMembers.filter(s => !s.title.toLowerCase().includes('macmillan'));
+  }, [macmillanFilter, staffMembers]);
 
   const handleRNumberSubmit = async (rNumber: string) => {
     setIsFetchingDemographics(true);
@@ -232,28 +248,47 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
           <Label htmlFor="hospitalName">Name of Hospital</Label>
           <Input type="text" id="hospitalName" name="hospitalName" value={patientData.hospitalName} onChange={handleChange} className={cn(isInitialValue('hospitalName') && "bg-red-100 dark:bg-red-900/30")}/>
         </div>
-        <div className="grid w-full max-w-sm items-center gap-1.5">
-          <Label htmlFor="macmillanContact">Macmillan Contact</Label>
-          <Select
-              value={patientData.macmillanContactId || ''}
-              onValueChange={handleMacmillanChange}
-          >
-              <SelectTrigger 
-                id="macmillanContact" 
-                className={cn(
-                  !patientData.macmillanContactId && "bg-red-100 dark:bg-red-900/30",
-                  showMacmillanWarning && "bg-orange-200 dark:bg-orange-800/50"
-                  )}
-              >
-                  <SelectValue placeholder="Make a selection" />
-              </SelectTrigger>
-              <SelectContent>
-                  {staffMembers.map(staff => (
-                      <SelectItem key={staff.id} value={staff.id}>{staff.name} - {staff.title}</SelectItem>
-                  ))}
-              </SelectContent>
-          </Select>
+
+        <div className="space-y-2">
+            <Label>Macmillan Contact</Label>
+            <div className="grid w-full max-w-sm items-center gap-1.5">
+                <Select
+                    value={macmillanFilter || ''}
+                    onValueChange={(value) => handleMacmillanFilterChange(value as 'macmillan' | 'other')}
+                >
+                    <SelectTrigger id="macmillanFilter">
+                        <SelectValue placeholder="Filter by contact type..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="macmillan">Macmillan</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="grid w-full max-w-sm items-center gap-1.5">
+                <Select
+                    value={patientData.macmillanContactId || ''}
+                    onValueChange={handleMacmillanChange}
+                    disabled={!macmillanFilter}
+                >
+                    <SelectTrigger 
+                        id="macmillanContact" 
+                        className={cn(
+                        (!patientData.macmillanContactId && !demographicsLoaded) && "bg-red-100 dark:bg-red-900/30",
+                        showMacmillanWarning && "bg-orange-200 dark:bg-orange-800/50"
+                        )}
+                    >
+                        <SelectValue placeholder="Select a contact" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {filteredMacmillanContacts.map(staff => (
+                            <SelectItem key={staff.id} value={staff.id}>{staff.name} - {staff.title}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
         </div>
+
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="rNumber">KOMS patient number</Label>
           <Input type="text" id="rNumber" name="rNumber" value={patientData.rNumber} onChange={handleChange} className={cn(isInitialValue('rNumber') && "bg-red-100 dark:bg-red-900/30")} />
