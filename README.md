@@ -62,7 +62,7 @@ The application's behavior after you select a form is controlled by settings on 
     -   Review all fields for accuracy. You can edit any pre-filled information directly on this screen.
     -   When you are satisfied, click the **"Submit & Open PDF"** button. The application will then either open the PDF in a new browser tab or download it, depending on the "PDF Handling" setting on the Configuration page.
 -   **If "Preview PDF fields before generating" is OFF**:
-    -   When you click a form, the application will immediately generate the filled PDF and either open it in a new tab or download it, skipping the preview step. The downloaded file will be named using the format `[patient_identifier]_[form_title]_filled.pdf`.
+    -   When you click a form, the application will immediately generate the filled PDF of the correct, selected form and either open it in a new tab or download it, skipping the preview step. The downloaded file will be named using the format `[patient_identifier]_[form_title]_filled.pdf`.
 
 ### 6. Submitting the Signed Form
 
@@ -136,4 +136,3 @@ After the consent form has been generated, downloaded, and signed by both the pa
 | DSPT / CAF | Low data-at-rest, no unmanaged third-party services, optional download flow – all count as good-practice evidence for DSPT questions 8-A and 9-C. |
 | UK GDPR & common-law confidentiality | Validation of patient identifiers, no long-term storage, and explicit under-16 warnings support accuracy, data-minimisation and lawful-consent duties. |
 | Consent law for minors | Under-16 alert directly operationalises Gillick-competence checks |
-

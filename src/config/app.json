@@ -3,7 +3,7 @@
   "rcrBaseUrl": "https://www.rcr.ac.uk",
   "validateRNumber": false,
   "previewPdfFields": false,
-  "pdfOpenMethod": "browser",
+  "pdfOpenMethod": "acrobat",
   "rtConsentFolder": "c:\\VC01\\RT_Consent",
   "prepopulateWithFakeData": true,
   "showWelshForms": false
