@@ -415,24 +415,28 @@ export default function Home() {
 
   const handleSelectForm = async (form: ConsentForm) => {
     setSelectedForm(form);
-    setPdfFields([]);
-    setPdfFormData({});
-    setIsFetchingFields(true);
     if (isMobile) setSheetOpen(false);
 
+    // If preview is on, clear fields and show loading skeleton.
+    if (previewPdfFieldsConfig) {
+        setPdfFields([]);
+        setPdfFormData({});
+        setIsFetchingFields(true);
+    }
+    
     try {
       const result = await getPdfFields(form.url);
       if (result.success && result.fields) {
         const { finalFields, finalFormData } = prePopulateData(result.fields);
         
-        setPdfFields(finalFields);
-
         if (previewPdfFieldsConfig) {
-          // Preview is ON: show the form
+          // Preview is ON: update state to show the form component.
+          setPdfFields(finalFields);
           setPdfFormData(finalFormData);
         } else {
-          // Preview is OFF: immediately submit
-          await handlePdfSubmit(finalFormData, finalFields);
+          // Preview is OFF: immediately submit for PDF generation.
+          // Pass the freshly populated data directly to avoid state lag.
+          await handlePdfSubmit(finalFormData, finalFields, form);
         }
 
       } else {
@@ -450,26 +454,32 @@ export default function Home() {
         description: `An error occurred while getting PDF fields: ${errorMessage}`,
       });
     } finally {
-      setIsFetchingFields(false);
+      if (previewPdfFieldsConfig) {
+        setIsFetchingFields(false);
+      }
     }
   };
 
-  const handlePdfSubmit = async (finalFormData: Record<string, string>, currentPdfFields?: PdfField[]) => {
-    if (!selectedForm) return;
+  const handlePdfSubmit = async (
+    dataForSubmission: Record<string, string>, 
+    fieldsForProcessing: PdfField[], 
+    formForSubmission?: ConsentForm
+  ) => {
+    const targetForm = formForSubmission || selectedForm;
+    if (!targetForm) return;
 
     let pendingWindow: Window | null = null;
     if (pdfOpenMethodConfig === 'browser') {
         pendingWindow = window.open('', '_blank');
+        if (pendingWindow) {
+            pendingWindow.document.write('Generating PDF, please wait...');
+        }
     }
 
     setIsSubmitting(true);
   
-    // Use passed fields or state fields
-    const fieldsForProcessing = currentPdfFields || pdfFields;
     const fieldNames = fieldsForProcessing.map(f => f.name);
-
-    // Create a mutable copy of the data to modify
-    const dataToFill = { ...finalFormData };
+    const dataToFill = { ...dataForSubmission };
   
     // Find the index of the "Job Title" field
     const jobTitleFieldIndex = fieldNames.findIndex(name =>
@@ -480,25 +490,21 @@ export default function Home() {
       let nameFieldBlanked = false;
       let dateFieldBlanked = false;
   
-      // Start searching from the field AFTER the job title
       for (let i = jobTitleFieldIndex + 1; i < fieldNames.length; i++) {
         const fieldName = fieldNames[i];
         const normalizedFieldName = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
   
-        // Find and blank the first "Name" field
         if (!nameFieldBlanked && normalizedFieldName.includes('name')) {
           dataToFill[fieldName] = '';
           nameFieldBlanked = true;
-          continue; // Move to the next field
+          continue;
         }
   
-        // Find and blank the first "Date" field after the name has been blanked
         if (nameFieldBlanked && !dateFieldBlanked && normalizedFieldName.includes('date')) {
           dataToFill[fieldName] = '';
           dateFieldBlanked = true;
         }
   
-        // If both are blanked, we can stop searching
         if (nameFieldBlanked && dateFieldBlanked) {
           break;
         }
@@ -507,65 +513,53 @@ export default function Home() {
   
     try {
       const result = await fillPdf({
-        formUrl: selectedForm.url,
-        fields: dataToFill, // Use the modified data
+        formUrl: targetForm.url,
+        fields: dataToFill,
       });
   
       if (result.success && result.pdfId) {
+        const pdfUrl = `/api/filled-pdf/${result.pdfId}`;
         if (pdfOpenMethodConfig === 'acrobat') {
-            const res = await fetch(`/api/filled-pdf/${result.pdfId}`);
+            const res = await fetch(pdfUrl);
             if (res.ok) {
                 const blob = await res.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                // Sanitize form title for filename
-                const safeTitle = selectedForm.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                const safeTitle = targetForm.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
                 const patientId = patientData.uniqueIdentifierValue.replace(/[^a-z0-9]/gi, '_');
                 a.download = `${patientId}_${safeTitle}_filled.pdf`;
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
                 window.URL.revokeObjectURL(url);
-                 toast({
+                toast({
                     title: 'Download Started',
                     description: 'Your PDF has been downloaded.',
                 });
             } else {
-                 toast({
-                    variant: 'destructive',
-                    title: 'Download Failed',
-                    description: 'Could not download the generated PDF.',
-                });
+                throw new Error('Failed to fetch generated PDF for download.');
             }
         } else {
-            // Default to opening in browser
             if (pendingWindow) {
-                pendingWindow.location.href = `/api/filled-pdf/${result.pdfId}`;
+                pendingWindow.location.href = pdfUrl;
             } else {
-                window.open(`/api/filled-pdf/${result.pdfId}`, '_blank');
+                window.open(pdfUrl, '_blank');
             }
         }
       } else {
-        if (pendingWindow) {
-            pendingWindow.close();
-        }
-        toast({
-          variant: 'destructive',
-          title: 'PDF Generation Failed',
-          description: result.error || 'An unknown error occurred while preparing the PDF.',
-        });
+        throw new Error(result.error || 'An unknown error occurred while preparing the PDF.');
       }
     } catch (error) {
-      if (pendingWindow) {
-          pendingWindow.close();
-      }
       const errorMessage = error instanceof Error ? error.message : String(error);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: `An error occurred while filling the PDF: ${errorMessage}`,
+        title: 'PDF Generation Failed',
+        description: errorMessage,
       });
+      if (pendingWindow) {
+        pendingWindow.close();
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -638,7 +632,7 @@ export default function Home() {
       formCategories={filteredFormCategories}
       onSelectForm={handleSelectForm}
       selectedFormUrl={selectedForm?.url}
-      disabled={isConfigLoading}
+      disabled={isConfigLoading || isSubmitting}
     />
   );
   
@@ -712,14 +706,14 @@ export default function Home() {
         return <PdfFormSkeleton />;
     }
 
-    if (selectedForm && Object.keys(pdfFormData).length > 0 && pdfFields.length > 0) {
+    if (selectedForm && Object.keys(pdfFormData).length > 0 && pdfFields.length > 0 && previewPdfFieldsConfig) {
         return (
             <PdfForm
                 formTitle={selectedForm.title}
                 fields={pdfFields}
                 initialData={pdfFormData}
                 isSubmitting={isSubmitting}
-                onSubmit={(data) => handlePdfSubmit(data)}
+                onSubmit={(data) => handlePdfSubmit(data, pdfFields)}
             />
         );
     }
