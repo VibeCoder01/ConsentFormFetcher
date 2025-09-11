@@ -434,7 +434,6 @@ export default function Home() {
           setPdfFormData(finalFormData);
         } else {
           // Preview is OFF: immediately submit for PDF generation.
-          // Pass the freshly populated data directly to avoid state lag.
           await handlePdfSubmit(finalFormData, finalFields, form);
         }
 

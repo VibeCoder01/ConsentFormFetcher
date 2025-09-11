@@ -33,8 +33,8 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     const { formUrl, fields: fieldsToFill, patientIdentifier, formTitle, clinicianName } = input;
     const config = await getConfig();
 
-    if (!config.tempPdfPath) {
-        throw new Error("Temporary PDF path (tempPdfPath) is not configured in settings.");
+    if (!config.rtConsentFolder) {
+        throw new Error("RT Consent Folder path is not configured in settings.");
     }
     
     // 1. Fetch the PDF from the URL
@@ -52,8 +52,8 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
             const field = form.getField(fieldName);
             
             if (field instanceof PDFTextField) {
-                if (fieldName.toLowerCase().includes('contact')) {
-                    field.setFontSize(8); // Set a smaller font size
+                if (fieldName.toLowerCase().includes('contact detail')) {
+                    field.setFontSize(8); 
                 }
                 field.setText(value.toString());
             } else if (field instanceof PDFDropdown && !field.isMultiselect()) {
@@ -67,7 +67,6 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
                     field.select(value.toString());
                  }
             } else if (field instanceof PDFCheckBox) {
-                // To support checkboxes, the value would need to be a boolean-like string e.g., "true"
                 if (value.toString().toLowerCase() === 'true') {
                     field.check();
                 } else {
@@ -80,7 +79,6 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
         }
     }
 
-    // Ensure text will be visible in PDF viewers by updating field appearances
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     try {
         form.updateFieldAppearances(font);
@@ -98,16 +96,16 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
 
     // 5. Create directory structure and save the file
     const safeClinicianName = clinicianName.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
-    const clinicianDir = path.join(config.tempPdfPath, safeClinicianName);
+    const tempDir = path.join(config.rtConsentFolder, safeClinicianName, 'TEMP');
     
-    // Ensure the clinician-specific directory exists
-    await fs.mkdir(clinicianDir, { recursive: true });
+    // Ensure the TEMP directory inside the clinician-specific folder exists
+    await fs.mkdir(tempDir, { recursive: true });
 
     // Create a unique filename
     const safePatientId = patientIdentifier.replace(/[^a-zA-Z0-9]/g, '');
     const safeFormTitle = formTitle.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
     const fileName = `${safePatientId}_${safeFormTitle}_filled.pdf`;
-    const filePath = path.join(clinicianDir, fileName);
+    const filePath = path.join(tempDir, fileName);
 
     await fs.writeFile(filePath, pdfBytes);
     
