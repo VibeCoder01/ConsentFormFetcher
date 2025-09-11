@@ -29,7 +29,7 @@ On the left sidebar, you will find a "Patient Details" form. The initial state o
 -   **Initial Data**: If pre-population is enabled, the form starts with dummy data ("John Smith"). If it is disabled, the form will be empty. In both cases, fields that require your attention will have a red background. This red highlight disappears as soon as you edit a field or import live data.
 -   **Manual Entry**: You can manually type the patient's information into each field. The "Name of Hospital" field is pre-filled with "Kent Oncology Centre" but can be edited.
 -   **Fetch Live Data**: To import data automatically, click the **"Get Live Patient Demographics"** button. A pop-up will appear where you can enter a patient's **KOMS patient number**. Pressing Enter or clicking the button will fetch the patient's details and populate the form.
-    -   A tooltip on this button reminds you that you must be logged into KOMS for this feature to work.
+    -   A tooltip on this button reminds you that you must be logged into KOMS for this feature to work. If the connection times out, it is highly likely that you need to log into the KOMS service.
     -   When live data is loaded, dropdown menus like the Macmillan Contact are reset, requiring a manual selection. The "Name of Hospital" text field will retain its current value.
 -   **Age Warning**: If you enter a Date of Birth for a patient who is under 16, the field will turn red, and a warning dialog will appear. This is to ensure correct consent procedures are followed for minors.
 
@@ -136,3 +136,6 @@ After the consent form has been generated, downloaded, and signed by both the pa
 | DSPT / CAF | Low data-at-rest, no unmanaged third-party services, optional download flow – all count as good-practice evidence for DSPT questions 8-A and 9-C. |
 | UK GDPR & common-law confidentiality | Validation of patient identifiers, no long-term storage, and explicit under-16 warnings support accuracy, data-minimisation and lawful-consent duties. |
 | Consent law for minors | Under-16 alert directly operationalises Gillick-competence checks |
+
+
+    
