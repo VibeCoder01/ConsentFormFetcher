@@ -21,6 +21,7 @@ import Link from "next/link";
 import { PdfForm, PdfFormSkeleton, PdfField } from "@/components/pdf-form";
 import { format } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const fakePatientData: PatientData = {
   forename: "John",
@@ -88,7 +89,6 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [previewPdfFieldsConfig, setPreviewPdfFieldsConfig] = useState(false);
-  const [pdfOpenMethodConfig, setPdfOpenMethodConfig] = useState<'browser' | 'acrobat'>('browser');
   const [showWelshFormsConfig, setShowWelshFormsConfig] = useState(false);
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   
@@ -143,7 +143,6 @@ export default function Home() {
       setStaffMembers(staffData);
       setTumourSites(sitesData);
       setPreviewPdfFieldsConfig(configData.previewPdfFields);
-      setPdfOpenMethodConfig(configData.pdfOpenMethod || 'browser');
       setShowWelshFormsConfig(configData.showWelshForms);
 
       const initialData = configData.prepopulateWithFakeData ? fakePatientData : emptyPatientData;
@@ -468,12 +467,13 @@ export default function Home() {
     const targetForm = formForSubmission || selectedForm;
     if (!targetForm) return;
 
-    let pendingWindow: Window | null = null;
-    if (pdfOpenMethodConfig === 'browser') {
-        pendingWindow = window.open('', '_blank');
-        if (pendingWindow) {
-            pendingWindow.document.write('Generating PDF, please wait...');
-        }
+    if (!selectedStaffMember?.name) {
+        toast({
+            variant: "destructive",
+            title: "Clinician Not Selected",
+            description: "Please select a clinician before generating a PDF.",
+        });
+        return;
     }
 
     setIsSubmitting(true);
@@ -515,38 +515,28 @@ export default function Home() {
       const result = await fillPdf({
         formUrl: targetForm.url,
         fields: dataToFill,
+        patientIdentifier: patientData.uniqueIdentifierValue,
+        formTitle: targetForm.title,
+        clinicianName: selectedStaffMember.name,
       });
   
-      if (result.success && result.pdfId) {
-        const pdfUrl = `/api/filled-pdf/${result.pdfId}`;
-        if (pdfOpenMethodConfig === 'acrobat') {
-            const res = await fetch(pdfUrl);
-            if (res.ok) {
-                const blob = await res.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                const safeTitle = targetForm.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                const patientId = patientData.uniqueIdentifierValue.replace(/[^a-z0-9]/gi, '_');
-                a.download = `${patientId}_${safeTitle}_filled.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(url);
-                toast({
-                    title: 'Download Started',
-                    description: 'Your PDF has been downloaded.',
-                });
-            } else {
-                throw new Error('Failed to fetch generated PDF for download.');
-            }
-        } else {
-            if (pendingWindow) {
-                pendingWindow.location.href = pdfUrl;
-            } else {
-                window.open(pdfUrl, '_blank');
-            }
-        }
+      if (result.success && result.uncPath) {
+        toast({
+            title: 'PDF Saved to Network',
+            duration: 10000,
+            description: (
+              <div className="flex flex-col gap-2">
+                <p>The PDF has been saved to the clinician's folder.</p>
+                <p className="font-mono bg-muted p-2 rounded-md text-xs">{result.uncPath}</p>
+                <Button
+                  size="sm"
+                  onClick={() => navigator.clipboard.writeText(result.uncPath!)}
+                >
+                  Copy Path
+                </Button>
+              </div>
+            ),
+        });
       } else {
         throw new Error(result.error || 'An unknown error occurred while preparing the PDF.');
       }
@@ -557,9 +547,6 @@ export default function Home() {
         title: 'PDF Generation Failed',
         description: errorMessage,
       });
-      if (pendingWindow) {
-        pendingWindow.close();
-      }
     } finally {
       setIsSubmitting(false);
     }

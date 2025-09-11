@@ -45,6 +45,9 @@ export default function ConfigPage() {
   const [rtConsentFolder, setRtConsentFolder] = useState("");
   const [initialRtConsentFolder, setInitialRtConsentFolder] = useState("");
 
+  const [tempPdfPath, setTempPdfPath] = useState("");
+  const [initialTempPdfPath, setInitialTempPdfPath] = useState("");
+
   const [prepopulateWithFakeData, setPrepopulateWithFakeData] = useState(true);
   const [initialPrepopulateWithFakeData, setInitialPrepopulateWithFakeData] = useState(true);
 
@@ -52,7 +55,7 @@ export default function ConfigPage() {
   const [initialShowWelshForms, setInitialShowWelshForms] = useState(false);
 
 
-  const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields || pdfOpenMethod !== initialPdfOpenMethod || rtConsentFolder !== initialRtConsentFolder || prepopulateWithFakeData !== initialPrepopulateWithFakeData || showWelshForms !== initialShowWelshForms;
+  const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields || pdfOpenMethod !== initialPdfOpenMethod || rtConsentFolder !== initialRtConsentFolder || tempPdfPath !== initialTempPdfPath || prepopulateWithFakeData !== initialPrepopulateWithFakeData || showWelshForms !== initialShowWelshForms;
 
   const fetchConfig = async () => {
     setIsLoadingConfig(true);
@@ -70,6 +73,8 @@ export default function ConfigPage() {
       setInitialPdfOpenMethod(config.pdfOpenMethod || 'browser');
       setRtConsentFolder(config.rtConsentFolder || "");
       setInitialRtConsentFolder(config.rtConsentFolder || "");
+      setTempPdfPath(config.tempPdfPath || "");
+      setInitialTempPdfPath(config.tempPdfPath || "");
       setPrepopulateWithFakeData(config.prepopulateWithFakeData);
       setInitialPrepopulateWithFakeData(config.prepopulateWithFakeData);
       setShowWelshForms(config.showWelshForms);
@@ -102,6 +107,7 @@ export default function ConfigPage() {
         previewPdfFields: previewPdfFields,
         pdfOpenMethod: pdfOpenMethod,
         rtConsentFolder: rtConsentFolder,
+        tempPdfPath: tempPdfPath,
         prepopulateWithFakeData: prepopulateWithFakeData,
         showWelshForms: showWelshForms,
       };
@@ -127,6 +133,7 @@ export default function ConfigPage() {
       setInitialPreviewPdfFields(newConfig.previewPdfFields);
       setInitialPdfOpenMethod(newConfig.pdfOpenMethod);
       setInitialRtConsentFolder(newConfig.rtConsentFolder);
+      setInitialTempPdfPath(newConfig.tempPdfPath);
       setInitialPrepopulateWithFakeData(newConfig.prepopulateWithFakeData);
       setInitialShowWelshForms(newConfig.showWelshForms);
 
@@ -381,10 +388,14 @@ export default function ConfigPage() {
     )
   }
   
-  const rtFolderCardContent = () => {
+  const filePathsCardContent = () => {
     if (isLoadingConfig) {
       return (
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-1/4" />
+            <Skeleton className="h-10 w-full" />
+          </div>
           <div className="space-y-2">
             <Skeleton className="h-4 w-1/4" />
             <Skeleton className="h-10 w-full" />
@@ -393,16 +404,27 @@ export default function ConfigPage() {
       )
     }
     return (
-      <CardContent>
+      <CardContent className="space-y-4">
          <div className="space-y-2">
-          <Label htmlFor="rtConsentFolder">RT Consent Folder</Label>
+          <Label htmlFor="rtConsentFolder">RT Consent Folder (for final uploads)</Label>
           <Input 
               id="rtConsentFolder"
               value={rtConsentFolder}
               onChange={(e) => setRtConsentFolder(e.target.value)}
               aria-label="RT Consent Folder Path"
               className="font-mono text-sm"
-              placeholder="e.g., /path/to/consent/forms"
+              placeholder="e.g., \\server\\share\\consent_forms"
+          />
+         </div>
+         <div className="space-y-2">
+          <Label htmlFor="tempPdfPath">Generated PDF Folder (for UNC links)</Label>
+          <Input 
+              id="tempPdfPath"
+              value={tempPdfPath}
+              onChange={(e) => setTempPdfPath(e.target.value)}
+              aria-label="Temporary PDF Folder Path"
+              className="font-mono text-sm"
+              placeholder="e.g., C:\\TEMP or \\server\\share\\temp_pdfs"
           />
          </div>
       </CardContent>
@@ -448,10 +470,10 @@ export default function ConfigPage() {
             <CardHeader>
               <CardTitle>File Paths</CardTitle>
               <CardDescription>
-                Set the destination folder for completed RT consent forms.
+                Set destination folders for generated and uploaded consent forms. Use UNC paths for network locations (e.g., `\\server\share\folder`).
               </CardDescription>
             </CardHeader>
-            {rtFolderCardContent()}
+            {filePathsCardContent()}
           </Card>
 
           <Card>
