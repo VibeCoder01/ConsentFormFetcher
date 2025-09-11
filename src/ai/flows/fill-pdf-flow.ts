@@ -102,10 +102,9 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     // Ensure the TEMP directory inside the clinician-specific folder exists
     await fs.mkdir(tempDir, { recursive: true });
 
-    // Create a unique filename
+    // Create a unique filename based on the new format
     const safePatientId = patientIdentifier.replace(/[^a-zA-Z0-9]/g, '');
-    const safeFormTitle = formTitle.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
-    const fileName = `${safePatientId}_${safeFormTitle}_filled.pdf`;
+    const fileName = `${safePatientId} CONSENT.pdf`;
     
     // Construct the final path for writing the file using the server's OS separator
     const filePathForWriting = path.join(tempDir, fileName);
