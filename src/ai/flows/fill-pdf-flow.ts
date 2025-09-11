@@ -99,7 +99,8 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     const safeClinicianName = clinicianName.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
     const tempDir = path.join(config.rtConsentFolder, safeClinicianName, 'TEMP');
     
-    // Ensure the TEMP directory inside the clinician-specific folder exists
+    // Ensure the TEMP directory is clean by removing and recreating it
+    await fs.rm(tempDir, { recursive: true, force: true });
     await fs.mkdir(tempDir, { recursive: true });
 
     // Create a unique filename based on the new format
