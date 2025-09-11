@@ -67,6 +67,36 @@ const emptyPatientData: PatientData = {
 };
 
 
+const UncPathToast = ({ uncPath }: { uncPath: string }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = async () => {
+        const success = await copyToClipboard(uncPath);
+        if (success) {
+            setCopied(true);
+        }
+    };
+
+    return (
+        <div className="flex flex-col gap-2 w-full">
+            <p>The PDF has been saved to the clinician's folder.</p>
+            <p className="font-mono bg-muted p-2 rounded-md text-xs break-all">{uncPath}</p>
+            {copied ? (
+                <p className="text-sm font-medium text-primary">Copied!</p>
+            ) : (
+                <Button
+                    size="sm"
+                    onClick={handleCopy}
+                    className="w-fit"
+                >
+                    Copy Path
+                </Button>
+            )}
+        </div>
+    );
+};
+
+
 export default function Home() {
   const [formCategories, setFormCategories] = useState<ConsentFormCategory[]>([]);
   const [isSheetOpen, setSheetOpen] = useState(false);
@@ -525,16 +555,7 @@ export default function Home() {
             title: 'PDF Saved to Network',
             duration: 10000,
             description: (
-              <div className="flex flex-col gap-2">
-                <p>The PDF has been saved to the clinician's folder.</p>
-                <p className="font-mono bg-muted p-2 rounded-md text-xs">{result.uncPath}</p>
-                <Button
-                  size="sm"
-                  onClick={() => copyToClipboard(result.uncPath!)}
-                >
-                  Copy Path
-                </Button>
-              </div>
+              <UncPathToast uncPath={result.uncPath} />
             ),
         });
       } else {
@@ -800,5 +821,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
