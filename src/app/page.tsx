@@ -22,6 +22,7 @@ import { PdfForm, PdfFormSkeleton, PdfField } from "@/components/pdf-form";
 import { format } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { copyToClipboard } from "@/lib/utils";
 
 const fakePatientData: PatientData = {
   forename: "John",
@@ -529,7 +530,7 @@ export default function Home() {
                 <p className="font-mono bg-muted p-2 rounded-md text-xs">{result.uncPath}</p>
                 <Button
                   size="sm"
-                  onClick={() => navigator.clipboard.writeText(result.uncPath!)}
+                  onClick={() => copyToClipboard(result.uncPath!)}
                 >
                   Copy Path
                 </Button>
@@ -799,3 +800,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
