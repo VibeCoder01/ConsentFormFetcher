@@ -82,7 +82,7 @@ const UncPathToast = ({ uncPath }: { uncPath: string }) => {
             <p>The PDF has been saved to the clinician's folder.</p>
             <p className="font-mono bg-muted p-2 rounded-md text-xs break-all">{uncPath}</p>
             {copied ? (
-                <p className="text-sm font-medium text-primary">Copied!</p>
+                <p className="text-sm font-medium text-primary">Copied! Now paste into the Windows Search box.</p>
             ) : (
                 <Button
                     size="sm"
@@ -821,3 +821,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
