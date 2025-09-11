@@ -53,7 +53,8 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
             
             if (field instanceof PDFTextField) {
                 if (fieldName.toLowerCase().includes('contact detail')) {
-                    field.setFontSize(8); 
+                    field.enableMultiline();
+                    field.enableAutosizing();
                 }
                 field.setText(value.toString());
             } else if (field instanceof PDFDropdown && !field.isMultiselect()) {
@@ -105,11 +106,16 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     const safePatientId = patientIdentifier.replace(/[^a-zA-Z0-9]/g, '');
     const safeFormTitle = formTitle.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
     const fileName = `${safePatientId}_${safeFormTitle}_filled.pdf`;
-    const filePath = path.join(tempDir, fileName);
-
-    await fs.writeFile(filePath, pdfBytes);
     
-    return { success: true, uncPath: filePath };
+    // Construct the final path for writing the file using the server's OS separator
+    const filePathForWriting = path.join(tempDir, fileName);
+
+    // Construct the UNC path for display using Windows backslashes
+    const uncPathForDisplay = path.win32.join(tempDir, fileName);
+
+    await fs.writeFile(filePathForWriting, pdfBytes);
+    
+    return { success: true, uncPath: uncPathForDisplay };
   } catch (error) {
     console.error('Failed to fill PDF:', error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred while processing the PDF.';
