@@ -6,22 +6,37 @@ import { PDFDocument, PDFTextField, PDFDropdown, PDFRadioGroup, PDFCheckBox, Sta
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
+// Helper function to read the config to avoid direct imports in server-side code
+async function getConfig() {
+    const configPath = path.join(process.cwd(), 'src', 'config', 'app.json');
+    const jsonData = await fs.readFile(configPath, 'utf-8');
+    return JSON.parse(jsonData);
+}
+
 const FillPdfInputSchema = z.object({
   formUrl: z.string().url(),
   fields: z.record(z.string()), // Flexible key-value pairs
+  patientIdentifier: z.string(),
+  formTitle: z.string(),
+  clinicianName: z.string(),
 });
 type FillPdfInput = z.infer<typeof FillPdfInputSchema>;
 
 export interface FillPdfOutput {
   success: boolean;
-  pdfId?: string;
+  uncPath?: string;
   error?: string;
 }
 
 export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
   try {
-    const { formUrl, fields: fieldsToFill } = input;
+    const { formUrl, fields: fieldsToFill, patientIdentifier, formTitle, clinicianName } = input;
+    const config = await getConfig();
 
+    if (!config.tempPdfPath) {
+        throw new Error("Temporary PDF path (tempPdfPath) is not configured in settings.");
+    }
+    
     // 1. Fetch the PDF from the URL
     const existingPdfBytes = await fetch(formUrl).then((res) => res.arrayBuffer());
 
@@ -71,8 +86,6 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
         form.updateFieldAppearances(font);
     } catch (fontError) {
         console.warn("Could not update field appearances with default font. Trying to flatten.", fontError);
-        // As a fallback for some problematic PDFs, we can flatten.
-        // This makes fields uneditable but ensures visibility.
         try {
             form.flatten();
         } catch (flattenError) {
@@ -80,25 +93,28 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
         }
     }
 
-
     // 4. Save the modified PDF to bytes
     const pdfBytes = await pdfDoc.save();
 
-    // 5. Save the PDF to a temporary file
-    const pdfId = crypto.randomUUID();
-    const tmpDir = path.join(process.cwd(), 'tmp');
-    // Ensure the tmp directory exists
-    await fs.mkdir(tmpDir, { recursive: true });
-    const filePath = path.join(tmpDir, `${pdfId}.pdf`);
+    // 5. Create directory structure and save the file
+    const safeClinicianName = clinicianName.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
+    const clinicianDir = path.join(config.tempPdfPath, safeClinicianName);
+    
+    // Ensure the clinician-specific directory exists
+    await fs.mkdir(clinicianDir, { recursive: true });
+
+    // Create a unique filename
+    const safePatientId = patientIdentifier.replace(/[^a-zA-Z0-9]/g, '');
+    const safeFormTitle = formTitle.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
+    const fileName = `${safePatientId}_${safeFormTitle}_filled.pdf`;
+    const filePath = path.join(clinicianDir, fileName);
+
     await fs.writeFile(filePath, pdfBytes);
     
-
-    return { success: true, pdfId: pdfId };
+    return { success: true, uncPath: filePath };
   } catch (error) {
     console.error('Failed to fill PDF:', error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred while processing the PDF.';
     return { success: false, error: message };
   }
 }
-
-    

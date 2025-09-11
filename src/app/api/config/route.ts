@@ -13,6 +13,7 @@ interface AppConfig {
     previewPdfFields: boolean;
     pdfOpenMethod: 'browser' | 'acrobat';
     rtConsentFolder: string;
+    tempPdfPath: string;
     prepopulateWithFakeData: boolean;
     showWelshForms: boolean;
 }

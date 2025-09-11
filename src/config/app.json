@@ -5,6 +5,7 @@
   "previewPdfFields": false,
   "pdfOpenMethod": "acrobat",
   "rtConsentFolder": "c:\\VC01\\RT_Consent",
+  "tempPdfPath": "C:\\TEMP",
   "prepopulateWithFakeData": true,
   "showWelshForms": false
 }
