@@ -60,13 +60,15 @@ The application's behavior after you select a form is controlled by settings on 
     -   The application will intelligently pre-populate these fields based on the patient and clinician data you entered. The source of the pre-filled data (e.g., "matched with - Patient Full Name") is shown above each field.
     -   The font size for the "Contact details" field is automatically reduced to ensure long names and titles are not truncated.
     -   Review all fields for accuracy. You can edit any pre-filled information directly on this screen.
-    -   When you are satisfied, click the **"Submit & Open PDF"** button. The application will then either open the PDF in a new browser tab or download it, depending on the "PDF Handling" setting on the Configuration page.
+    -   When you are satisfied, click the **"Submit & Open PDF"** button. The application will then save the filled PDF to the server.
 -   **If "Preview PDF fields before generating" is OFF**:
-    -   When you click a form, the application will immediately generate the filled PDF of the correct, selected form and either open it in a new tab or download it, skipping the preview step. The downloaded file will be named using the format `[patient_identifier]_[form_title]_filled.pdf`.
+    -   When you click a form, the application will immediately generate the filled PDF and save it to the server, skipping the preview step.
+
+In both cases, after the PDF is generated, it will be saved with the filename `[patient_identifier] CONSENT.pdf` inside a `TEMP` subfolder within the clinician's folder (e.g., `C:\VC01\RT_Consent\Dr_John_Doe\TEMP\`). A success notification will appear in the middle of the screen containing the full UNC path to the file. You can use the "Copy Path" button and paste it into Windows Search or File Explorer to quickly access the file. The `TEMP` folder is automatically emptied before each new PDF is saved, ensuring it only ever contains the latest document.
 
 ### 6. Submitting the Signed Form
 
-After the consent form has been generated, downloaded, and signed by both the patient and clinician, it can be submitted back to the system.
+After the consent form has been generated, located using the UNC path, and signed by both the patient and clinician, it can be submitted back to the system.
 
 -   Click the **SUBMIT** button in the top-right corner of the application.
 -   This will open a file dialog, allowing you to select the completed PDF from your computer.
@@ -136,6 +138,3 @@ After the consent form has been generated, downloaded, and signed by both the pa
 | DSPT / CAF | Low data-at-rest, no unmanaged third-party services, optional download flow – all count as good-practice evidence for DSPT questions 8-A and 9-C. |
 | UK GDPR & common-law confidentiality | Validation of patient identifiers, no long-term storage, and explicit under-16 warnings support accuracy, data-minimisation and lawful-consent duties. |
 | Consent law for minors | Under-16 alert directly operationalises Gillick-competence checks |
-
-
-    
