@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, Settings, FileText, Upload } from "lucide-react";
+import { Menu, Settings, FileText, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -44,13 +44,12 @@ export function AppHeader({ isMobile, onMenuClick, onUploadClick }: AppHeaderPro
           <Tooltip>
             <TooltipTrigger asChild>
               <Button onClick={onUploadClick}>
-                  <Upload className="mr-2 h-4 w-4" />
-                  SUBMIT
+                  <Mail className="mr-2 h-4 w-4" />
+                  SEND EMAILS
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Submit a signed consent form.</p>
-              <p>PDF will be uploaded to RT Consent Form folder.</p>
+              <p>Email the signed PDF to the configured recipients.</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
