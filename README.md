@@ -18,7 +18,7 @@ The application is divided into two main sections:
 You can hover over the main title, "ConsentForm Fetcher," to see the application's current version number.
 
 In the top-right corner, you will find several controls, each with a helpful tooltip that appears when you hover over it:
--   **SUBMIT**: For uploading a completed and signed consent form. The tooltip clarifies that the PDF will be saved to the configured RT Consent Folder.
+-   **SEND EMAILS**: For emailing a completed and signed consent form. The tooltip clarifies that the PDF will be emailed to configured recipients.
 -   **Theme Toggle (Sun/Moon icon)**: For changing between light and dark mode.
 -   **Settings (Gear icon)**: For accessing the configuration page.
 
@@ -66,14 +66,14 @@ The application's behavior after you select a form is controlled by settings on 
 
 In both cases, after the PDF is generated, it will be saved with the filename `[patient_identifier] CONSENT.pdf` inside a `TEMP` subfolder within the clinician's folder (e.g., `C:\VC01\RT_Consent\Dr_John_Doe\TEMP\`). A success notification will appear in the middle of the screen containing the full UNC path to the file. You can use the "Copy Path" button and paste it into Windows Search or File Explorer to quickly access the file. The `TEMP` folder is automatically emptied before each new PDF is saved, ensuring it only ever contains the latest document.
 
-### 6. Submitting the Signed Form
+### 6. Sending the Signed Form
 
-After the consent form has been generated, located using the UNC path, and signed by both the patient and clinician, it can be submitted back to the system.
+After the consent form has been generated, located using the UNC path, signed, and saved:
 
--   Click the **SUBMIT** button in the top-right corner of the application.
+-   Click the **SEND EMAILS** button in the top-right corner of the application.
 -   This will open a file dialog, allowing you to select the completed PDF from your computer.
--   The application will then upload the file to the server, storing it in the location specified by the "RT Consent Folder" setting on the Configuration page.
--   **Automatic Renaming**: If a file with the same name already exists in the destination folder, the application will automatically rename the uploaded file by appending a number (e.g., `filename_1.pdf`) to prevent accidental overwrites.
+-   The application will then email the file to the list of recipients configured on the **Edit Email Config** page.
+-   If a file with the same name already exists in the destination folder, the application will automatically rename the uploaded file by appending a number (e.g., `filename_1.pdf`) to prevent accidental overwrites.
 
 ### 7. Configuration
 
