@@ -184,7 +184,7 @@ export default function StaffConfigPage() {
               }
 
           } catch (error) {
-               const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+               const errorMessage = error instanceof Error ? error.message : String(error);
                toast({ variant: 'destructive', title: 'Import Failed', description: errorMessage });
           }
       };
@@ -258,11 +258,10 @@ export default function StaffConfigPage() {
                             <Button
                                 key={member.id}
                                 variant={selectedStaff?.id === member.id ? "secondary" : "ghost"}
-                                className="w-full justify-start h-auto flex flex-col items-start p-2"
+                                className="w-full justify-start text-left"
                                 onClick={() => handleSelectStaff(member)}
                             >
-                                <span className="font-semibold">#{index + 1}: {member.name || "New Member"}</span>
-                                <span className="text-muted-foreground text-xs">{member.title || "No title"}</span>
+                                <span className="font-semibold truncate">#{index + 1}: {member.name || "New Member"}</span>
                             </Button>
                         ))}
                     </div>
