@@ -123,7 +123,6 @@ export default function Home() {
   const [showWelshFormsConfig, setShowWelshFormsConfig] = useState(false);
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   
-  const uploadInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
@@ -590,50 +589,12 @@ export default function Home() {
     }
   };
   
-  const handleUploadClick = () => {
-    uploadInputRef.current?.click();
+  const handleSendEmailsClick = () => {
+    toast({
+        title: "Not Implemented",
+        description: "Email functionality is not implemented yet.",
+    });
   };
-
-  const handleFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      handleUpload(file);
-    }
-    // Reset file input to allow uploading the same file again
-    event.target.value = '';
-  };
-  
-  const handleUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-        const response = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData,
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.error || 'Upload failed');
-        }
-
-        toast({
-            title: "Upload Successful",
-            description: result.message || `${file.name} has been submitted.`,
-        });
-
-    } catch (error) {
-        const message = error instanceof Error ? error.message : 'An unknown error occurred.';
-        toast({
-            variant: "destructive",
-            title: "Upload Error",
-            description: message,
-        });
-    }
-  };
-  
 
   const formListComponent = (
     <FormList
@@ -780,14 +741,7 @@ export default function Home() {
       <AppHeader
         isMobile={isMobile}
         onMenuClick={() => setSheetOpen(true)}
-        onUploadClick={handleUploadClick}
-      />
-       <input
-        type="file"
-        ref={uploadInputRef}
-        onChange={handleFileSelected}
-        accept="application/pdf"
-        className="hidden"
+        onSendEmailsClick={handleSendEmailsClick}
       />
       <main className="flex flex-1 overflow-hidden">
         {/* Desktop Sidebar */}
