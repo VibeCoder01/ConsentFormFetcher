@@ -118,7 +118,7 @@ export default function StaffConfigPage() {
   };
 
   const handleExport = async () => {
-    const dataToExport = staff.filter(member => member.name || member.title || member.phone || member.emailRecipients);
+    const dataToExport = staff.filter(member => member.name || member.title || member.phone);
     if (dataToExport.length === 0) {
         toast({ title: 'Nothing to Export', description: 'The staff list is empty.' });
         return;
