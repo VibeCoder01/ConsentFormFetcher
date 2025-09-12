@@ -71,9 +71,7 @@ In both cases, after the PDF is generated, it will be saved with the filename `[
 After the consent form has been generated, located using the UNC path, signed, and saved:
 
 -   Click the **SEND EMAILS** button in the top-right corner of the application.
--   This will open a file dialog, allowing you to select the completed PDF from your computer.
--   The application will then email the file to the list of recipients configured on the **Edit Email Config** page.
--   If a file with the same name already exists in the destination folder, the application will automatically rename the uploaded file by appending a number (e.g., `filename_1.pdf`) to prevent accidental overwrites.
+-   A notification will appear to inform you that the email functionality is not yet implemented.
 
 ### 7. Configuration
 
@@ -93,7 +91,10 @@ After the consent form has been generated, located using the UNC path, signed, a
     -   **Download for Adobe Acrobat**: Downloads the PDF to your computer, allowing you to open it in a dedicated application like Adobe Acrobat.
 -   **Update Forms**: Click **Check for Updated Forms** to manually trigger a scrape of the currently saved URL to refresh the list of available forms.
 -   **Backup & Restore Settings**: You can export the application's entire configuration (including settings, emails, staff, and tumour sites) to a single JSON file for backup. You can also import a settings file to restore a previous configuration.
--   **Staff Management**: Click **Edit Staff List** to navigate to a separate page where you can add, edit, or remove staff members, including their tumour site specialities. On this page, you can also import and export the staff list independently of the main application settings.
+-   **Staff Management**: Click **Edit Staff List** to navigate to a separate page to manage staff members.
+    - The page features a two-column layout. The left column contains a searchable list of all staff members, showing their number and name.
+    - Clicking a member in the list will display their full, editable details in the right-hand column.
+    - You can add, update, and remove individual staff members. You can also import and export the staff list independently of the main application settings.
 -   **Tumour Site Management**: Click **Edit Tumour Sites** to manage the list of tumour sites that can be assigned as specialities to staff members.
 -   **Email Management**: Click **Edit Email Config** to navigate to a page where you can manage a list of email recipients. Emails must be in a valid format and unique.
 
