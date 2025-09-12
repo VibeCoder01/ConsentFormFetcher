@@ -280,7 +280,7 @@ export default function StaffConfigPage() {
                                 className="w-full justify-start text-left"
                                 onClick={() => handleSelectStaff(member)}
                             >
-                                <span className="font-semibold truncate">#{staff.findIndex(s => s.id === member.id) + 1}: {member.name || "New Member"}</span>
+                                <span className="font-semibold truncate">{member.name || "New Member"}</span>
                             </Button>
                         ))}
                     </div>
@@ -352,3 +352,5 @@ export default function StaffConfigPage() {
     </div>
   );
 }
+
+    
