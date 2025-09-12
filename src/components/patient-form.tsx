@@ -186,10 +186,12 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button onClick={() => setShowRNumberPrompt(true)} disabled={isFetchingDemographics} className="h-auto py-3 px-1">
-                        {isFetchingDemographics ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                        Get Live Patient Demographics
-                    </Button>
+                    <div className="w-[70%]">
+                        <Button onClick={() => setShowRNumberPrompt(true)} disabled={isFetchingDemographics} className="h-auto py-3 px-1 w-full">
+                            {isFetchingDemographics ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Get Live Patient Demographics
+                        </Button>
+                    </div>
                 </TooltipTrigger>
                 <TooltipContent>
                     <p>Fetch patient details from KOMS. You must be logged into KOMS for this to work.</p>
@@ -337,6 +339,8 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
     </div>
   );
 }
+
+    
 
     
 
