@@ -41,6 +41,7 @@ export interface StaffMember {
     speciality1?: string | null;
     speciality2?: string | null;
     speciality3?: string | null;
+    emailRecipients?: string;
 }
 
 export interface KomsResponse {
