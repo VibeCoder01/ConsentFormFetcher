@@ -11,10 +11,10 @@ import { version } from "../../package.json";
 interface AppHeaderProps {
   isMobile: boolean;
   onMenuClick: () => void;
-  onUploadClick: () => void;
+  onSendEmailsClick: () => void;
 }
 
-export function AppHeader({ isMobile, onMenuClick, onUploadClick }: AppHeaderProps) {
+export function AppHeader({ isMobile, onMenuClick, onSendEmailsClick }: AppHeaderProps) {
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-6 z-10 bg-card">
       <div className="flex items-center gap-2 sm:gap-4">
@@ -43,7 +43,7 @@ export function AppHeader({ isMobile, onMenuClick, onUploadClick }: AppHeaderPro
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button onClick={onUploadClick}>
+              <Button onClick={onSendEmailsClick}>
                   <Mail className="mr-2 h-4 w-4" />
                   SEND EMAILS
               </Button>

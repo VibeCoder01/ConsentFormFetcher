@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 
-const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
-
 // Helper function to read the config
 async function getConfig() {
     const configPath = path.join(process.cwd(), 'src', 'config', 'app.json');
@@ -17,20 +15,6 @@ async function getConfig() {
         throw new Error("Server configuration is missing or unreadable.");
     }
 }
-
-
-// Ensure the uploads directory exists
-async function ensureUploadsDirExists() {
-  try {
-    await fs.mkdir(UPLOADS_DIR, { recursive: true });
-  } catch (error) {
-    console.error("Could not create uploads directory:", error);
-    // This is a critical error, so we throw it to prevent the app from running in a broken state.
-    throw new Error("Server setup failed: unable to create uploads directory.");
-  }
-}
-// We call this once when the module loads
-ensureUploadsDirExists();
 
 async function getUniqueFilePath(destinationDir: string, originalName: string): Promise<string> {
     const parsedPath = path.parse(originalName);
