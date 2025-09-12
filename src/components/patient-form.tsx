@@ -339,9 +339,3 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
     </div>
   );
 }
-
-    
-
-    
-
-    
