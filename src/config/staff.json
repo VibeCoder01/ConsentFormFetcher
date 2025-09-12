@@ -1,3 +1,4 @@
+
 [
   {
     "id": "new_sam_forner",
@@ -6,7 +7,8 @@
     "phone": "",
     "speciality1": "ts_brain",
     "speciality2": "ts_ugi",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_sabri_ahmed",
@@ -15,7 +17,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_russell_burcombe",
@@ -24,7 +27,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_catherine_harper_wynne",
@@ -33,7 +37,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_doaa_mohamed",
@@ -42,7 +47,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_charlotte_moss",
@@ -51,7 +57,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_lazaros_nikiforidis",
@@ -60,7 +67,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_mathini_sridharan",
@@ -69,7 +77,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": "ts_lung",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_aswin_kumar",
@@ -78,7 +87,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": "ts_lymphoma",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_solly_thomas",
@@ -87,7 +97,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": "ts_thyroid",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_subecha_bhusal",
@@ -96,7 +107,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": "ts_urology",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_julia_hall",
@@ -105,7 +117,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": "ts_lung",
-    "speciality3": "ts_sarcoma"
+    "speciality3": "ts_sarcoma",
+    "emailRecipients": ""
   },
   {
     "id": "new_jenny_glendenning",
@@ -114,7 +127,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": "ts_brain",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_gemma_hegarty",
@@ -123,7 +137,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": "ts_gynae",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_beena_kunheri",
@@ -132,7 +147,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": "ts_gynae",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_jane_brown",
@@ -141,7 +157,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": "ts_lung",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_sarah_qureshi",
@@ -150,7 +167,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": "ts_melanoma",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_gemma_mccormick",
@@ -159,7 +177,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": "ts_thyroid",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_binu_nair",
@@ -168,7 +187,8 @@
     "phone": "",
     "speciality1": "ts_breast",
     "speciality2": "ts_ugi",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_nicky_adenike_williams",
@@ -177,7 +197,8 @@
     "phone": "",
     "speciality1": "ts_gynae",
     "speciality2": "ts_lgi",
-    "speciality3": "ts_brachy"
+    "speciality3": "ts_brachy",
+    "emailRecipients": ""
   },
   {
     "id": "new_rema_jyothirmayi",
@@ -186,7 +207,8 @@
     "phone": "",
     "speciality1": "ts_gynae",
     "speciality2": "ts_breast",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_lorna_kviat",
@@ -195,7 +217,8 @@
     "phone": "",
     "speciality1": "ts_gynae",
     "speciality2": "ts_lgi",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_justin_waters",
@@ -204,7 +227,8 @@
     "phone": "",
     "speciality1": "ts_gynae",
     "speciality2": "ts_ugi",
-    "speciality3": "ts_netgist"
+    "speciality3": "ts_netgist",
+    "emailRecipients": ""
   },
   {
     "id": "new_jenny_turner_dormer",
@@ -213,7 +237,8 @@
     "phone": "",
     "speciality1": "ts_head_and_neck",
     "speciality2": "ts_skin",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_benjamin_hunter",
@@ -222,7 +247,8 @@
     "phone": "",
     "speciality1": "ts_head_and_neck",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_sally_fouda",
@@ -231,7 +257,8 @@
     "phone": "",
     "speciality1": "ts_head_and_neck",
     "speciality2": "ts_skin",
-    "speciality3": "ts_lymphoma"
+    "speciality3": "ts_lymphoma",
+    "emailRecipients": ""
   },
   {
     "id": "new_kannon_nathan",
@@ -240,7 +267,8 @@
     "phone": "",
     "speciality1": "ts_head_and_neck",
     "speciality2": "ts_gynae",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_anthi_zeniou",
@@ -249,7 +277,8 @@
     "phone": "",
     "speciality1": "ts_head_and_neck",
     "speciality2": "ts_skin",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_sneha_george",
@@ -258,7 +287,8 @@
     "phone": "",
     "speciality1": "ts_lgi",
     "speciality2": "ts_ugi",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_joe_morilla",
@@ -267,7 +297,8 @@
     "phone": "",
     "speciality1": "ts_lgi",
     "speciality2": "ts_lung",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_alicja_synowiec",
@@ -276,7 +307,8 @@
     "phone": "",
     "speciality1": "ts_lgi",
     "speciality2": "ts_lung",
-    "speciality3": "ts_gynae"
+    "speciality3": "ts_gynae",
+    "emailRecipients": ""
   },
   {
     "id": "new_geraldo_alves_de_paula_neto",
@@ -285,7 +317,8 @@
     "phone": "",
     "speciality1": "ts_lgi",
     "speciality2": "ts_ugi",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_meeta_durve",
@@ -294,7 +327,8 @@
     "phone": "",
     "speciality1": "ts_lgi",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_mark_hill",
@@ -303,7 +337,8 @@
     "phone": "",
     "speciality1": "ts_lgi",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_rakesh_raman",
@@ -312,7 +347,8 @@
     "phone": "",
     "speciality1": "ts_lgi",
     "speciality2": "ts_urology",
-    "speciality3": "ts_sabr"
+    "speciality3": "ts_sabr",
+    "emailRecipients": ""
   },
   {
     "id": "new_sam_enefer",
@@ -321,7 +357,8 @@
     "phone": "",
     "speciality1": "ts_lgi",
     "speciality2": "ts_ugi",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_melanie_boafo-yirenkyi",
@@ -330,7 +367,8 @@
     "phone": "",
     "speciality1": "ts_lgi",
     "speciality2": "ts_urology",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_amanda_clarke",
@@ -339,7 +377,8 @@
     "phone": "",
     "speciality1": "ts_lgi",
     "speciality2": "ts_urology",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_nicola_davis",
@@ -348,7 +387,8 @@
     "phone": "",
     "speciality1": "ts_lung",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_riyaz_shah",
@@ -357,7 +397,8 @@
     "phone": "",
     "speciality1": "ts_lung",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_mathilda_cominos",
@@ -366,7 +407,8 @@
     "phone": "",
     "speciality1": "ts_lung",
     "speciality2": "ts_ugi",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_tim_sevitt",
@@ -375,7 +417,8 @@
     "phone": "",
     "speciality1": "ts_lung",
     "speciality2": "ts_ugi",
-    "speciality3": "ts_sabr"
+    "speciality3": "ts_sabr",
+    "emailRecipients": ""
   },
   {
     "id": "new_jenny_pang",
@@ -384,7 +427,8 @@
     "phone": "",
     "speciality1": "ts_lung",
     "speciality2": "ts_urology",
-    "speciality3": "ts_sabr"
+    "speciality3": "ts_sabr",
+    "emailRecipients": ""
   },
   {
     "id": "new_harman_saman",
@@ -393,7 +437,8 @@
     "phone": "",
     "speciality1": "ts_lung",
     "speciality2": "ts_ugi",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_pritha_roy",
@@ -402,7 +447,8 @@
     "phone": "",
     "speciality1": "ts_lymphoma",
     "speciality2": "ts_lung",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_nataliya_rozumna-martynyuk",
@@ -411,7 +457,8 @@
     "phone": "",
     "speciality1": "ts_melanoma",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_beth_mackay",
@@ -420,7 +467,8 @@
     "phone": "",
     "speciality1": "ts_palliative_care",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_dag_rutter",
@@ -429,7 +477,8 @@
     "phone": "",
     "speciality1": "ts_palliative_care",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_albert_edwards",
@@ -438,7 +487,8 @@
     "phone": "",
     "speciality1": "ts_urology",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_muditha_perera",
@@ -447,7 +497,8 @@
     "phone": "",
     "speciality1": "ts_urology",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_kathryn_lees",
@@ -456,7 +507,8 @@
     "phone": "",
     "speciality1": "ts_urology",
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_carys_thomas",
@@ -465,7 +517,8 @@
     "phone": "",
     "speciality1": "ts_urology",
     "speciality2": "ts_breast",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_rohit_sasidharan",
@@ -474,7 +527,8 @@
     "phone": "",
     "speciality1": "ts_urology",
     "speciality2": "ts_ugi",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_patryk_brulinski",
@@ -483,7 +537,8 @@
     "phone": "",
     "speciality1": "ts_urology",
     "speciality2": "ts_sabr",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_diletta_bianchini",
@@ -492,7 +547,8 @@
     "phone": "",
     "speciality1": "ts_urology",
     "speciality2": "ts_testis",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_henry_taylor",
@@ -501,7 +557,8 @@
     "phone": "",
     "speciality1": "ts_urology",
     "speciality2": "ts_testis",
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_steve_dann",
@@ -510,7 +567,8 @@
     "phone": "01227 766877 ext 7222716",
     "speciality1": null,
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_katy_taylor",
@@ -519,7 +577,8 @@
     "phone": "01622 225094",
     "speciality1": null,
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_adriana_kadungure",
@@ -528,7 +587,8 @@
     "phone": "01622 225094",
     "speciality1": null,
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_rachael_hopson",
@@ -537,7 +597,8 @@
     "phone": "01227 766877 ext 7222716",
     "speciality1": null,
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_memory_masamba_2",
@@ -546,7 +607,8 @@
     "phone": "01227 766877 ext 7222716",
     "speciality1": null,
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_claire_johnson",
@@ -555,7 +617,8 @@
     "phone": "01227 766877 ext 7222716",
     "speciality1": null,
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_jacquiline_paramananthan",
@@ -564,7 +627,8 @@
     "phone": "01227 766877 ext 7222716",
     "speciality1": null,
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_daniel_miller",
@@ -573,7 +637,8 @@
     "phone": "01622 225094",
     "speciality1": null,
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_josephine_sanders",
@@ -582,7 +647,8 @@
     "phone": "01622 225094",
     "speciality1": null,
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_geraint_rees",
@@ -591,7 +657,8 @@
     "phone": "01622 225094",
     "speciality1": null,
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_sara_hodgkinson",
@@ -600,7 +667,8 @@
     "phone": "01622 225094",
     "speciality1": null,
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_sarah_egan_2",
@@ -609,7 +677,8 @@
     "phone": "01622 225094",
     "speciality1": null,
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_kerry_culmer",
@@ -618,7 +687,8 @@
     "phone": "01622 225094",
     "speciality1": null,
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_emily_piddington",
@@ -627,7 +697,8 @@
     "phone": "01622 225094",
     "speciality1": null,
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   },
   {
     "id": "new_jagadeesan_arumugam",
@@ -636,6 +707,7 @@
     "phone": "01622 225094",
     "speciality1": null,
     "speciality2": null,
-    "speciality3": null
+    "speciality3": null,
+    "emailRecipients": ""
   }
 ]
