@@ -213,8 +213,8 @@ export default function EmailConfigPage() {
         <div className="mx-auto max-w-2xl space-y-8">
             <Card>
                 <CardHeader>
-                    <CardTitle>Email Recipients</CardTitle>
-                    <CardDescription>Manage the list of email addresses for notifications. Empty entries will be removed on save.</CardDescription>
+                    <CardTitle>All Activity email recipients</CardTitle>
+                    <CardDescription>Manage the list of email addresses that receive notifications for ALL activity.</CardDescription>
                 </CardHeader>
             </Card>
 
