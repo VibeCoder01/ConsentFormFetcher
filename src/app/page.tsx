@@ -79,7 +79,7 @@ const UncPathToast = ({ uncPath }: { uncPath: string }) => {
 
     return (
         <div className="flex flex-col gap-2 w-full">
-            <p>The PDF has been saved to the clinician's folder.</p>
+            <p className="break-words">The PDF has been saved to the clinician's folder.</p>
             <p className="font-mono bg-muted p-2 rounded-md text-xs break-all">{uncPath}</p>
             {copied ? (
                 <p className="text-sm font-medium text-destructive">Copied! Now paste into the Windows Search box.</p>
@@ -753,16 +753,19 @@ export default function Home() {
                 <strong>Check Details:</strong> Ensure all entered information is correct.
               </li>
               <li>
-                <strong>Select Consent Form:</strong> Choose the appropriate form from the "Available Forms" list. The pre-filled PDF will be generated.
+                <strong>Select Consent Form:</strong> Choose the appropriate form from the "Available Forms" list. The partially pre-populated PDF will be generated.
               </li>
               <li>
-                <strong>Fill & Sign PDF:</strong> Open the downloaded PDF from your browsers download folder in Acrobat Reader to complete any remaining fields and obtain signatures.
+                <strong>Copy the Path to the PDF</strong> and paste into the Windows Search bar, press ENTER.
               </li>
               <li>
-                <strong>Save the File:</strong> Save the completed and signed PDF to your computer.
+                <strong>Acrobat Reader will open with the document - Fill & Sign PDF.</strong>
               </li>
               <li>
-                <strong>Submit:</strong> Use the <strong>SUBMIT</strong> button in the top-right corner to upload the final PDF to the configured "RT Consent" folder.
+                <strong>Click Save in Acrobat Reader,</strong> choose the Clinicians NAME as the folder to save to, and exit Acrobat.
+              </li>
+              <li>
+                <strong>Use the SEND EMAILS button</strong> to email the PDF to the configured recipients.
               </li>
             </ol>
           </CardContent>
