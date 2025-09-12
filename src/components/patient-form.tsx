@@ -187,7 +187,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
             <Tooltip>
                 <TooltipTrigger asChild>
                     <div className="w-[70%]">
-                        <Button onClick={() => setShowRNumberPrompt(true)} disabled={isFetchingDemographics} className="h-auto py-3 px-1 w-full">
+                        <Button onClick={() => setShowRNumberPrompt(true)} disabled={isFetchingDemographics} className="h-auto py-3 px-1 text-base">
                             {isFetchingDemographics ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             Get Live Patient Demographics
                         </Button>
