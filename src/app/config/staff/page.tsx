@@ -11,21 +11,25 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, PlusCircle, Save, Trash2, Loader2, Eraser, Upload, Download, X } from 'lucide-react';
 import type { StaffMember, TumourSite } from '@/lib/types';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function StaffConfigPage() {
   const { toast } = useToast();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [initialStaff, setInitialStaff] = useState<StaffMember[]>([]);
+  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  const [editedStaff, setEditedStaff] = useState<StaffMember | null>(null);
   const [tumourSites, setTumourSites] = useState<TumourSite[]>([]);
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const importFileRef = useRef<HTMLInputElement>(null);
 
-  const isModified = JSON.stringify(staff) !== JSON.stringify(initialStaff);
+  const isModified = selectedStaff && editedStaff && JSON.stringify(selectedStaff) !== JSON.stringify(editedStaff);
 
   const fetchInitialData = async () => {
       setIsLoading(true);
@@ -37,12 +41,14 @@ export default function StaffConfigPage() {
         if (!staffRes.ok) throw new Error('Failed to fetch staff');
         if (!sitesRes.ok) throw new Error('Failed to fetch tumour sites');
         
-        const staffData: StaffMember[] = await staffRes.json();
+        const staffData: StaffMember[] = (await staffRes.json()).sort((a,b) => a.name.localeCompare(b.name));
         const sitesData: TumourSite[] = await sitesRes.json();
 
         setStaff(staffData);
         setInitialStaff(staffData);
         setTumourSites(sitesData);
+        setSelectedStaff(null);
+        setEditedStaff(null);
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -58,72 +64,90 @@ export default function StaffConfigPage() {
     fetchInitialData();
   }, [toast]);
 
-  const handleFieldChange = (index: number, field: keyof Omit<StaffMember, 'id'>, value: string | null) => {
-    const updatedStaff = [...staff];
-    updatedStaff[index] = { ...updatedStaff[index], [field]: value };
-    setStaff(updatedStaff);
+  const handleSelectStaff = (member: StaffMember) => {
+    setSelectedStaff(member);
+    setEditedStaff(JSON.parse(JSON.stringify(member))); // Deep copy for editing
+  };
+
+  const handleFieldChange = (field: keyof Omit<StaffMember, 'id'>, value: string | null) => {
+    if (editedStaff) {
+      setEditedStaff({ ...editedStaff, [field]: value });
+    }
   };
 
   const addStaffMember = () => {
-    setStaff([...staff, { id: `new_${Date.now()}`, name: '', title: '', phone: '', speciality1: null, speciality2: null, speciality3: null, emailRecipients: '' }]);
+    const newMember: StaffMember = { id: `new_${Date.now()}`, name: '', title: '', phone: '', speciality1: null, speciality2: null, speciality3: null, emailRecipients: '' };
+    setStaff([...staff, newMember]);
+    handleSelectStaff(newMember);
   };
 
-  const removeStaffMember = (index: number) => {
-    const updatedStaff = staff.filter((_, i) => i !== index);
+  const removeStaffMember = async () => {
+    if (!selectedStaff) return;
+    
+    const updatedStaff = staff.filter(s => s.id !== selectedStaff.id);
     setStaff(updatedStaff);
+    await persistChanges(updatedStaff);
+    setSelectedStaff(null);
+    setEditedStaff(null);
+    toast({ title: 'Success', description: 'Staff member removed.' });
   };
 
-  const handleSaveChanges = async () => {
-    setIsSaving(true);
-    const nonEmptyStaff = staff.filter(member => member.name || member.title || member.phone || member.emailRecipients);
-    try {
-      const response = await fetch('/api/staff', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(nonEmptyStaff),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save changes.');
+  const persistChanges = async (staffList: StaffMember[]) => {
+      setIsSaving(true);
+      try {
+          const response = await fetch('/api/staff', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(staffList),
+          });
+          if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || 'Failed to save changes.');
+          }
+          return true;
+      } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          toast({ variant: "destructive", title: "Save Failed", description: errorMessage });
+          return false;
+      } finally {
+          setIsSaving(false);
       }
-      
-      toast({
-        title: 'Success',
-        description: 'Staff list updated successfully.',
-      });
-      setStaff(nonEmptyStaff);
-      setInitialStaff(nonEmptyStaff);
-    } catch (error) {
-       const errorMessage = error instanceof Error ? error.message : String(error);
-       toast({
-        variant: "destructive",
-        title: "Save Failed",
-        description: `Could not save staff list. ${errorMessage}`,
-      });
-    } finally {
-        setIsSaving(false);
+  };
+
+
+  const handleUpdate = async () => {
+    if (!editedStaff || !selectedStaff) return;
+    
+    const updatedList = staff.map(s => s.id === selectedStaff.id ? editedStaff : s).sort((a,b) => a.name.localeCompare(b.name));
+    
+    setStaff(updatedList);
+    const success = await persistChanges(updatedList);
+    
+    if (success) {
+        setSelectedStaff(editedStaff);
+        setInitialStaff(updatedList);
+        toast({ title: 'Success', description: 'Staff member details updated.' });
+    } else {
+        // Revert on failure
+        setStaff(initialStaff);
     }
   };
 
-  const handleClearList = () => {
-      setStaff([]);
+  const handleClearList = async () => {
       setShowClearConfirm(false);
-      toast({
-          title: "List Cleared",
-          description: "Click 'Save All Changes' to make it permanent.",
-      });
+      const success = await persistChanges([]);
+      if (success) {
+          fetchInitialData(); // refetch
+          toast({ title: "List Cleared", description: "The staff list has been emptied." });
+      }
   };
 
   const handleExport = async () => {
-    const dataToExport = staff.filter(member => member.name || member.title || member.phone);
-    if (dataToExport.length === 0) {
+    if (staff.length === 0) {
         toast({ title: 'Nothing to Export', description: 'The staff list is empty.' });
         return;
     }
-    const jsonData = JSON.stringify(dataToExport, null, 2);
+    const jsonData = JSON.stringify(staff, null, 2);
     const blob = new Blob([jsonData], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -136,9 +160,7 @@ export default function StaffConfigPage() {
     toast({ title: 'Success', description: 'The current staff list has been exported.'});
   };
 
-  const handleImportClick = () => {
-    importFileRef.current?.click();
-  };
+  const handleImportClick = () => { importFileRef.current?.click(); };
 
   const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -155,94 +177,36 @@ export default function StaffConfigPage() {
                   throw new Error("Invalid file format. The file should contain a list of staff members.");
               }
 
-              // Overwrite current staff state with imported data
-              setStaff(importedData);
-              toast({
-                  title: 'Import Successful',
-                  description: "The staff list has been updated. Click 'Save Changes' to make it permanent.",
-              });
+              const success = await persistChanges(importedData);
+              if (success) {
+                toast({ title: 'Import Successful', description: "Staff list has been overwritten." });
+                fetchInitialData();
+              }
 
           } catch (error) {
                const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-               toast({
-                   variant: 'destructive',
-                   title: 'Import Failed',
-                   description: errorMessage,
-               });
+               toast({ variant: 'destructive', title: 'Import Failed', description: errorMessage });
           }
       };
-      reader.onerror = () => {
-          toast({ variant: 'destructive', title: 'Error', description: 'Failed to read the file.'});
-      }
+      reader.onerror = () => { toast({ variant: 'destructive', title: 'Error', description: 'Failed to read the file.'}); }
       reader.readAsText(file);
-
-      // Reset file input value to allow re-importing the same file
       event.target.value = '';
   };
   
   const loadingSkeleton = (
-    <div className="space-y-6">
-        {[...Array(2)].map((_, i) => (
-            <Card key={i}>
-                <CardHeader>
-                    <Skeleton className="h-6 w-3/5" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                     <div className="space-y-2">
-                        <Skeleton className="h-4 w-1/4" />
-                        <Skeleton className="h-10 w-full" />
-                    </div>
-                     <div className="space-y-2">
-                        <Skeleton className="h-4 w-1/4" />
-                        <Skeleton className="h-10 w-full" />
-                    </div>
-                     <div className="space-y-2">
-                        <Skeleton className="h-4 w-1/4" />
-                        <Skeleton className="h-10 w-full" />
-                    </div>
-                </CardContent>
-                <CardFooter>
-                    <Skeleton className="h-9 w-24" />
-                </CardFooter>
-            </Card>
-        ))}
+    <div className="p-2 space-y-2">
+        {[...Array(10)].map((_, i) => ( <Skeleton key={i} className="h-10 w-full" /> ))}
     </div>
   );
 
-  const isLastMemberEmpty = () => {
-      if (staff.length === 0) return false;
-      const lastMember = staff[staff.length - 1];
-      return !lastMember.name && !lastMember.title && !lastMember.phone && !lastMember.emailRecipients;
-  };
-
-  const addStaffButton = (
-    <TooltipProvider>
-        <Tooltip>
-            <TooltipTrigger asChild>
-                <div className="inline-block"> 
-                    <Button onClick={addStaffMember} disabled={isLastMemberEmpty()}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add New Staff Member
-                    </Button>
-                </div>
-            </TooltipTrigger>
-            {isLastMemberEmpty() && (
-                 <TooltipContent>
-                    <p>Please fill in the last staff member before adding a new one.</p>
-                </TooltipContent>
-            )}
-        </Tooltip>
-    </TooltipProvider>
-  );
-
-  const SpecialitySelector = ({ index, field }: { index: number, field: 'speciality1' | 'speciality2' | 'speciality3' }) => (
+  const SpecialitySelector = ({ field }: { field: 'speciality1' | 'speciality2' | 'speciality3' }) => (
     <div className="space-y-1.5 relative">
-        <Label htmlFor={`${field}-${index}`}>Tumour Site Speciality</Label>
+        <Label htmlFor={field}>Tumour Site Speciality</Label>
         <Select
-            value={staff[index][field] || ''}
-            onValueChange={(value) => handleFieldChange(index, field, value)}
+            value={editedStaff?.[field] || ''}
+            onValueChange={(value) => handleFieldChange(field, value)}
         >
-            <SelectTrigger id={`${field}-${index}`}>
+            <SelectTrigger id={field}>
                 <SelectValue placeholder="Select speciality..." />
             </SelectTrigger>
             <SelectContent>
@@ -251,12 +215,12 @@ export default function StaffConfigPage() {
                 ))}
             </SelectContent>
         </Select>
-        {staff[index][field] && (
+        {editedStaff?.[field] && (
             <Button
                 variant="ghost"
                 size="icon"
                 className="absolute top-6 right-8 h-6 w-6"
-                onClick={() => handleFieldChange(index, field, null)}
+                onClick={() => handleFieldChange(field, null)}
             >
                 <X className="h-4 w-4" />
             </Button>
@@ -265,121 +229,110 @@ export default function StaffConfigPage() {
   );
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <header className="flex h-16 items-center border-b bg-card px-4 md:px-6 justify-between">
+    <div className="flex h-screen w-full flex-col">
+      <header className="flex h-16 shrink-0 items-center border-b bg-card px-4 md:px-6 justify-between">
          <div className="flex items-center">
             <Link href="/config" aria-label="Back to configuration">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-6 w-6" />
-              </Button>
+              <Button variant="ghost" size="icon"> <ArrowLeft className="h-6 w-6" /> </Button>
             </Link>
             <h1 className="ml-4 text-xl font-bold">Edit Staff List</h1>
          </div>
          <div className="flex items-center gap-2">
-            {addStaffButton}
-             <Button variant="outline" onClick={() => setShowClearConfirm(true)} disabled={staff.length === 0}>
-                <Eraser className="mr-2 h-4 w-4" />
-                Clear List
-            </Button>
-            <Button onClick={handleSaveChanges} disabled={isSaving || !isModified}>
-              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-              Save Changes
-            </Button>
+            <Button onClick={addStaffMember}> <PlusCircle className="mr-2 h-4 w-4" /> Add Staff Member </Button>
+            <Button variant="outline" onClick={handleImportClick}> <Upload className="mr-2 h-4 w-4" /> Import </Button>
+            <Button variant="outline" onClick={handleExport} disabled={staff.length === 0}> <Download className="mr-2 h-4 w-4" /> Export </Button>
+            <Button variant="destructive" onClick={() => setShowClearConfirm(true)} disabled={staff.length === 0}> <Eraser className="mr-2 h-4 w-4" /> Clear List </Button>
+             <input type="file" ref={importFileRef} onChange={handleFileImport} accept="application/json" className="hidden"/>
          </div>
       </header>
-      <main className="flex-1 p-4 md:p-8 lg:p-12">
-        <div className="mx-auto max-w-4xl space-y-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Data Management</CardTitle>
-                    <CardDescription>Export the current staff list or import a new list from a file.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-wrap gap-2">
-                    <Button variant="outline" onClick={handleExport} disabled={staff.length === 0}>
-                        <Download className="mr-2 h-4 w-4" />
-                        Export Staff List
-                    </Button>
-                    <Button variant="outline" onClick={handleImportClick}>
-                        <Upload className="mr-2 h-4 w-4" />
-                        Import Staff List
-                    </Button>
-                    <input
-                        type="file"
-                        ref={importFileRef}
-                        onChange={handleFileImport}
-                        accept="application/json"
-                        className="hidden"
-                    />
-                </CardContent>
-            </Card>
-
-          {isLoading ? loadingSkeleton : (
-            <div className="space-y-6">
-                {staff.map((member, index) => (
-                    <Card key={member.id}>
-                        <CardHeader>
-                            <CardTitle>Staff Member #{index + 1}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            <div className="space-y-1.5">
-                                <Label htmlFor={`name-${index}`}>Full Name</Label>
-                                <Input id={`name-${index}`} value={member.name} onChange={(e) => handleFieldChange(index, 'name', e.target.value)} placeholder="e.g., Dr. Jane Doe"/>
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label htmlFor={`title-${index}`}>Job Title</Label>
-                                <Input id={`title-${index}`} value={member.title} onChange={(e) => handleFieldChange(index, 'title', e.target.value)} placeholder="e.g., Consultant Oncologist"/>
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label htmlFor={`phone-${index}`}>Phone/Bleep</Label>
-                                <Input id={`phone-${index}`} value={member.phone} onChange={(e) => handleFieldChange(index, 'phone', e.target.value)} placeholder="e.g., 1234"/>
-                            </div>
-                             <SpecialitySelector index={index} field="speciality1" />
-                             <SpecialitySelector index={index} field="speciality2" />
-                             <SpecialitySelector index={index} field="speciality3" />
-                             <div className="space-y-1.5 md:col-span-2 lg:col-span-3">
-                                <Label htmlFor={`emailRecipients-${index}`}>Email Recipients (comma-separated)</Label>
-                                <Input id={`emailRecipients-${index}`} value={member.emailRecipients} onChange={(e) => handleFieldChange(index, 'emailRecipients', e.target.value)} placeholder="e.g., recipient1@nhs.net, recipient2@nhs.net"/>
-                            </div>
-                        </CardContent>
-                        <CardFooter>
-                            <Button variant="destructive" size="sm" onClick={() => removeStaffMember(index)}>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Remove
+      <div className="flex flex-1 overflow-hidden">
+        <aside className="w-1/3 border-r h-full">
+            <CardHeader>
+                <CardTitle>Staff Members</CardTitle>
+                <CardDescription>{staff.length} member(s) in the list.</CardDescription>
+            </CardHeader>
+            <ScrollArea className="h-[calc(100vh-10rem)]">
+                {isLoading ? loadingSkeleton : (
+                    <div className="p-2 space-y-1">
+                        {staff.map((member, index) => (
+                            <Button
+                                key={member.id}
+                                variant={selectedStaff?.id === member.id ? "secondary" : "ghost"}
+                                className="w-full justify-start h-auto flex flex-col items-start p-2"
+                                onClick={() => handleSelectStaff(member)}
+                            >
+                                <span className="font-semibold">#{index + 1}: {member.name || "New Member"}</span>
+                                <span className="text-muted-foreground text-xs">{member.title || "No title"}</span>
                             </Button>
-                        </CardFooter>
-                    </Card>
-                ))}
-            </div>
-          )}
-
-           {!isLoading && staff.length === 0 && (
-                <Card className="text-center">
+                        ))}
+                    </div>
+                )}
+            </ScrollArea>
+        </aside>
+        <main className="w-2/3 flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
+            {editedStaff ? (
+                <Card>
                     <CardHeader>
-                        <CardTitle>The Staff List is Empty</CardTitle>
+                        <CardTitle>Edit: {selectedStaff?.name || 'New Member'}</CardTitle>
+                        <CardDescription>Modify the details for this staff member and click Update to save.</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground">Add a new staff member to get started.</p>
+                    <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="name">Full Name</Label>
+                            <Input id="name" value={editedStaff.name} onChange={(e) => handleFieldChange('name', e.target.value)} placeholder="e.g., Dr. Jane Doe"/>
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="title">Job Title</Label>
+                            <Input id="title" value={editedStaff.title} onChange={(e) => handleFieldChange('title', e.target.value)} placeholder="e.g., Consultant Oncologist"/>
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="phone">Phone/Bleep</Label>
+                            <Input id="phone" value={editedStaff.phone} onChange={(e) => handleFieldChange('phone', e.target.value)} placeholder="e.g., 1234"/>
+                        </div>
+                         <SpecialitySelector field="speciality1" />
+                         <SpecialitySelector field="speciality2" />
+                         <SpecialitySelector field="speciality3" />
+                         <div className="space-y-1.5 md:col-span-3">
+                            <Label htmlFor="emailRecipients">Email Recipients (comma-separated)</Label>
+                            <Input id="emailRecipients" value={editedStaff.emailRecipients} onChange={(e) => handleFieldChange('emailRecipients', e.target.value)} placeholder="e.g., recipient1@nhs.net, recipient2@nhs.net"/>
+                        </div>
                     </CardContent>
+                    <CardFooter className="justify-end gap-2">
+                        <Button variant="destructive" onClick={removeStaffMember}> <Trash2 className="mr-2 h-4 w-4" /> Remove </Button>
+                        <Button onClick={handleUpdate} disabled={isSaving || !isModified}>
+                          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                          Update
+                        </Button>
+                    </CardFooter>
                 </Card>
+            ) : (
+                <div className="flex h-full items-center justify-center">
+                    <Card className="text-center w-full max-w-md">
+                        <CardHeader>
+                            <CardTitle>Select a Staff Member</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground">Select a staff member from the list on the left to view or edit their details. Or, add a new member.</p>
+                        </CardContent>
+                    </Card>
+                </div>
             )}
-        </div>
-      </main>
+        </main>
+      </div>
       <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
         <AlertDialogContent>
             <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                    This action will remove all staff members from the list. This cannot be undone. You will need to save your changes to make this permanent.
-                </AlertDialogDescription>
+                <AlertDialogDescription>This action will remove all staff members from the list. This cannot be undone.</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleClearList} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Yes, clear the list
-                </AlertDialogAction>
+                <AlertDialogAction onClick={handleClearList} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, clear the list</AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
   );
 }
+
+    
