@@ -65,7 +65,7 @@ export default function StaffConfigPage() {
   };
 
   const addStaffMember = () => {
-    setStaff([...staff, { id: `new_${Date.now()}`, name: '', title: '', phone: '', speciality1: null, speciality2: null, speciality3: null }]);
+    setStaff([...staff, { id: `new_${Date.now()}`, name: '', title: '', phone: '', speciality1: null, speciality2: null, speciality3: null, emailRecipients: '' }]);
   };
 
   const removeStaffMember = (index: number) => {
@@ -75,7 +75,7 @@ export default function StaffConfigPage() {
 
   const handleSaveChanges = async () => {
     setIsSaving(true);
-    const nonEmptyStaff = staff.filter(member => member.name || member.title || member.phone);
+    const nonEmptyStaff = staff.filter(member => member.name || member.title || member.phone || member.emailRecipients);
     try {
       const response = await fetch('/api/staff', {
         method: 'POST',
@@ -212,7 +212,7 @@ export default function StaffConfigPage() {
   const isLastMemberEmpty = () => {
       if (staff.length === 0) return false;
       const lastMember = staff[staff.length - 1];
-      return !lastMember.name && !lastMember.title && !lastMember.phone;
+      return !lastMember.name && !lastMember.title && !lastMember.phone && !lastMember.emailRecipients;
   };
 
   const addStaffButton = (
@@ -336,6 +336,10 @@ export default function StaffConfigPage() {
                              <SpecialitySelector index={index} field="speciality1" />
                              <SpecialitySelector index={index} field="speciality2" />
                              <SpecialitySelector index={index} field="speciality3" />
+                             <div className="space-y-1.5 md:col-span-2 lg:col-span-3">
+                                <Label htmlFor={`emailRecipients-${index}`}>Email Recipients (comma-separated)</Label>
+                                <Input id={`emailRecipients-${index}`} value={member.emailRecipients} onChange={(e) => handleFieldChange(index, 'emailRecipients', e.target.value)} placeholder="e.g., recipient1@nhs.net, recipient2@nhs.net"/>
+                            </div>
                         </CardContent>
                         <CardFooter>
                             <Button variant="destructive" size="sm" onClick={() => removeStaffMember(index)}>
