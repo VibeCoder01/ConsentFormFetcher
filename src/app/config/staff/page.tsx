@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -9,11 +9,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, PlusCircle, Save, Trash2, Loader2, Eraser, Upload, Download, X } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Save, Trash2, Loader2, Eraser, Upload, Download, X, Search } from 'lucide-react';
 import type { StaffMember, TumourSite } from '@/lib/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function StaffConfigPage() {
@@ -27,9 +26,20 @@ export default function StaffConfigPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const importFileRef = useRef<HTMLInputElement>(null);
 
   const isModified = selectedStaff && editedStaff && JSON.stringify(selectedStaff) !== JSON.stringify(editedStaff);
+
+  const filteredStaff = useMemo(() => {
+    if (!searchQuery) return staff;
+    const lowercasedQuery = searchQuery.toLowerCase();
+    return staff.filter(member => {
+        return Object.values(member).some(value => 
+            String(value).toLowerCase().includes(lowercasedQuery)
+        );
+    });
+  }, [staff, searchQuery]);
 
   const fetchInitialData = async () => {
       setIsLoading(true);
@@ -246,22 +256,31 @@ export default function StaffConfigPage() {
          </div>
       </header>
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-1/3 border-r h-full">
+        <aside className="w-1/3 border-r h-full flex flex-col">
             <CardHeader>
                 <CardTitle>Staff Members</CardTitle>
-                <CardDescription>{staff.length} member(s) in the list.</CardDescription>
+                <CardDescription>{filteredStaff.length} of {staff.length} member(s) shown.</CardDescription>
+                <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                        placeholder="Search staff..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-8 w-full"
+                    />
+                </div>
             </CardHeader>
-            <ScrollArea className="h-[calc(100vh-10rem)]">
+            <ScrollArea className="flex-1">
                 {isLoading ? loadingSkeleton : (
                     <div className="p-2 space-y-1">
-                        {staff.map((member, index) => (
+                        {filteredStaff.map((member, index) => (
                             <Button
                                 key={member.id}
                                 variant={selectedStaff?.id === member.id ? "secondary" : "ghost"}
                                 className="w-full justify-start text-left"
                                 onClick={() => handleSelectStaff(member)}
                             >
-                                <span className="font-semibold truncate">#{index + 1}: {member.name || "New Member"}</span>
+                                <span className="font-semibold truncate">#{staff.findIndex(s => s.id === member.id) + 1}: {member.name || "New Member"}</span>
                             </Button>
                         ))}
                     </div>
@@ -333,5 +352,3 @@ export default function StaffConfigPage() {
     </div>
   );
 }
-
-    
