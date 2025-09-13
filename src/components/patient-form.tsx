@@ -90,16 +90,6 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
             const errorMsg = 'error' in data ? data.error : `Request failed with status ${response.status}`;
             throw new Error(errorMsg);
         }
-        
-        // Check for placeholder response which indicates user is not logged into KOMS
-        if (data.forename === '${forename}') {
-            toast({
-                variant: "destructive",
-                title: "Login Required",
-                description: "Please ensure you are logged into KOMS to access patient information.",
-            });
-            return; // Stop execution
-        }
 
         setDemographicsLoaded(true);
 
@@ -339,3 +329,5 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
     </div>
   );
 }
+
+    
