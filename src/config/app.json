@@ -7,5 +7,6 @@
   "pdfOpenMethod": "acrobat",
   "rtConsentFolder": "c:\\VC01\\RT_Consent",
   "prepopulateWithFakeData": true,
-  "showWelshForms": false
+  "showWelshForms": false,
+  "komsApiDebugMode": false
 }

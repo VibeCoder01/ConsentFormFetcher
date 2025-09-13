@@ -1,7 +1,7 @@
 
 'use client';
 
-import { PatientData, IdentifierType, StaffMember, KomsResponse } from '@/lib/types';
+import { PatientData, IdentifierType, StaffMember, KomsResponse, AppConfig } from '@/lib/types';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
@@ -20,6 +20,7 @@ interface PatientFormProps {
   initialData: PatientData;
   setPatientData: (data: PatientData, fromDemographics?: boolean) => void;
   staffMembers: StaffMember[];
+  appConfig: Partial<AppConfig>;
 }
 
 const identifierOptions: { value: IdentifierType; label: string }[] = [
@@ -29,7 +30,7 @@ const identifierOptions: { value: IdentifierType; label: string }[] = [
     { value: 'hospitalNumberMTW', label: 'Hospital Number (MTW)' },
 ];
 
-export function PatientForm({ patientData, initialData, setPatientData, staffMembers }: PatientFormProps) {
+export function PatientForm({ patientData, initialData, setPatientData, staffMembers, appConfig }: PatientFormProps) {
   const [showAgeWarning, setShowAgeWarning] = useState(false);
   const [showRNumberPrompt, setShowRNumberPrompt] = useState(false);
   const [isFetchingDemographics, setIsFetchingDemographics] = useState(false);
@@ -86,6 +87,14 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
         const response = await fetch(`/api/koms?RNumber=${rNumber}`);
         const data: KomsResponse | { error: string } = await response.json();
 
+        if (appConfig.komsApiDebugMode) {
+            toast({
+                title: 'KOMS API Response',
+                description: <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4"><code className="text-white">{JSON.stringify(data, null, 2)}</code></pre>,
+                duration: 15000,
+            });
+        }
+
         if (!response.ok || 'error' in data) {
             const errorMsg = 'error' in data ? data.error : `Request failed with status ${response.status}`;
             throw new Error(errorMsg);
@@ -120,11 +129,13 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-        toast({
-            variant: "destructive",
-            title: "Fetch Failed",
-            description: errorMessage,
-        });
+        if (!appConfig.komsApiDebugMode) { // Don't show generic error if debug toast is already showing it
+            toast({
+                variant: "destructive",
+                title: "Fetch Failed",
+                description: errorMessage,
+            });
+        }
     } finally {
         setIsFetchingDemographics(false);
     }
@@ -329,5 +340,3 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
     </div>
   );
 }
-
-    

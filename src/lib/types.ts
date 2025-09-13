@@ -77,3 +77,15 @@ export interface TumourGroup {
     id: string;
     name: string;
 }
+
+export interface AppConfig {
+    rcrConsentFormsUrl: string;
+    rcrBaseUrl: string;
+    validateRNumber: boolean;
+    previewPdfFields: boolean;
+    pdfOpenMethod: 'browser' | 'acrobat';
+    rtConsentFolder: string;
+    prepopulateWithFakeData: boolean;
+    showWelshForms: boolean;
+    komsApiDebugMode: boolean;
+}

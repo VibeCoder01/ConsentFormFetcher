@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import type { ConsentForm, ConsentFormCategory, PatientData, IdentifierType, StaffMember, TumourSite } from "@/lib/types";
+import type { ConsentForm, ConsentFormCategory, PatientData, IdentifierType, StaffMember, TumourSite, AppConfig } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AppHeader } from "@/components/app-header";
 import { FormList } from "@/components/form-list";
@@ -119,8 +119,7 @@ export default function Home() {
   const [pdfFormData, setPdfFormData] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [previewPdfFieldsConfig, setPreviewPdfFieldsConfig] = useState(false);
-  const [showWelshFormsConfig, setShowWelshFormsConfig] = useState(false);
+  const [appConfig, setAppConfig] = useState<Partial<AppConfig>>({});
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   
   const isMobile = useIsMobile();
@@ -165,15 +164,14 @@ export default function Home() {
 
       const formsData: ConsentFormCategory[] = await formsRes.json();
       const staffData: StaffMember[] = await staffRes.json();
-      const configData = await configRes.json();
+      const configData: AppConfig = await configRes.json();
       const sitesData: TumourSite[] = await sitesRes.json();
 
 
       setFormCategories(formsData);
       setStaffMembers(staffData);
       setTumourSites(sitesData);
-      setPreviewPdfFieldsConfig(configData.previewPdfFields);
-      setShowWelshFormsConfig(configData.showWelshForms);
+      setAppConfig(configData);
 
       const initialData = configData.prepopulateWithFakeData ? fakePatientData : emptyPatientData;
       setPatientData(initialData);
@@ -202,14 +200,14 @@ export default function Home() {
             if (lowerCaseTitle.includes('project acknowledgements')) {
                 return false;
             }
-            if (!showWelshFormsConfig && lowerCaseTitle.includes('welsh language')) {
+            if (!appConfig.showWelshForms && lowerCaseTitle.includes('welsh language')) {
                 return false;
             }
             return true;
         })
       }))
       .filter(category => category.forms.length > 0);
-  }, [formCategories, showWelshFormsConfig]);
+  }, [formCategories, appConfig.showWelshForms]);
 
 
   useEffect(() => {
@@ -447,7 +445,7 @@ export default function Home() {
     if (isMobile) setSheetOpen(false);
 
     // If preview is on, clear fields and show loading skeleton.
-    if (previewPdfFieldsConfig) {
+    if (appConfig.previewPdfFields) {
         setPdfFields([]);
         setPdfFormData({});
         setIsFetchingFields(true);
@@ -458,7 +456,7 @@ export default function Home() {
       if (result.success && result.fields) {
         const { finalFields, finalFormData } = prePopulateData(result.fields);
         
-        if (previewPdfFieldsConfig) {
+        if (appConfig.previewPdfFields) {
           // Preview is ON: update state to show the form component.
           setPdfFields(finalFields);
           setPdfFormData(finalFormData);
@@ -482,7 +480,7 @@ export default function Home() {
         description: `An error occurred while getting PDF fields: ${errorMessage}`,
       });
     } finally {
-      if (previewPdfFieldsConfig) {
+      if (appConfig.previewPdfFields) {
         setIsFetchingFields(false);
       }
     }
@@ -657,7 +655,8 @@ export default function Home() {
             patientData={patientData}
             initialData={initialPatientData}
             setPatientData={handlePatientDataChange} 
-            staffMembers={staffMembers} 
+            staffMembers={staffMembers}
+            appConfig={appConfig}
         />
         <ClinicianForm 
           staffMembers={staffMembers}
@@ -675,7 +674,7 @@ export default function Home() {
         return <PdfFormSkeleton />;
     }
 
-    if (selectedForm && Object.keys(pdfFormData).length > 0 && pdfFields.length > 0 && previewPdfFieldsConfig) {
+    if (selectedForm && Object.keys(pdfFormData).length > 0 && pdfFields.length > 0 && appConfig.previewPdfFields) {
         return (
             <PdfForm
                 formTitle={selectedForm.title}

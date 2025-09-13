@@ -2,20 +2,9 @@
 import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
+import { AppConfig } from '@/lib/types';
 
 const configPath = path.join(process.cwd(), 'src', 'config', 'app.json');
-
-// Define a type for the config for better type safety
-interface AppConfig {
-    rcrConsentFormsUrl: string;
-    rcrBaseUrl: string;
-    validateRNumber: boolean;
-    previewPdfFields: boolean;
-    pdfOpenMethod: 'browser' | 'acrobat';
-    rtConsentFolder: string;
-    prepopulateWithFakeData: boolean;
-    showWelshForms: boolean;
-}
 
 // Function to read the current config
 async function readConfig(): Promise<AppConfig> {
