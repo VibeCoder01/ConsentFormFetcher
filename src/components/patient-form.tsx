@@ -122,10 +122,12 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
             macmillanContactId: null, // Reset macmillan dropdown
         }, true); // Pass true to indicate it's from demographics fetch
 
-        toast({
-            title: 'Success',
-            description: `Successfully fetched details for ${data.fullName}.`,
-        });
+        if (!appConfig.komsApiDebugMode) {
+            toast({
+                title: 'Success',
+                description: `Successfully fetched details for ${data.fullName}.`,
+            });
+        }
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
