@@ -34,7 +34,8 @@ async function getKomsUser(): Promise<KomsResponse | null> {
             'Content-Type': 'application/x-www-form-urlencoded',
             'User-Agent': 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)'
             },
-            body: 'RNumber=ZZZ' // Dummy call
+            body: 'RNumber=ZZZ', // Dummy call
+            cache: 'no-store' // Disable caching
         });
 
         if (!koms.ok) return null;
