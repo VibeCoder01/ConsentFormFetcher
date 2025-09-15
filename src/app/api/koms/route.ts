@@ -2,6 +2,7 @@
 import type { NextRequest } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
+import { logActivity } from '@/lib/logger';
 
 // Per Next.js docs, this is the proper way to access env vars in a route handler
 const KOMS_URL = process.env.KOMS_URL;
@@ -96,17 +97,9 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    // Log the full error object and any nested cause for detailed debugging.
-    console.error('[KOMS_API_ERROR]', error);
-    if (error instanceof Error && error.cause) {
-      console.error('[KOMS_API_ERROR_CAUSE]', error.cause);
-    }
-
     let message = 'An unknown network error occurred';
     if (error instanceof Error) {
-        // The actual error code (e.g., UND_ERR_CONNECT_TIMEOUT) is often nested in the 'cause' property.
         const cause = (error as any).cause;
-
         if (cause?.code === 'UND_ERR_CONNECT_TIMEOUT') {
              message = 'Connection to KOMS timed out. Please ensure you are logged into KOMS and try again.';
         } else if (cause && typeof cause.code === 'string') {
@@ -115,6 +108,9 @@ export async function GET(req: NextRequest) {
             message = error.message;
         }
     }
+    
+    await logActivity('KOMS API call', { status: 'FAILURE', details: { rNumber, error: message } });
+
     return Response.json({ error: message }, { status: 504 }); // Gateway Timeout
   }
 }

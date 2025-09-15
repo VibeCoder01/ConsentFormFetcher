@@ -11,6 +11,7 @@ import { scrapeRcrForms } from '@/ai/flows/scrape-forms-flow';
 import type { ConsentFormCategory } from '@/lib/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { logActivity } from '@/lib/logger';
 
 // Helper function to read the config to avoid direct imports in server-side code
 async function getConfig() {
@@ -56,7 +57,7 @@ export async function checkForFormUpdates(): Promise<UpdateCheckResult> {
 
     return { hasUpdates: true, newData: newForms };
   } catch (error) {
-    console.error('Error checking for form updates:', error);
+    await logActivity('Error checking for form updates', { status: 'FAILURE', details: error });
     return { hasUpdates: false };
   }
 }
@@ -66,9 +67,10 @@ export async function updateForms(newData: ConsentFormCategory[]): Promise<{ suc
     const jsonFilePath = path.join(process.cwd(), 'public', 'consent-forms.json');
     const jsonData = JSON.stringify(newData, null, 2);
     await fs.writeFile(jsonFilePath, jsonData, 'utf-8');
+    await logActivity('Updated forms JSON file', { status: 'SUCCESS' });
     return { success: true };
   } catch (error) {
-    console.error('Failed to write updated forms to JSON:', error);
+    await logActivity('Failed to write updated forms to JSON', { status: 'FAILURE', details: error });
     return { success: false };
   }
 }

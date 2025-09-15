@@ -7,6 +7,7 @@
  */
 
 import { PDFDocument, PDFCheckBox } from 'pdf-lib';
+import { logActivity } from '@/lib/logger';
 
 export interface GetPdfFieldsOutput {
   success: boolean;
@@ -49,7 +50,7 @@ export async function getPdfFields(formUrl: string): Promise<GetPdfFieldsOutput>
 
     return { success: true, fields: fieldNames };
   } catch (error) {
-    console.error('Failed to get PDF fields:', error);
+    await logActivity('Failed to get PDF fields', { status: 'FAILURE', details: error });
     const message = error instanceof Error ? error.message : 'An unknown error occurred while processing the PDF.';
     return { success: false, error: message };
   }

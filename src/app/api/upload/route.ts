@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
+import { logActivity } from '@/lib/logger';
 
 // Helper function to read the config
 async function getConfig() {
@@ -10,7 +11,7 @@ async function getConfig() {
         const jsonData = await fs.readFile(configPath, 'utf-8');
         return JSON.parse(jsonData);
     } catch (error) {
-        console.error("Could not read config file for upload route:", error);
+        await logActivity("Could not read config file for upload route", { status: 'FAILURE', details: error });
         // Return a default or throw an error
         throw new Error("Server configuration is missing or unreadable.");
     }
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
     try {
         await fs.mkdir(destinationDir, { recursive: true });
     } catch (dirError) {
-         console.error(`Failed to create destination directory: ${destinationDir}`, dirError);
+         await logActivity(`Failed to create destination directory: ${destinationDir}`, { status: 'FAILURE', details: dirError });
          return NextResponse.json({ error: 'Could not access or create the destination folder.' }, { status: 500 });
     }
 
@@ -86,10 +87,11 @@ export async function POST(req: NextRequest) {
     await fs.writeFile(finalPath, fileBuffer);
     
     const message = `File '${finalName}' uploaded successfully to the consent folder.`
+    await logActivity('File Upload', { status: 'SUCCESS', details: message });
     return NextResponse.json({ success: true, message: message }, { status: 200 });
 
   } catch (error) {
-    console.error('Upload error:', error);
+    await logActivity('File Upload', { status: 'FAILURE', details: error });
     const message = error instanceof Error ? error.message : 'Failed to upload file.';
     return NextResponse.json({ error: message }, { status: 500 });
   }

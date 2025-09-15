@@ -79,7 +79,7 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
             }
         } catch(e) {
             // Field not found, just log and continue
-            console.warn(`Field "${fieldName}" not found in PDF, skipping.`);
+            await logActivity(`PDF field not found`, { status: 'INFO', details: `Field "${fieldName}" was not found in PDF, skipping.` });
         }
     }
 
@@ -87,11 +87,11 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     try {
         form.updateFieldAppearances(font);
     } catch (fontError) {
-        console.warn("Could not update field appearances with default font. Trying to flatten.", fontError);
+        await logActivity(`PDF appearance update failed`, { status: 'INFO', details: fontError });
         try {
             form.flatten();
         } catch (flattenError) {
-            console.error("Fallback to flatten also failed.", flattenError);
+            await logActivity(`PDF flatten fallback failed`, { status: 'FAILURE', details: flattenError });
         }
     }
 
