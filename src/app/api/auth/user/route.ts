@@ -33,11 +33,19 @@ async function getKomsUser(request: NextRequest): Promise<KomsResponse | null> {
         return null;
     }
     try {
-        const headers = buildKomsRequestHeaders(request);
-        const koms = await fetch(KOMS_URL, {
-            method: 'POST',
-            headers,
-            body: new URLSearchParams({ RNumber: 'ZZZ' }).toString(), // Dummy call
+const headers = buildKomsRequestHeaders(request);
+
+const cookieHeader = request.headers.get('cookie') ?? undefined;
+if (cookieHeader) {
+  headers['Cookie'] = cookieHeader;
+}
+
+const koms = await fetch(KOMS_URL, {
+  method: 'POST',
+  headers,
+  body: new URLSearchParams({ RNumber: 'ZZZ' }).toString(), // Dummy call
+});
+
             cache: 'no-store' // Disable caching
         });
 
