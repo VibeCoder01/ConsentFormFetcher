@@ -18,7 +18,7 @@ The application is divided into two main sections:
 You can hover over the main title, "ConsentForm Fetcher," to see the application's current version number.
 
 In the top-right corner, you will find several controls, each with a helpful tooltip that appears when you hover over it:
--   **SEND EMAILS**: For emailing a completed and signed consent form. The tooltip clarifies that the PDF will be emailed to configured recipients.
+-   **SEND EMAILS**: Clicking this button will display a notification, as the email functionality is not yet implemented.
 -   **Theme Toggle (Sun/Moon icon)**: For changing between light and dark mode.
 -   **Settings (Gear icon)**: For accessing the configuration page.
 
@@ -86,15 +86,16 @@ After the consent form has been generated, located using the UNC path, signed, a
     -   **Preview PDF fields before generating**: This switch controls the workflow after selecting a form. If ON, you can review and edit fields before generating the PDF. If OFF, the PDF is generated and opened immediately. Defaults to OFF.
     -   **Pre-populate form with dummy data**: Controls whether the patient form is initialized with "John Smith" data or starts empty.
     -   **Display Welsh PDF forms**: If enabled, consent forms available in Welsh will be included in the "Available Forms" list.
+    -   **Enable KOMS API debug mode**: When enabled, fetching patient demographics will show a toast notification with the raw data returned from the KOMS API, which is useful for diagnostics.
 -   **PDF Handling**: Choose how you want the final PDF to be opened.
     -   **Automatically open in Browser**: Opens the PDF in a new browser tab.
     -   **Download for Adobe Acrobat**: Downloads the PDF to your computer, allowing you to open it in a dedicated application like Adobe Acrobat.
 -   **Update Forms**: Click **Check for Updated Forms** to manually trigger a scrape of the currently saved URL to refresh the list of available forms.
 -   **Backup & Restore Settings**: You can export the application's entire configuration (including settings, emails, staff, and tumour sites) to a single JSON file for backup. You can also import a settings file to restore a previous configuration.
 -   **Staff Management**: Click **Edit Staff List** to navigate to a separate page to manage staff members.
-    - The page features a two-column layout. The left column contains a searchable list of all staff members, showing their number and name.
-    - Clicking a member in the list will display their full, editable details in the right-hand column.
-    - You can add, update, and remove individual staff members. You can also import and export the staff list independently of the main application settings.
+    - The page features a two-column layout. The left column contains a searchable list of all staff members.
+    - Clicking a member in the list will display their full, editable details in the right-hand column, where you can update their name, title, phone number, specialities, and email recipients.
+    - You can add new staff members, update existing ones, or remove them. The entire staff list can also be imported or exported as a JSON file.
 -   **Tumour Site Management**: Click **Edit Tumour Sites** to manage the list of tumour sites that can be assigned as specialities to staff members.
 -   **Email Management**: Click **Edit Email Config** to navigate to a page where you can manage a list of email recipients. Emails must be in a valid format and unique.
 
@@ -132,10 +133,13 @@ After the consent form has been generated, located using the UNC path, signed, a
 
 ## Where it maps onto each “big-ticket” framework
 | Framework / rule | Relevant built-in evidence |
-| --- | --- |
+| --- | --- | --- |
 | DCB 0129 (manufacturer) | Age-check, clinician-role guard, witness-field blanking, live-form fetch & hazard controls all contribute to a future Clinical Safety Case (sections 3–7) |
 | DCB 0160 (deploying org) | The same controls make it easier for the trust’s CSO to show “risk is ALARP” when integrating the tool. |
 | DTAC | C1 ✔ (see clinical-safety controls), C2 partly ✔ (no cached data, short-lived PDFs), C3 partly ✔ (HTTPS + isolation), C4 partly ✔ (API for demographics, standards PDF), C5 ✔ (accessible UI). |
 | DSPT / CAF | Low data-at-rest, no unmanaged third-party services, optional download flow – all count as good-practice evidence for DSPT questions 8-A and 9-C. |
 | UK GDPR & common-law confidentiality | Validation of patient identifiers, no long-term storage, and explicit under-16 warnings support accuracy, data-minimisation and lawful-consent duties. |
 | Consent law for minors | Under-16 alert directly operationalises Gillick-competence checks |
+
+
+    
