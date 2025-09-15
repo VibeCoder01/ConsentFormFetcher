@@ -4,6 +4,8 @@ import path from 'path';
 import fs from 'fs/promises';
 import { EmailContact, StaffMember, TumourSite } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 // Define paths
 const appConfigPath = path.join(process.cwd(), 'src', 'config', 'app.json');
 const emailConfigPath = path.join(process.cwd(), 'src', 'config', 'email.json');

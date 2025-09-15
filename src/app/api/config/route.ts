@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 
+export const dynamic = 'force-dynamic';
+
 const configPath = path.join(process.cwd(), 'src', 'config', 'app.json');
 
 // Define a type for the config for better type safety

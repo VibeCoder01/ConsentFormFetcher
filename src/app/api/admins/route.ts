@@ -4,6 +4,8 @@ import path from 'path';
 import fs from 'fs/promises';
 import { AdminUser } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 const adminsConfigPath = path.join(process.cwd(), 'src', 'config', 'admins.json');
 
 export async function GET() {

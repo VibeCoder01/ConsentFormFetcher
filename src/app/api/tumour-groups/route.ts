@@ -4,6 +4,8 @@ import path from 'path';
 import fs from 'fs/promises';
 import { TumourGroup } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 const configPath = path.join(process.cwd(), 'src', 'config', 'tumour-groups.json');
 
 export async function GET() {

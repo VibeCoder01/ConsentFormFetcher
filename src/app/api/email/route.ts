@@ -4,6 +4,8 @@ import path from 'path';
 import fs from 'fs/promises';
 import { EmailContact } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 const emailConfigPath = path.join(process.cwd(), 'src', 'config', 'email.json');
 
 // Basic email validation regex

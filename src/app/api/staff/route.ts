@@ -4,6 +4,8 @@ import path from 'path';
 import fs from 'fs/promises';
 import { StaffMember } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const jsonFilePath = path.join(process.cwd(), 'src', 'config', 'staff.json');
