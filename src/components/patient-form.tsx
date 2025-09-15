@@ -14,12 +14,14 @@ import { RNumberPromptDialog } from './r-number-prompt-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DebugToast } from './debug-toast';
 
 interface PatientFormProps {
   patientData: PatientData;
   initialData: PatientData;
   setPatientData: (data: PatientData, fromDemographics?: boolean) => void;
   staffMembers: StaffMember[];
+  komsApiDebugMode: boolean;
 }
 
 const identifierOptions: { value: IdentifierType; label: string }[] = [
@@ -29,7 +31,7 @@ const identifierOptions: { value: IdentifierType; label: string }[] = [
     { value: 'hospitalNumberMTW', label: 'Hospital Number (MTW)' },
 ];
 
-export function PatientForm({ patientData, initialData, setPatientData, staffMembers }: PatientFormProps) {
+export function PatientForm({ patientData, initialData, setPatientData, staffMembers, komsApiDebugMode }: PatientFormProps) {
   const [showAgeWarning, setShowAgeWarning] = useState(false);
   const [showRNumberPrompt, setShowRNumberPrompt] = useState(false);
   const [isFetchingDemographics, setIsFetchingDemographics] = useState(false);
@@ -81,24 +83,38 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
       title: 'Fetching...',
       description: `Getting demographics for ${rNumber}...`,
     });
+    
+    let rawResponseData: any;
 
     try {
         const response = await fetch(`/api/koms?RNumber=${rNumber}`);
-        const data: KomsResponse | { error: string } = await response.json();
+        rawResponseData = await response.json();
 
-        if (!response.ok || 'error' in data) {
-            const errorMsg = 'error' in data ? data.error : `Request failed with status ${response.status}`;
+        if (komsApiDebugMode) {
+            toast({
+              title: "KOMS API Debug Response",
+              duration: 15000, // Show for longer
+              description: <DebugToast data={rawResponseData} />,
+            });
+        }
+
+        if (!response.ok || 'error' in rawResponseData) {
+            const errorMsg = 'error' in rawResponseData ? rawResponseData.error : `Request failed with status ${response.status}`;
             throw new Error(errorMsg);
         }
         
+        const data: KomsResponse = rawResponseData;
+        
         // Check for placeholder response which indicates user is not logged into KOMS
         if (data.forename === '${forename}') {
-            toast({
-                variant: "destructive",
-                title: "Login Required",
-                description: "Please ensure you are logged into KOMS to access patient information.",
-            });
-            return; // Stop execution
+             if (!komsApiDebugMode) { // Only show this if debug mode is off
+                toast({
+                    variant: "destructive",
+                    title: "Login Required",
+                    description: "Please ensure you are logged into KOMS to access patient information.",
+                });
+             }
+             return; // Stop execution
         }
 
         setDemographicsLoaded(true);
@@ -123,18 +139,22 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
             macmillanContactId: null, // Reset macmillan dropdown
         }, true); // Pass true to indicate it's from demographics fetch
 
-        toast({
-            title: 'Success',
-            description: `Successfully fetched details for ${data.fullName}.`,
-        });
+        if (!komsApiDebugMode) {
+            toast({
+                title: 'Success',
+                description: `Successfully fetched details for ${data.fullName}.`,
+            });
+        }
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-        toast({
-            variant: "destructive",
-            title: "Fetch Failed",
-            description: errorMessage,
-        });
+         if (!komsApiDebugMode) {
+            toast({
+                variant: "destructive",
+                title: "Fetch Failed",
+                description: errorMessage,
+            });
+        }
     } finally {
         setIsFetchingDemographics(false);
     }

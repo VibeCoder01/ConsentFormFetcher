@@ -15,6 +15,7 @@ interface AppConfig {
     rtConsentFolder: string;
     prepopulateWithFakeData: boolean;
     showWelshForms: boolean;
+    komsApiDebugMode: boolean;
 }
 
 // Function to read the current config
