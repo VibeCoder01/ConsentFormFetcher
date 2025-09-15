@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { PDFDocument, PDFTextField, PDFDropdown, PDFRadioGroup, PDFCheckBox, StandardFonts } from 'pdf-lib';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { logActivity } from '@/lib/logger';
 
 // Helper function to read the config to avoid direct imports in server-side code
 async function getConfig() {
@@ -29,8 +30,10 @@ export interface FillPdfOutput {
 }
 
 export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
+  const { formUrl, fields: fieldsToFill, patientIdentifier, formTitle, clinicianName } = input;
+  const activity = `Generate PDF for form "${formTitle}" for patient ${patientIdentifier}`;
+
   try {
-    const { formUrl, fields: fieldsToFill, patientIdentifier, formTitle, clinicianName } = input;
     const config = await getConfig();
 
     if (!config.rtConsentFolder) {
@@ -115,9 +118,10 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
 
     await fs.writeFile(filePathForWriting, pdfBytes);
     
+    await logActivity(activity, { status: 'SUCCESS', details: `File saved to ${uncPathForDisplay}` });
     return { success: true, uncPath: uncPathForDisplay };
   } catch (error) {
-    console.error('Failed to fill PDF:', error);
+    await logActivity(activity, { status: 'FAILURE', details: error });
     const message = error instanceof Error ? error.message : 'An unknown error occurred while processing the PDF.';
     return { success: false, error: message };
   }

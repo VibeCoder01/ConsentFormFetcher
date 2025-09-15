@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 import { AdminUser } from '@/lib/types';
+import { logActivity } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ export async function GET() {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         return NextResponse.json([]);
     }
-    console.error("Failed to read admins config file:", error);
+    await logActivity('Failed to read admins config file', { status: 'FAILURE', details: error });
     return NextResponse.json({ message: "Could not load admin configuration." }, { status: 500 });
   }
 }
@@ -27,16 +28,22 @@ export async function POST(request: Request) {
         const updatedAdmins: AdminUser[] = await request.json();
         
         if (!Array.isArray(updatedAdmins)) {
-            return NextResponse.json({ message: "Invalid data format. Expected an array of admin users." }, { status: 400 });
+            const errorMsg = "Invalid data format. Expected an array of admin users.";
+            await logActivity('Update admin configuration', { status: 'FAILURE', details: errorMsg });
+            return NextResponse.json({ message: errorMsg }, { status: 400 });
         }
 
         const seenUsernames = new Set<string>();
         for (const admin of updatedAdmins) {
             if (!admin.username || admin.username.trim() === '') {
-                 return NextResponse.json({ message: `Admin username cannot be empty.` }, { status: 400 });
+                 const errorMsg = `Admin username cannot be empty.`;
+                 await logActivity('Update admin configuration', { status: 'FAILURE', details: errorMsg });
+                 return NextResponse.json({ message: errorMsg }, { status: 400 });
             }
             if (seenUsernames.has(admin.username)) {
-                 return NextResponse.json({ message: `Duplicate username found: "${admin.username}"` }, { status: 400 });
+                 const errorMsg = `Duplicate username found: "${admin.username}"`;
+                 await logActivity('Update admin configuration', { status: 'FAILURE', details: errorMsg });
+                 return NextResponse.json({ message: errorMsg }, { status: 400 });
             }
             seenUsernames.add(admin.username);
         }
@@ -45,10 +52,11 @@ export async function POST(request: Request) {
         
         await fs.writeFile(adminsConfigPath, jsonData, 'utf-8');
         
+        await logActivity('Admin configuration updated', { status: 'SUCCESS' });
         return NextResponse.json({ message: "Admin configuration updated successfully." });
 
     } catch (error) {
-        console.error("Failed to write admin config file:", error);
+        await logActivity('Failed to write admin config file', { status: 'FAILURE', details: error });
         const message = error instanceof Error ? error.message : "An unknown error occurred.";
         return NextResponse.json({ message: "Could not update admin configuration.", error: message }, { status: 500 });
     }

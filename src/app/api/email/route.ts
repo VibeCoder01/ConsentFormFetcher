@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 import { EmailContact } from '@/lib/types';
+import { logActivity } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,7 @@ export async function GET() {
         // File doesn't exist, return empty array
         return NextResponse.json([]);
     }
-    console.error("Failed to read email config file:", error);
+    await logActivity("Failed to read email config", { status: 'FAILURE', details: error });
     return NextResponse.json({ message: "Could not load email configuration." }, { status: 500 });
   }
 }
@@ -31,16 +32,22 @@ export async function POST(request: Request) {
         const updatedEmails: EmailContact[] = await request.json();
         
         if (!Array.isArray(updatedEmails)) {
-            return NextResponse.json({ message: "Invalid data format. Expected an array of email contacts." }, { status: 400 });
+            const errorMsg = "Invalid data format. Expected an array of email contacts.";
+            await logActivity('Update email configuration', { status: 'FAILURE', details: errorMsg });
+            return NextResponse.json({ message: errorMsg }, { status: 400 });
         }
 
         const seenEmails = new Set<string>();
         for (const contact of updatedEmails) {
             if (!contact.email || !emailRegex.test(contact.email)) {
-                 return NextResponse.json({ message: `Invalid email format: "${contact.email || ''}"` }, { status: 400 });
+                 const errorMsg = `Invalid email format: "${contact.email || ''}"`;
+                 await logActivity('Update email configuration', { status: 'FAILURE', details: errorMsg });
+                 return NextResponse.json({ message: errorMsg }, { status: 400 });
             }
             if (seenEmails.has(contact.email)) {
-                 return NextResponse.json({ message: `Duplicate email found: "${contact.email}"` }, { status: 400 });
+                 const errorMsg = `Duplicate email found: "${contact.email}"`;
+                 await logActivity('Update email configuration', { status: 'FAILURE', details: errorMsg });
+                 return NextResponse.json({ message: errorMsg }, { status: 400 });
             }
             seenEmails.add(contact.email);
         }
@@ -49,10 +56,11 @@ export async function POST(request: Request) {
         
         await fs.writeFile(emailConfigPath, jsonData, 'utf-8');
         
+        await logActivity('Email configuration updated', { status: 'SUCCESS' });
         return NextResponse.json({ message: "Email configuration updated successfully." });
 
     } catch (error) {
-        console.error("Failed to write email config file:", error);
+        await logActivity('Failed to write email config', { status: 'FAILURE', details: error });
         const message = error instanceof Error ? error.message : "An unknown error occurred.";
         return NextResponse.json({ message: "Could not update email configuration.", error: message }, { status: 500 });
     }

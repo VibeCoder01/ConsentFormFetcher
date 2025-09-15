@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
+import { logActivity } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +33,7 @@ export async function GET() {
     const config = await readConfig();
     return NextResponse.json(config);
   } catch (error) {
-    console.error("Failed to read app config file:", error);
+    await logActivity("Failed to read app config", { status: 'FAILURE', details: error });
     return NextResponse.json({ message: "Could not load app configuration." }, { status: 500 });
   }
 }
@@ -43,7 +44,9 @@ export async function POST(request: Request) {
         const updates: Partial<AppConfig> = await request.json();
 
         if (typeof updates.rcrConsentFormsUrl === 'string' && !updates.rcrConsentFormsUrl) {
-             return NextResponse.json({ message: "URL cannot be empty." }, { status: 400 });
+             const errorMsg = "URL cannot be empty.";
+             await logActivity('Update app configuration', { status: 'FAILURE', details: errorMsg });
+             return NextResponse.json({ message: errorMsg }, { status: 400 });
         }
 
         // Read the full config to avoid overwriting other values
@@ -59,10 +62,11 @@ export async function POST(request: Request) {
         
         await fs.writeFile(configPath, jsonData, 'utf-8');
         
+        await logActivity('App configuration updated', { status: 'SUCCESS', details: updates });
         return NextResponse.json({ message: "Configuration updated successfully.", newConfig: updatedConfig });
 
     } catch (error) {
-        console.error("Failed to write app config file:", error);
+        await logActivity('Failed to write app config', { status: 'FAILURE', details: error });
         const message = error instanceof Error ? error.message : "An unknown error occurred.";
         return NextResponse.json({ message: "Could not update configuration.", error: message }, { status: 500 });
     }

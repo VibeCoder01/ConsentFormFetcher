@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 import { TumourGroup } from '@/lib/types';
+import { logActivity } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +19,7 @@ export async function GET() {
         // File doesn't exist, return empty array
         return NextResponse.json([]);
     }
-    console.error("Failed to read tumour group config file:", error);
+    await logActivity("Failed to read tumour group config", { status: 'FAILURE', details: error });
     return NextResponse.json({ message: "Could not load tumour group configuration." }, { status: 500 });
   }
 }
@@ -28,17 +29,20 @@ export async function POST(request: Request) {
         const updatedGroups: TumourGroup[] = await request.json();
         
         if (!Array.isArray(updatedGroups)) {
-            return NextResponse.json({ message: "Invalid data format. Expected an array of tumour groups." }, { status: 400 });
+            const errorMsg = "Invalid data format. Expected an array of tumour groups.";
+            await logActivity("Update tumour group config", { status: 'FAILURE', details: errorMsg });
+            return NextResponse.json({ message: errorMsg }, { status: 400 });
         }
 
         const jsonData = JSON.stringify(updatedGroups, null, 2);
         
         await fs.writeFile(configPath, jsonData, 'utf-8');
         
+        await logActivity("Tumour group configuration updated", { status: 'SUCCESS' });
         return NextResponse.json({ message: "Tumour group configuration updated successfully." });
 
     } catch (error) {
-        console.error("Failed to write tumour group config file:", error);
+        await logActivity("Failed to write tumour group config", { status: 'FAILURE', details: error });
         const message = error instanceof Error ? error.message : "An unknown error occurred.";
         return NextResponse.json({ message: "Could not update tumour group configuration.", error: message }, { status: 500 });
     }

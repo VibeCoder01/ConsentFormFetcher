@@ -12,6 +12,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { ConsentForm, ConsentFormCategory } from '@/lib/types';
 import { updateCache } from '@/ai/util/cache';
+import { logActivity } from '@/lib/logger';
 
 // Helper function to read the config to avoid direct imports in server-side code
 async function getConfig() {
@@ -35,6 +36,7 @@ async function saveFormsToJson(data: ConsentFormCategory[]): Promise<void> {
 
 
 export async function scrapeRcrForms(url: string): Promise<ScrapeRcrFormsOutput> {
+  const activity = `Scrape RCR forms from ${url}`;
   try {
     const config = await getConfig();
     const response = await fetch(url);
@@ -110,9 +112,10 @@ export async function scrapeRcrForms(url: string): Promise<ScrapeRcrFormsOutput>
     
     updateCache(formCategories);
 
+    await logActivity(activity, { status: 'SUCCESS', details: `Found ${totalForms} forms.` });
     return { success: true, formCount: totalForms, newData: formCategories };
   } catch (error) {
-    console.error('Scraping failed:', error);
+    await logActivity(activity, { status: 'FAILURE', details: error });
     const message = error instanceof Error ? error.message : 'An unknown error occurred during scraping.';
     return { success: false, error: message };
   }

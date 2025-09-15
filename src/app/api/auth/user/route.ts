@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 import { AdminUser, KomsResponse } from '@/lib/types';
+import { logActivity } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +19,7 @@ async function getAdmins(): Promise<AdminUser[]> {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
             return []; // No admins file means no one has access
         }
-        console.error("Could not read admin config:", error);
+        await logActivity("Could not read admin config", { status: 'FAILURE', details: error });
         return []; // Fail securely
     }
 }
@@ -26,7 +27,7 @@ async function getAdmins(): Promise<AdminUser[]> {
 // Function to get current user from KOMS
 async function getKomsUser(): Promise<KomsResponse | null> {
     if (!KOMS_URL) {
-        console.error("KOMS_URL is not configured.");
+        await logActivity("KOMS auth check", { status: 'FAILURE', details: 'KOMS_URL is not configured.' });
         return null;
     }
     try {
@@ -40,7 +41,10 @@ async function getKomsUser(): Promise<KomsResponse | null> {
             cache: 'no-store' // Disable caching
         });
 
-        if (!koms.ok) return null;
+        if (!koms.ok) {
+            await logActivity("KOMS auth check", { status: 'FAILURE', details: `KOMS responded ${koms.status}` });
+            return null;
+        }
         
         const h = koms.headers;
         return {
@@ -48,7 +52,7 @@ async function getKomsUser(): Promise<KomsResponse | null> {
         } as KomsResponse;
 
     } catch (error) {
-        console.error("Failed to contact KOMS for user auth:", error);
+        await logActivity("KOMS auth check", { status: 'FAILURE', details: error });
         return null;
     }
 }
@@ -59,6 +63,7 @@ export async function GET() {
         const komsUsername = komsUser?.user?.toLowerCase();
 
         if (!komsUsername) {
+            await logActivity(`Config page access`, { status: 'DENIED', details: "Could not determine KOMS username or user not logged in." });
             return NextResponse.json({ message: "Could not determine KOMS username or not logged in." }, { status: 401 });
         }
         
@@ -66,14 +71,16 @@ export async function GET() {
         const adminEntry = admins.find(admin => admin.username.toLowerCase() === komsUsername);
 
         if (!adminEntry) {
+            await logActivity(`Config page access`, { status: 'DENIED', details: "User is not an authorized administrator." });
             return NextResponse.json({ message: "Access Denied. You are not an authorized administrator." }, { status: 401 });
         }
 
+        await logActivity(`Config page access`, { status: 'SUCCESS', details: `Access granted with level: ${adminEntry.accessLevel}` });
         // Return the admin user object which includes their access level
         return NextResponse.json(adminEntry);
 
     } catch (error) {
-        console.error("Error during user authentication:", error);
+        await logActivity("User authentication", { status: 'FAILURE', details: error });
         return NextResponse.json({ message: "An internal server error occurred during authentication." }, { status: 500 });
     }
 }

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 import { EmailContact, StaffMember, TumourSite } from '@/lib/types';
+import { logActivity } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,10 +51,11 @@ export async function GET() {
         staff,
         tumourSites,
     };
-
+    
+    await logActivity('Exported app settings', { status: 'SUCCESS' });
     return NextResponse.json(backupData);
   } catch (error) {
-    console.error("Failed to read config files for export:", error);
+    await logActivity('Failed to export config', { status: 'FAILURE', details: error });
     const message = error instanceof Error ? error.message : "An unknown error occurred.";
     return NextResponse.json({ message: "Could not export configuration.", error: message }, { status: 500 });
   }
@@ -70,6 +72,8 @@ export async function POST(request: Request) {
             !data.staff || !Array.isArray(data.staff) ||
             !data.tumourSites || !Array.isArray(data.tumourSites)
         ) {
+            const errorMsg = "Invalid backup file format.";
+            await logActivity('Import app settings', { status: 'FAILURE', details: errorMsg });
             return NextResponse.json({ message: "Invalid backup file format. It must contain settings, emails, staff, and tumourSites." }, { status: 400 });
         }
         
@@ -86,10 +90,11 @@ export async function POST(request: Request) {
             fs.writeFile(tumourSitesConfigPath, tumourSitesJsonData, 'utf-8'),
         ]);
         
+        await logActivity('Imported app settings', { status: 'SUCCESS' });
         return NextResponse.json({ message: "Full application configuration imported successfully." });
 
     } catch (error) {
-        console.error("Failed to write config files on import:", error);
+        await logActivity('Failed to import app settings', { status: 'FAILURE', details: error });
         const message = error instanceof Error ? error.message : "An unknown error occurred.";
         return NextResponse.json({ message: "Could not import configuration.", error: message }, { status: 500 });
     }
