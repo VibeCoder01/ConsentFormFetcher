@@ -51,8 +51,11 @@ export default function ConfigPage() {
   const [showWelshForms, setShowWelshForms] = useState(false);
   const [initialShowWelshForms, setInitialShowWelshForms] = useState(false);
 
+  const [komsApiDebugMode, setKomsApiDebugMode] = useState(false);
+  const [initialKomsApiDebugMode, setInitialKomsApiDebugMode] = useState(false);
 
-  const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields || pdfOpenMethod !== initialPdfOpenMethod || rtConsentFolder !== initialRtConsentFolder || prepopulateWithFakeData !== initialPrepopulateWithFakeData || showWelshForms !== initialShowWelshForms;
+
+  const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields || pdfOpenMethod !== initialPdfOpenMethod || rtConsentFolder !== initialRtConsentFolder || prepopulateWithFakeData !== initialPrepopulateWithFakeData || showWelshForms !== initialShowWelshForms || komsApiDebugMode !== initialKomsApiDebugMode;
 
   const fetchConfig = async () => {
     setIsLoadingConfig(true);
@@ -74,6 +77,8 @@ export default function ConfigPage() {
       setInitialPrepopulateWithFakeData(config.prepopulateWithFakeData);
       setShowWelshForms(config.showWelshForms);
       setInitialShowWelshForms(config.showWelshForms);
+      setKomsApiDebugMode(config.komsApiDebugMode);
+      setInitialKomsApiDebugMode(config.komsApiDebugMode);
     } catch (error) {
        toast({
         variant: 'destructive',
@@ -104,6 +109,7 @@ export default function ConfigPage() {
         rtConsentFolder: rtConsentFolder,
         prepopulateWithFakeData: prepopulateWithFakeData,
         showWelshForms: showWelshForms,
+        komsApiDebugMode: komsApiDebugMode,
       };
 
        const response = await fetch('/api/config', {
@@ -129,6 +135,7 @@ export default function ConfigPage() {
       setInitialRtConsentFolder(newConfig.rtConsentFolder);
       setInitialPrepopulateWithFakeData(newConfig.prepopulateWithFakeData);
       setInitialShowWelshForms(newConfig.showWelshForms);
+      setInitialKomsApiDebugMode(newConfig.komsApiDebugMode);
 
       toast({
         title: 'Success',
@@ -342,6 +349,14 @@ export default function ConfigPage() {
                     onCheckedChange={setShowWelshForms}
                 />
                 <Label htmlFor="show-welsh-forms">Display Welsh PDF forms</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+                <Switch 
+                    id="koms-api-debug-mode" 
+                    checked={komsApiDebugMode}
+                    onCheckedChange={setKomsApiDebugMode}
+                />
+                <Label htmlFor="koms-api-debug-mode">Enable KOMS API debug mode</Label>
             </div>
         </CardContent>
     )

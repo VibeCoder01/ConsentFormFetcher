@@ -121,6 +121,7 @@ export default function Home() {
   
   const [previewPdfFieldsConfig, setPreviewPdfFieldsConfig] = useState(false);
   const [showWelshFormsConfig, setShowWelshFormsConfig] = useState(false);
+  const [komsApiDebugModeConfig, setKomsApiDebugModeConfig] = useState(false);
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   
   const isMobile = useIsMobile();
@@ -174,6 +175,7 @@ export default function Home() {
       setTumourSites(sitesData);
       setPreviewPdfFieldsConfig(configData.previewPdfFields);
       setShowWelshFormsConfig(configData.showWelshForms);
+      setKomsApiDebugModeConfig(configData.komsApiDebugMode);
 
       const initialData = configData.prepopulateWithFakeData ? fakePatientData : emptyPatientData;
       setPatientData(initialData);
@@ -658,6 +660,7 @@ export default function Home() {
             initialData={initialPatientData}
             setPatientData={handlePatientDataChange} 
             staffMembers={staffMembers} 
+            komsApiDebugMode={komsApiDebugModeConfig}
         />
         <ClinicianForm 
           staffMembers={staffMembers}
