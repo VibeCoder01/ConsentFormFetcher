@@ -53,6 +53,8 @@ export default function ConfigPage() {
 
   const [komsApiDebugMode, setKomsApiDebugMode] = useState(false);
   const [initialKomsApiDebugMode, setInitialKomsApiDebugMode] = useState(false);
+  
+  const [komsUsername, setKomsUsername] = useState<string | null>(null);
 
 
   const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields || pdfOpenMethod !== initialPdfOpenMethod || rtConsentFolder !== initialRtConsentFolder || prepopulateWithFakeData !== initialPrepopulateWithFakeData || showWelshForms !== initialShowWelshForms || komsApiDebugMode !== initialKomsApiDebugMode;
@@ -92,6 +94,21 @@ export default function ConfigPage() {
 
   useEffect(() => {
     fetchConfig();
+    
+    // Perform KOMS check
+    const checkKomsLogin = async () => {
+        try {
+            const res = await fetch('/api/koms?RNumber=ZZZ');
+            const data = await res.json();
+            if (res.ok && data.user) {
+                setKomsUsername(data.user);
+            }
+        } catch (error) {
+            console.error("KOMS login check failed:", error);
+        }
+    };
+    checkKomsLogin();
+
   }, [toast]);
 
   const handleRestoreDefaultUrl = () => {
@@ -435,6 +452,11 @@ export default function ConfigPage() {
               </Button>
             </Link>
             <h1 className="ml-4 text-xl font-bold">Configuration</h1>
+             {komsUsername && (
+                <span className="ml-4 text-sm text-muted-foreground font-mono">
+                  Logged in as: {komsUsername}
+                </span>
+             )}
         </div>
         <div className="flex items-center gap-4">
             <Button onClick={handleSaveChanges} disabled={!isModified || isSaving}>
