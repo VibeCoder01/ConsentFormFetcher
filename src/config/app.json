@@ -1,4 +1,3 @@
-
 {
   "rcrConsentFormsUrl": "https://www.rcr.ac.uk/our-services/management-service-delivery/national-radiotherapy-consent-forms/",
   "rcrBaseUrl": "https://www.rcr.ac.uk",
@@ -8,5 +7,5 @@
   "rtConsentFolder": "c:\\VC01\\RT_Consent",
   "prepopulateWithFakeData": true,
   "showWelshForms": false,
-  "komsApiDebugMode": false
+  "komsApiDebugMode": true
 }
