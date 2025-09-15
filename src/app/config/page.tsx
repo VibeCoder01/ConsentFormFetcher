@@ -293,7 +293,7 @@ export default function ConfigPage() {
           <ShieldX className="h-4 w-4" />
           <AlertTitle>Access Denied</AlertTitle>
           <AlertDescription>
-            You do not have permission to view this page. Please contact an administrator.
+            You do not have permission to view this page, or maybe are not logged into KOMS. Please contact an administrator.
           </AlertDescription>
         </Alert>
       </div>
