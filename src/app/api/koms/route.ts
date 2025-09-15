@@ -3,9 +3,12 @@ import type { NextRequest } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 import { logActivity } from '@/lib/logger';
+import { buildKomsRequestHeaders } from '@/lib/koms-client';
 
 // Per Next.js docs, this is the proper way to access env vars in a route handler
 const KOMS_URL = process.env.KOMS_URL;
+
+export const runtime = 'nodejs';
 
 // Helper function to read the config to avoid direct imports in server-side code
 async function getConfig() {
@@ -27,13 +30,11 @@ export async function GET(req: NextRequest) {
     return Response.json({ error: 'Invalid R number. It should start with "R" and be followed by 7 digits.' }, { status: 400 });
 
   try {
+    const headers = buildKomsRequestHeaders(req);
     const koms = await fetch(KOMS_URL, {
         method: 'POST',
-        headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)'
-        },
-        body: `RNumber=${encodeURIComponent(rNumber || '')}`,
+        headers,
+        body: new URLSearchParams({ RNumber: rNumber || '' }).toString(),
         cache: 'no-store' // Disable caching
     });
 
