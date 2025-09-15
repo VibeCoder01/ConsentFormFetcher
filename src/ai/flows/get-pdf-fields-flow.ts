@@ -21,7 +21,7 @@ export async function getPdfFields(formUrl: string): Promise<GetPdfFieldsOutput>
     }
     
     // 1. Fetch the PDF from the URL
-    const existingPdfBytes = await fetch(formUrl).then((res) => {
+    const existingPdfBytes = await fetch(formUrl, { cache: 'no-store' }).then((res) => {
         if (!res.ok) {
             throw new Error(`Failed to fetch PDF. Status: ${res.status} ${res.statusText}`);
         }

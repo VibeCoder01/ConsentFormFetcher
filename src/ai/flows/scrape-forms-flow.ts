@@ -39,7 +39,7 @@ export async function scrapeRcrForms(url: string): Promise<ScrapeRcrFormsOutput>
   const activity = `Scrape RCR forms from ${url}`;
   try {
     const config = await getConfig();
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) {
       throw new Error(`Failed to fetch the page. Status: ${response.status}`);
     }

@@ -41,7 +41,7 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     }
     
     // 1. Fetch the PDF from the URL
-    const existingPdfBytes = await fetch(formUrl).then((res) => res.arrayBuffer());
+    const existingPdfBytes = await fetch(formUrl, { cache: 'no-store' }).then((res) => res.arrayBuffer());
 
     // 2. Load the PDF with pdf-lib, ignoring encryption
     const pdfDoc = await PDFDocument.load(existingPdfBytes, { ignoreEncryption: true });
