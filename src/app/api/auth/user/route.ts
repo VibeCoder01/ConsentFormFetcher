@@ -4,6 +4,8 @@ import path from 'path';
 import fs from 'fs/promises';
 import { AdminUser, KomsResponse } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 const KOMS_URL = process.env.KOMS_URL;
 const adminsConfigPath = path.join(process.cwd(), 'src', 'config', 'admins.json');
 
