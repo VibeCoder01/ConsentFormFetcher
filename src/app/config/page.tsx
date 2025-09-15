@@ -15,11 +15,13 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2, Download, Upload, Mail, MapPin } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2, Download, Upload, Mail, MapPin, UserCog, ShieldX } from "lucide-react";
 import { scrapeRcrForms } from "@/ai/flows/scrape-forms-flow";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import type { AdminUser } from "@/lib/types";
 
 const DEFAULT_RCR_URL = "https://www.rcr.ac.uk/our-services/management-service-delivery/national-radiotherapy-consent-forms/";
 
@@ -27,8 +29,10 @@ export default function ConfigPage() {
   const { toast } = useToast();
   const [isScraping, setIsScraping] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const importFileRef = useRef<HTMLInputElement>(null);
+  
+  const [currentUser, setCurrentUser] = useState<AdminUser | null>(null);
   
   const [rcrUrl, setRcrUrl] = useState("");
   const [initialRcrUrl, setInitialRcrUrl] = useState("");
@@ -53,62 +57,62 @@ export default function ConfigPage() {
 
   const [komsApiDebugMode, setKomsApiDebugMode] = useState(false);
   const [initialKomsApiDebugMode, setInitialKomsApiDebugMode] = useState(false);
-  
-  const [komsUsername, setKomsUsername] = useState<string | null>(null);
-
 
   const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields || pdfOpenMethod !== initialPdfOpenMethod || rtConsentFolder !== initialRtConsentFolder || prepopulateWithFakeData !== initialPrepopulateWithFakeData || showWelshForms !== initialShowWelshForms || komsApiDebugMode !== initialKomsApiDebugMode;
+  
+  const hasChangePermission = currentUser?.accessLevel === 'Change' || currentUser?.accessLevel === 'Full';
+  const hasFullPermission = currentUser?.accessLevel === 'Full';
 
-  const fetchConfig = async () => {
-    setIsLoadingConfig(true);
+
+  const fetchUserDataAndConfig = async () => {
+    setIsLoading(true);
     try {
-      const res = await fetch('/api/config');
-      if (!res.ok) throw new Error('Failed to fetch config');
-      const config = await res.json();
-      setRcrUrl(config.rcrConsentFormsUrl);
-      setInitialRcrUrl(config.rcrConsentFormsUrl);
-      setValidateRNumber(config.validateRNumber);
-      setInitialValidateRNumber(config.validateRNumber);
-      setPreviewPdfFields(config.previewPdfFields);
-      setInitialPreviewPdfFields(config.previewPdfFields);
-      setPdfOpenMethod(config.pdfOpenMethod || 'browser');
-      setInitialPdfOpenMethod(config.pdfOpenMethod || 'browser');
-      setRtConsentFolder(config.rtConsentFolder || "");
-      setInitialRtConsentFolder(config.rtConsentFolder || "");
-      setPrepopulateWithFakeData(config.prepopulateWithFakeData);
-      setInitialPrepopulateWithFakeData(config.prepopulateWithFakeData);
-      setShowWelshForms(config.showWelshForms);
-      setInitialShowWelshForms(config.showWelshForms);
-      setKomsApiDebugMode(config.komsApiDebugMode);
-      setInitialKomsApiDebugMode(config.komsApiDebugMode);
+        const userRes = await fetch('/api/auth/user');
+        if (!userRes.ok) {
+          if (userRes.status === 401) {
+            // Not an admin, they should not be here
+             setCurrentUser(null);
+             setIsLoading(false);
+             return;
+          }
+          throw new Error('Failed to fetch user data');
+        }
+        const userData: AdminUser = await userRes.json();
+        setCurrentUser(userData);
+
+        const configRes = await fetch('/api/config');
+        if (!configRes.ok) throw new Error('Failed to fetch config');
+        const config = await configRes.json();
+        
+        setRcrUrl(config.rcrConsentFormsUrl);
+        setInitialRcrUrl(config.rcrConsentFormsUrl);
+        setValidateRNumber(config.validateRNumber);
+        setInitialValidateRNumber(config.validateRNumber);
+        setPreviewPdfFields(config.previewPdfFields);
+        setInitialPreviewPdfFields(config.previewPdfFields);
+        setPdfOpenMethod(config.pdfOpenMethod || 'browser');
+        setInitialPdfOpenMethod(config.pdfOpenMethod || 'browser');
+        setRtConsentFolder(config.rtConsentFolder || "");
+        setInitialRtConsentFolder(config.rtConsentFolder || "");
+        setPrepopulateWithFakeData(config.prepopulateWithFakeData);
+        setInitialPrepopulateWithFakeData(config.prepopulateWithFakeData);
+        setShowWelshForms(config.showWelshForms);
+        setInitialShowWelshForms(config.showWelshForms);
+        setKomsApiDebugMode(config.komsApiDebugMode);
+        setInitialKomsApiDebugMode(config.komsApiDebugMode);
     } catch (error) {
        toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Could not load app configuration.',
+        description: 'Could not load initial page data.',
       });
     } finally {
-      setIsLoadingConfig(false);
+      setIsLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchConfig();
-    
-    // Perform KOMS check
-    const checkKomsLogin = async () => {
-        try {
-            const res = await fetch('/api/koms?RNumber=ZZZ');
-            const data = await res.json();
-            if (res.ok && data.user) {
-                setKomsUsername(data.user);
-            }
-        } catch (error) {
-            console.error("KOMS login check failed:", error);
-        }
-    };
-    checkKomsLogin();
-
+    fetchUserDataAndConfig();
   }, [toast]);
 
   const handleRestoreDefaultUrl = () => {
@@ -116,6 +120,7 @@ export default function ConfigPage() {
   };
 
   const handleSaveChanges = async () => {
+    if (!hasChangePermission) return;
     setIsSaving(true);
     try {
       const updates = {
@@ -144,7 +149,6 @@ export default function ConfigPage() {
 
       const { newConfig } = await response.json();
       
-      // Update initial state to match saved state
       setInitialRcrUrl(newConfig.rcrConsentFormsUrl);
       setInitialValidateRNumber(newConfig.validateRNumber);
       setInitialPreviewPdfFields(newConfig.previewPdfFields);
@@ -172,6 +176,7 @@ export default function ConfigPage() {
   };
 
   const handleUpdate = async () => {
+    if (!hasChangePermission) return;
     setIsScraping(true);
     toast({
       title: "Scraping in Progress",
@@ -224,6 +229,7 @@ export default function ConfigPage() {
   };
 
   const handleImportClick = () => {
+    if (!hasChangePermission) return;
     importFileRef.current?.click();
   };
   
@@ -254,7 +260,6 @@ export default function ConfigPage() {
                   description: "App settings have been restored. The page will now reload.",
               });
               
-              // Reload the page to apply all changes
               setTimeout(() => window.location.reload(), 2000);
 
           } catch (error) {
@@ -270,177 +275,30 @@ export default function ConfigPage() {
           toast({ variant: 'destructive', title: 'Error', description: 'Failed to read the file.'});
       }
       reader.readAsText(file);
-
-      // Reset file input value to allow re-importing the same file
       event.target.value = '';
   };
-
-  const dataSourceCardContent = () => {
-    if (isLoadingConfig) {
-      return (
-        <CardContent>
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-6 w-1/2" />
-          </div>
-        </CardContent>
-      )
-    }
-    return (
-      <>
-        <CardContent>
-           <div className="space-y-2">
-            <Label htmlFor="rcrUrl">Data Source URL</Label>
-            <Input 
-                id="rcrUrl"
-                value={rcrUrl}
-                onChange={(e) => setRcrUrl(e.target.value)}
-                aria-label="RCR Consent Forms URL"
-                className="font-mono text-sm"
-            />
-           </div>
-        </CardContent>
-        <CardFooter className="flex justify-start">
-            <Button onClick={handleRestoreDefaultUrl} variant="outline" disabled={isSaving}>
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Restore Default URL
-            </Button>
-        </CardFooter>
-      </>
-    )
-  }
-
-  const settingsCardContent = () => {
-     if (isLoadingConfig) {
-      return (
-        <CardContent className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Skeleton className="h-6 w-6 rounded-full" />
-            <Skeleton className="h-4 w-[250px]" />
-          </div>
-          <div className="flex items-center space-x-2">
-            <Skeleton className="h-6 w-6 rounded-full" />
-            <Skeleton className="h-4 w-[200px]" />
-          </div>
-           <div className="flex items-center space-x-2">
-            <Skeleton className="h-6 w-6 rounded-full" />
-            <Skeleton className="h-4 w-[280px]" />
-          </div>
-          <div className="flex items-center space-x-2">
-            <Skeleton className="h-6 w-6 rounded-full" />
-            <Skeleton className="h-4 w-[220px]" />
-          </div>
-        </CardContent>
-      )
-    }
-    return (
-        <CardContent className="space-y-4">
-            <div className="flex items-center space-x-2">
-                <Switch 
-                    id="validate-r-number" 
-                    checked={validateRNumber}
-                    onCheckedChange={setValidateRNumber}
-                />
-                <Label htmlFor="validate-r-number">Enable R Number format validation</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-                <Switch 
-                    id="preview-pdf-fields" 
-                    checked={previewPdfFields}
-                    onCheckedChange={setPreviewPdfFields}
-                />
-                <Label htmlFor="preview-pdf-fields">Preview PDF fields before generating</Label>
-            </div>
-             <div className="flex items-center space-x-2">
-                <Switch 
-                    id="prepopulate-with-fake-data" 
-                    checked={prepopulateWithFakeData}
-                    onCheckedChange={setPrepopulateWithFakeData}
-                />
-                <Label htmlFor="prepopulate-with-fake-data">Pre-populate form with dummy data</Label>
-            </div>
-             <div className="flex items-center space-x-2">
-                <Switch 
-                    id="show-welsh-forms" 
-                    checked={showWelshForms}
-                    onCheckedChange={setShowWelshForms}
-                />
-                <Label htmlFor="show-welsh-forms">Display Welsh PDF forms</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-                <Switch 
-                    id="koms-api-debug-mode" 
-                    checked={komsApiDebugMode}
-                    onCheckedChange={setKomsApiDebugMode}
-                />
-                <Label htmlFor="koms-api-debug-mode">Enable KOMS API debug mode</Label>
-            </div>
-        </CardContent>
-    )
-  }
   
-  const pdfHandlingCardContent = () => {
-     if (isLoadingConfig) {
-      return (
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-1/3" />
-            <Skeleton className="h-6 w-1/2" />
-            <Skeleton className="h-6 w-1/2" />
-          </div>
-        </CardContent>
-      )
-    }
+  if (isLoading) {
     return (
-        <CardContent>
-          <RadioGroup 
-            value={pdfOpenMethod} 
-            onValueChange={(value) => setPdfOpenMethod(value as 'browser' | 'acrobat')}
-            className="space-y-2"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="browser" id="open-browser" />
-              <Label htmlFor="open-browser">Automatically open in Browser</Label>
-            </div>
-            <div className="flex flex-col space-y-2">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="acrobat" id="open-acrobat" />
-                <Label htmlFor="open-acrobat">Download for Adobe Acrobat</Label>
-              </div>
-            </div>
-          </RadioGroup>
-        </CardContent>
-    )
+      <div className="flex items-center justify-center h-full p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
-  
-  const filePathsCardContent = () => {
-    if (isLoadingConfig) {
-      return (
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-1/4" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-        </CardContent>
-      )
-    }
-    return (
-      <CardContent className="space-y-4">
-         <div className="space-y-2">
-          <Label htmlFor="rtConsentFolder">RT Consent Folder (for uploads & generated PDFs)</Label>
-          <Input 
-              id="rtConsentFolder"
-              value={rtConsentFolder}
-              onChange={(e) => setRtConsentFolder(e.target.value)}
-              aria-label="RT Consent Folder Path"
-              className="font-mono text-sm"
-              placeholder="e.g., \\server\\share\\consent_forms"
-          />
-         </div>
-      </CardContent>
-    )
-  };
 
+  if (!currentUser) {
+    return (
+      <div className="flex items-center justify-center h-full p-8">
+        <Alert variant="destructive" className="max-w-lg">
+          <ShieldX className="h-4 w-4" />
+          <AlertTitle>Access Denied</AlertTitle>
+          <AlertDescription>
+            You do not have permission to view this page. Please contact an administrator.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -452,18 +310,16 @@ export default function ConfigPage() {
               </Button>
             </Link>
             <h1 className="ml-4 text-xl font-bold">Configuration</h1>
-             {komsUsername && (
-                <span className="ml-4 text-sm text-muted-foreground font-mono">
-                  Logged in as: {komsUsername}
-                </span>
-             )}
+            <span className="ml-4 text-sm text-muted-foreground font-mono">
+              Logged in as: {currentUser.username} ({currentUser.accessLevel})
+            </span>
         </div>
         <div className="flex items-center gap-4">
-            <Button onClick={handleSaveChanges} disabled={!isModified || isSaving}>
+            <Button onClick={handleSaveChanges} disabled={!isModified || isSaving || !hasChangePermission}>
               {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
               Save Changes
             </Button>
-             <Button onClick={handleUpdate} disabled={isScraping || isModified}>
+             <Button onClick={handleUpdate} disabled={isScraping || isModified || !hasChangePermission}>
               <RefreshCw className={`mr-2 h-4 w-4 ${isScraping ? 'animate-spin' : ''}`} />
               Check for Updated Forms
             </Button>
@@ -478,7 +334,25 @@ export default function ConfigPage() {
                 The URL from which consent forms are scraped. This can be manually updated and saved.
               </CardDescription>
             </CardHeader>
-            {dataSourceCardContent()}
+            <CardContent>
+              <div className="space-y-2">
+                <Label htmlFor="rcrUrl">Data Source URL</Label>
+                <Input 
+                    id="rcrUrl"
+                    value={rcrUrl}
+                    onChange={(e) => setRcrUrl(e.target.value)}
+                    aria-label="RCR Consent Forms URL"
+                    className="font-mono text-sm"
+                    disabled={!hasChangePermission}
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-start">
+                <Button onClick={handleRestoreDefaultUrl} variant="outline" disabled={isSaving || !hasChangePermission}>
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Restore Default URL
+                </Button>
+            </CardFooter>
           </Card>
           
           <Card>
@@ -488,7 +362,20 @@ export default function ConfigPage() {
                 Set the destination folder for generated and uploaded consent forms. Use UNC paths for network locations (e.g., `\\server\share\folder`).
               </CardDescription>
             </CardHeader>
-            {filePathsCardContent()}
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="rtConsentFolder">RT Consent Folder (for uploads & generated PDFs)</Label>
+                <Input 
+                    id="rtConsentFolder"
+                    value={rtConsentFolder}
+                    onChange={(e) => setRtConsentFolder(e.target.value)}
+                    aria-label="RT Consent Folder Path"
+                    className="font-mono text-sm"
+                    placeholder="e.g., \\server\\share\\consent_forms"
+                    disabled={!hasChangePermission}
+                />
+              </div>
+            </CardContent>
           </Card>
 
           <Card>
@@ -498,7 +385,53 @@ export default function ConfigPage() {
                     Adjust application behavior and validation rules.
                 </CardDescription>
             </CardHeader>
-            {settingsCardContent()}
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-2">
+                  <Switch 
+                      id="validate-r-number" 
+                      checked={validateRNumber}
+                      onCheckedChange={setValidateRNumber}
+                      disabled={!hasChangePermission}
+                  />
+                  <Label htmlFor="validate-r-number">Enable R Number format validation</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                  <Switch 
+                      id="preview-pdf-fields" 
+                      checked={previewPdfFields}
+                      onCheckedChange={setPreviewPdfFields}
+                      disabled={!hasChangePermission}
+                  />
+                  <Label htmlFor="preview-pdf-fields">Preview PDF fields before generating</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                  <Switch 
+                      id="prepopulate-with-fake-data" 
+                      checked={prepopulateWithFakeData}
+                      onCheckedChange={setPrepopulateWithFakeData}
+                      disabled={!hasChangePermission}
+                  />
+                  <Label htmlFor="prepopulate-with-fake-data">Pre-populate form with dummy data</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                  <Switch 
+                      id="show-welsh-forms" 
+                      checked={showWelshForms}
+                      onCheckedChange={setShowWelshForms}
+                      disabled={!hasChangePermission}
+                  />
+                  <Label htmlFor="show-welsh-forms">Display Welsh PDF forms</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                  <Switch 
+                      id="koms-api-debug-mode" 
+                      checked={komsApiDebugMode}
+                      onCheckedChange={setKomsApiDebugMode}
+                      disabled={!hasChangePermission}
+                  />
+                  <Label htmlFor="koms-api-debug-mode">Enable KOMS API debug mode</Label>
+              </div>
+            </CardContent>
           </Card>
 
            <Card>
@@ -508,8 +441,45 @@ export default function ConfigPage() {
                     Choose how to open the generated PDF file.
                 </CardDescription>
             </CardHeader>
-            {pdfHandlingCardContent()}
+            <CardContent>
+              <RadioGroup 
+                value={pdfOpenMethod} 
+                onValueChange={(value) => setPdfOpenMethod(value as 'browser' | 'acrobat')}
+                className="space-y-2"
+                disabled={!hasChangePermission}
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="browser" id="open-browser" />
+                  <Label htmlFor="open-browser">Automatically open in Browser</Label>
+                </div>
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="acrobat" id="open-acrobat" />
+                    <Label htmlFor="open-acrobat">Download for Adobe Acrobat</Label>
+                  </div>
+                </div>
+              </RadioGroup>
+            </CardContent>
           </Card>
+
+          {hasFullPermission && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Admin Management</CardTitle>
+                <CardDescription>
+                  Manage users who have access to this configuration page.
+                </CardDescription>
+              </CardHeader>
+              <CardFooter>
+                 <Link href="/config/admins" passHref>
+                    <Button variant="outline">
+                      <UserCog className="mr-2 h-4 w-4" />
+                      Manage Admins
+                    </Button>
+                 </Link>
+              </CardFooter>
+            </Card>
+          )}
           
           <Card>
             <CardHeader>
@@ -520,7 +490,7 @@ export default function ConfigPage() {
             </CardHeader>
             <CardFooter>
                <Link href="/config/staff" passHref>
-                  <Button variant="outline">
+                  <Button variant="outline" disabled={!hasChangePermission}>
                     <Users className="mr-2 h-4 w-4" />
                     Edit Staff List
                   </Button>
@@ -537,7 +507,7 @@ export default function ConfigPage() {
             </CardHeader>
             <CardFooter>
                <Link href="/config/tumour-sites" passHref>
-                  <Button variant="outline">
+                  <Button variant="outline" disabled={!hasChangePermission}>
                     <MapPin className="mr-2 h-4 w-4" />
                     Edit Tumour Sites
                   </Button>
@@ -554,7 +524,7 @@ export default function ConfigPage() {
             </CardHeader>
             <CardFooter>
                <Link href="/config/email" passHref>
-                  <Button variant="outline">
+                  <Button variant="outline" disabled={!hasChangePermission}>
                     <Mail className="mr-2 h-4 w-4" />
                     Edit Email Config
                   </Button>
@@ -572,7 +542,7 @@ export default function ConfigPage() {
                     <Download className="mr-2 h-4 w-4" />
                     Export App Settings
                 </Button>
-                <Button variant="outline" onClick={handleImportClick}>
+                <Button variant="outline" onClick={handleImportClick} disabled={!hasChangePermission}>
                     <Upload className="mr-2 h-4 w-4" />
                     Import App Settings
                 </Button>
@@ -582,6 +552,7 @@ export default function ConfigPage() {
                     onChange={handleFileImport}
                     accept="application/json"
                     className="hidden"
+                    disabled={!hasChangePermission}
                 />
             </CardContent>
           </Card>

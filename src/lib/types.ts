@@ -77,3 +77,11 @@ export interface TumourGroup {
     id: string;
     name: string;
 }
+
+export type AccessLevel = 'Read' | 'Change' | 'Full';
+
+export interface AdminUser {
+    id: string;
+    username: string;
+    accessLevel: AccessLevel;
+}
