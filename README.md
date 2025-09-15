@@ -75,8 +75,8 @@ After the consent form has been generated, located using the UNC path, signed, a
 
 ### 7. Configuration
 
--   Click the **Settings** icon (⚙️) in the top-right corner to go to the Configuration page.
--   From here, you can manage the application's data sources, settings, and staff list.
+-   Click the **Settings** icon (⚙️) in the top-right corner to go to the Configuration page. Only authorized administrators can access this page. If you are logged into KOMS, your username will appear in the header.
+-   From here, you can manage the application's data sources, settings, and staff list, depending on your access level.
 
 -   **Data Source**: You can view and edit the URL from which the application scrapes consent forms. Click **Save Changes** to apply, or **Restore Default** to revert.
 -   **File Paths**:
@@ -92,6 +92,9 @@ After the consent form has been generated, located using the UNC path, signed, a
     -   **Download for Adobe Acrobat**: Downloads the PDF to your computer, allowing you to open it in a dedicated application like Adobe Acrobat.
 -   **Update Forms**: Click **Check for Updated Forms** to manually trigger a scrape of the currently saved URL to refresh the list of available forms.
 -   **Backup & Restore Settings**: You can export the application's entire configuration (including settings, emails, staff, and tumour sites) to a single JSON file for backup. You can also import a settings file to restore a previous configuration.
+-   **Admin Management**: This section is only visible to users with "Full" access.
+    - Click **Manage Admins** to go to a separate page to manage administrators.
+    - There are three access levels: **Read** (can view settings), **Change** (can edit all settings except the admin list), and **Full** (can edit all settings and manage admins).
 -   **Staff Management**: Click **Edit Staff List** to navigate to a separate page to manage staff members.
     - The page features a two-column layout. The left column contains a searchable list of all staff members.
     - Clicking a member in the list will display their full, editable details in the right-hand column, where you can update their name, title, phone number, specialities, and email recipients.
@@ -141,5 +144,7 @@ After the consent form has been generated, located using the UNC path, signed, a
 | UK GDPR & common-law confidentiality | Validation of patient identifiers, no long-term storage, and explicit under-16 warnings support accuracy, data-minimisation and lawful-consent duties. |
 | Consent law for minors | Under-16 alert directly operationalises Gillick-competence checks |
 
+
+    
 
     
