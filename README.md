@@ -117,6 +117,7 @@ After the consent form has been generated, located using the UNC path, signed, a
 | Feature | Positive impact | IG artefact it aligns with |
 | --- | --- | --- |
 | KOMS “R-number” format validation (‘R’ + 7 digits) | Reduces the chance of pulling the wrong patient record – speaks to the GDPR accuracy principle. | Art 5(1)(d) UK GDPR accuracy • DSPT outcome A1 (“accurate data”) |
+| Role-based access control (Read/Change/Full) for all settings, linked to KOMS username | Enforces the principle of least privilege, ensuring only authorised staff can alter critical settings like file paths or data sources. | GDPR Art 32 (security of processing) • DSPT outcome 10-C (access control) |
 | No form templates cached; filled PDFs stored only in /tmp with random IDs | Minimises long-term personal-data footprint and aids secure-deletion; supports storage-limitation and data-minimisation. | GDPR Art 5(1)(c)(e); DSPT outcome B2 (“only necessary data retained”) |
 | User decides whether the PDF opens in-browser or downloads | Lets trusts disable browser rendering if their IG policy forbids patient PDFs in cache. | DSPT / local IG policy flexibility |
 
@@ -124,6 +125,7 @@ After the consent form has been generated, located using the UNC path, signed, a
 | Feature | Positive impact | Cyber baseline it helps tick |
 | --- | --- | --- |
 | Next.js 14 + ShadCN on the client, with server-side flows isolated from the UI | Separation of concerns simplifies threat modelling; fits CAF principle PR.DS-3 (segmented architectures). | NCSC CAF-aligned DSPT section 3 |
+| Role-based access control for all config routes and admin functions | Prevents unauthorised changes to application settings, file paths, and user permissions, strengthening overall security. | CAF PR.AM-1 (access management); DSPT outcome 10-C |
 | Ignores PDF encryption instead of trying to break it | Means the app never sees password-protected documents – avoids storing decryption keys. | DSPT outcome C4 (“don’t weaken third-party crypto”) |
 | All external calls are HTTPS and the RCR source is configurable | Lets the trust pin certificates or proxy through an allow-listed egress gateway. | CAF SR.A – secure external services |
 
@@ -139,12 +141,7 @@ After the consent form has been generated, located using the UNC path, signed, a
 | --- | --- | --- |
 | DCB 0129 (manufacturer) | Age-check, clinician-role guard, witness-field blanking, live-form fetch & hazard controls all contribute to a future Clinical Safety Case (sections 3–7) |
 | DCB 0160 (deploying org) | The same controls make it easier for the trust’s CSO to show “risk is ALARP” when integrating the tool. |
-| DTAC | C1 ✔ (see clinical-safety controls), C2 partly ✔ (no cached data, short-lived PDFs), C3 partly ✔ (HTTPS + isolation), C4 partly ✔ (API for demographics, standards PDF), C5 ✔ (accessible UI). |
-| DSPT / CAF | Low data-at-rest, no unmanaged third-party services, optional download flow – all count as good-practice evidence for DSPT questions 8-A and 9-C. |
+| DTAC | C1 ✔ (see clinical-safety controls), C2 ✔ (role-based access, no cached data), C3 ✔ (HTTPS, isolation, RBAC), C4 partly ✔ (API for demographics, standards PDF), C5 ✔ (accessible UI). |
+| DSPT / CAF | Low data-at-rest, no unmanaged third-party services, role-based access controls, and optional download flow – all count as good-practice evidence for DSPT questions 8-A and 9-C. |
 | UK GDPR & common-law confidentiality | Validation of patient identifiers, no long-term storage, and explicit under-16 warnings support accuracy, data-minimisation and lawful-consent duties. |
 | Consent law for minors | Under-16 alert directly operationalises Gillick-competence checks |
-
-
-    
-
-    
