@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, PlusCircle, Save, Trash2, Loader2, Eraser, ShieldX, UserCog } from 'lucide-react';
 import type { AdminUser, AccessLevel } from '@/lib/types';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, Alert } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const accessLevels: AccessLevel[] = ['Read', 'Change', 'Full'];
@@ -112,11 +112,12 @@ export default function AdminsConfigPage() {
   };
   
   const handleClearList = () => {
-      setAdmins([]);
+      const fullAdmins = admins.filter(admin => admin.accessLevel === 'Full');
+      setAdmins(fullAdmins);
       setShowClearConfirm(false);
       toast({
           title: "List Cleared",
-          description: "Click 'Save Changes' to make it permanent.",
+          description: "Admins with Read and Change permissions removed. Click 'Save Changes' to make it permanent.",
       });
   };
 
@@ -243,7 +244,7 @@ export default function AdminsConfigPage() {
             <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                    This action will remove all admins from the list. This could lock you out of the settings. This action cannot be undone.
+                    This action will remove all admins with 'Read' and 'Change' permissions from the list. Users with 'Full' access will be preserved. This action cannot be undone.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
