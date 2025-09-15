@@ -67,7 +67,7 @@ export default function ConfigPage() {
   const fetchUserDataAndConfig = async () => {
     setIsLoading(true);
     try {
-        const userRes = await fetch('/api/auth/user');
+        const userRes = await fetch('/api/auth/user', { credentials: 'include' });
         if (!userRes.ok) {
           if (userRes.status === 401) {
             // Not an admin, they should not be here
@@ -80,7 +80,7 @@ export default function ConfigPage() {
         const userData: AdminUser = await userRes.json();
         setCurrentUser(userData);
 
-        const configRes = await fetch('/api/config');
+        const configRes = await fetch('/api/config', { credentials: 'include' });
         if (!configRes.ok) throw new Error('Failed to fetch config');
         const config = await configRes.json();
         
@@ -139,6 +139,7 @@ export default function ConfigPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(updates),
       });
 
@@ -207,7 +208,7 @@ export default function ConfigPage() {
 
   const handleExport = async () => {
     try {
-        const res = await fetch('/api/config/backup');
+        const res = await fetch('/api/config/backup', { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to fetch configuration for export.');
         const data = await res.json();
         
@@ -247,6 +248,7 @@ export default function ConfigPage() {
               const response = await fetch('/api/config/backup', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
                   body: JSON.stringify(importedData)
               });
               

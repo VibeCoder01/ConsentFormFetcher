@@ -32,8 +32,8 @@ export default function AdminsConfigPage() {
       setIsLoading(true);
       try {
         const [userRes, adminsRes] = await Promise.all([
-          fetch('/api/auth/user'),
-          fetch('/api/admins')
+          fetch('/api/auth/user', { credentials: 'include' }),
+          fetch('/api/admins', { credentials: 'include' })
         ]);
 
         if (!userRes.ok) throw new Error('Could not authenticate current user.');
@@ -86,6 +86,7 @@ export default function AdminsConfigPage() {
       const response = await fetch('/api/admins', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(validAdmins),
       });
 

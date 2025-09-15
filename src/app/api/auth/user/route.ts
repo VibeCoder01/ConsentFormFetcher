@@ -1,5 +1,5 @@
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 import { AdminUser, KomsResponse } from '@/lib/types';
@@ -25,18 +25,25 @@ async function getAdmins(): Promise<AdminUser[]> {
 }
 
 // Function to get current user from KOMS
-async function getKomsUser(): Promise<KomsResponse | null> {
+async function getKomsUser(request: NextRequest): Promise<KomsResponse | null> {
     if (!KOMS_URL) {
         await logActivity("KOMS auth check", { status: 'FAILURE', details: 'KOMS_URL is not configured.' });
         return null;
     }
     try {
-        const koms = await fetch(KOMS_URL, {
-            method: 'POST',
-            headers: {
+        const cookieHeader = request.headers.get('cookie') ?? undefined;
+        const headers: Record<string, string> = {
             'Content-Type': 'application/x-www-form-urlencoded',
             'User-Agent': 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)'
-            },
+        };
+
+        if (cookieHeader) {
+            headers['Cookie'] = cookieHeader;
+        }
+
+        const koms = await fetch(KOMS_URL, {
+            method: 'POST',
+            headers,
             body: 'RNumber=ZZZ', // Dummy call
             cache: 'no-store' // Disable caching
         });
@@ -57,9 +64,9 @@ async function getKomsUser(): Promise<KomsResponse | null> {
     }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
-        const komsUser = await getKomsUser();
+        const komsUser = await getKomsUser(request);
         const komsUsername = komsUser?.user?.toLowerCase();
 
         if (!komsUsername) {
