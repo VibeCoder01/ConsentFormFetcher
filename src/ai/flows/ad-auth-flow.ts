@@ -19,11 +19,12 @@ function escapeLDAPfilter(value: string) {
   return value.replace(/[\0\*\(\)\\]/g, (c) => '\\' + c.charCodeAt(0).toString(16));
 }
 
+export type AdAuthInput = z.infer<typeof AdAuthInputSchema>;
 const AdAuthInputSchema = z.object({
   username: z.string(),
   password: z.string(),
 });
-export type AdAuthInput = z.infer<typeof AdAuthInputSchema>;
+
 
 export type AuthResult = 
     | { ok: true; userDN: string; roles: AccessLevel[] }
@@ -32,10 +33,10 @@ export type AuthResult =
 
 async function getTlsOptions(config: ADConfig): Promise<TlsOptions | undefined> {
     if (!config.caFile) {
-        // In a dev environment, we might allow this, but for production, it's a risk.
-        // For this app, we will enforce it for security.
+        // If no CA file is specified, proceed with caution.
+        // This is not recommended for production environments.
         return {
-             rejectUnauthorized: false // Use with caution in production
+             rejectUnauthorized: false
         };
     }
     try {
@@ -135,7 +136,12 @@ export async function testAdConnection(): Promise<{ success: boolean; message: s
         await client.bind(config.bindDN, config.bindPassword);
         await client.unbind();
 
-        return { success: true, message: 'Active Directory connection successful.' };
+        let message = 'Active Directory connection successful.';
+        if(tlsOptions?.rejectUnauthorized === false) {
+            message += ' Warning: Connection is insecure as certificate validation is disabled.';
+        }
+
+        return { success: true, message: message };
 
     } catch (error) {
         console.error('AD Connection Test Error:', error);
