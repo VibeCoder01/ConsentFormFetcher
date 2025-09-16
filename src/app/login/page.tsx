@@ -61,7 +61,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Admin Login</CardTitle>
-          <CardDescription>Enter your Windows credentials to access the configuration area.</CardDescription>
+          <CardDescription>Enter your mtw.nhs.uk credentials to access the configuration area.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -80,7 +80,7 @@ export default function LoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                placeholder="domain\\username"
+                placeholder="username"
                 disabled={isLoading}
               />
             </div>
