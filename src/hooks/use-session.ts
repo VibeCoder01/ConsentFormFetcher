@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import type { SessionData, AccessLevel } from '@/lib/types';
 import adConfig from '@/config/ad.json';
