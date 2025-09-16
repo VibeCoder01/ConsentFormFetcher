@@ -1,20 +1,16 @@
+
 import { NextResponse, type NextRequest } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/auth';
-import { getAdConfigForSetup } from './lib/ad-config-loader';
+import adConfig from './config/ad.json';
 
 
 export async function middleware(request: NextRequest) {
-  // Read the AD config on the server to check for setup mode.
-  const adConfig = await getAdConfigForSetup();
-  
-  // If the 'full' access group DN is not set or is a placeholder, assume initial setup and bypass auth for config pages.
+  // If the 'full' access group DN is not set or is the default placeholder, assume initial setup and bypass auth for config pages.
   const isSetupMode = !adConfig.groupDNs.full || adConfig.groupDNs.full === "CN=AppAdmins-Full,OU=Groups,DC=domain,DC=com";
 
-  if (isSetupMode) {
-    if (request.nextUrl.pathname.startsWith('/config')) {
+  if (isSetupMode && request.nextUrl.pathname.startsWith('/config')) {
       return NextResponse.next();
-    }
   }
   
   const session = await getIronSession<SessionData>(request.cookies, sessionOptions);
