@@ -276,12 +276,12 @@ export default function ConfigPage() {
     )
   }
 
-  const hasWriteAccess = session.isLoggedIn && session.roles.includes('change');
   const hasFullAccess = session.isLoggedIn && session.roles.includes('full');
-  const hasReadAccess = session.isLoggedIn && session.roles.includes('read');
+  const hasWriteAccess = session.isLoggedIn && (session.roles.includes('change') || hasFullAccess);
+  const hasReadOnlyAccess = session.isLoggedIn && session.roles.includes('read') && !hasWriteAccess;
   const hasNoRoles = session.isLoggedIn && session.roles.length === 0;
 
-  const allButtonsDisabled = hasReadAccess && !hasWriteAccess;
+  const allButtonsDisabled = hasReadOnlyAccess;
 
 
   const dataSourceCard = () => {
@@ -501,7 +501,7 @@ export default function ConfigPage() {
                     Save Changes
                 </Button>
             )}
-             <Button onClick={handleUpdate} disabled={isScraping || (isModified && hasWriteAccess) || allButtonsDisabled}>
+             <Button onClick={handleUpdate} disabled={isScraping || (isModified && hasWriteAccess) || !hasWriteAccess}>
               <RefreshCw className={`mr-2 h-4 w-4 ${isScraping ? 'animate-spin' : ''}`} />
               Check for Updated Forms
             </Button>
