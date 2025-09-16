@@ -18,7 +18,8 @@ export function useSession(): SessionHookResult {
   const [session, setSession] = useState<(SessionData & { isLoggedIn: true }) | { isLoggedIn: false }>({ isLoggedIn: false });
   const [isLoading, setIsLoading] = useState(true);
 
-  const isInSetupMode = !adConfig.groupDNs.full;
+  // Enter setup mode if the full access group is missing or is still the default placeholder.
+  const isInSetupMode = !adConfig.groupDNs.full || adConfig.groupDNs.full === "CN=AppAdmins-Full,OU=Groups,DC=domain,DC=com";
 
   useEffect(() => {
     async function fetchSession() {
