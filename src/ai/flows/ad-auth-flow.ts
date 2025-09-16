@@ -19,7 +19,7 @@ function escapeLDAPfilter(value: string) {
   return value.replace(/[\0\*\(\)\\]/g, (c) => '\\' + c.charCodeAt(0).toString(16));
 }
 
-export const AdAuthInputSchema = z.object({
+const AdAuthInputSchema = z.object({
   username: z.string(),
   password: z.string(),
 });
