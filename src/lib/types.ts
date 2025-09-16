@@ -74,6 +74,13 @@ export interface TumourSite {
 }
 
 export interface TumourGroup {
-    id: string;
+    id:string;
     name: string;
+}
+
+export interface ADConfig {
+    url: string;
+    baseDN: string;
+    username: string;
+    password?: string;
 }

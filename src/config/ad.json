@@ -1,0 +1,7 @@
+
+{
+  "url": "ldap://your-dc.domain.com",
+  "baseDN": "dc=domain,dc=com",
+  "username": "your-bind-username",
+  "password": "your-bind-password"
+}
