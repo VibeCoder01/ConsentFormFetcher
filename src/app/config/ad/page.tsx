@@ -216,16 +216,17 @@ export default function ADConfigPage() {
                         </div>
                         <div className="space-y-1.5">
                             <Label htmlFor="caFile">CA Certificate File Path (Optional)</Label>
-                            <Input id="caFile" value={config.caFile || ''} onChange={(e) => handleFieldChange('caFile', e.target.value)} placeholder="/path/to/your/ca.pem" />
+                            <Input id="caFile" value={config.caFile || ''} onChange={(e) => handleFieldChange('caFile', e.target.value)} placeholder="e.g., C:\\certs\\ca.pem or /etc/ssl/certs/ca.pem" />
                         </div>
                     </CardContent>
                 )}
                  <CardFooter>
-                    <Alert>
+                    <Alert variant={!config.caFile ? "destructive" : "default"}>
                         <Info className="h-4 w-4" />
                         <AlertTitle>Security Note</AlertTitle>
                         <AlertDescription>
-                            The Bind Password is not displayed. It is stored securely and write-only. To change it, enter a new password and save. If no CA file is provided, certificate validation will be skipped (not recommended for production).
+                            The Bind Password is not displayed. To change it, enter a new password and save. 
+                            If no CA file is provided, certificate validation will be skipped, making the connection insecure. This is not recommended for production environments.
                         </AlertDescription>
                     </Alert>
                 </CardFooter>
