@@ -5,7 +5,7 @@ import { sessionOptions, SessionData } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
 export async function middleware(request: NextRequest) {
-  const session = await getIronSession<SessionData>(cookies(), sessionOptions);
+  const session = await getIronSession<SessionData>(request.cookies, sessionOptions);
 
   // If the user is not logged in, redirect them to the login page.
   if (session.isLoggedIn !== true) {
