@@ -88,6 +88,12 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
 
     // 4) Re-bind as service account for group checks
     await client.bind(config.bindDN, config.bindPassword);
+    
+    // Check for initial setup: if no groups are defined, grant full access
+    const { read, change, full } = config.groupDNs;
+    if (!read && !change && !full) {
+      return { ok: true, userDN, username, roles: ['full', 'change', 'read'] };
+    }
 
     // Helper: nested group membership via matching-rule-in-chain
     async function isMemberOf(groupDN: string) {
@@ -101,7 +107,7 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
       return se.length === 1;
     }
 
-    // All authenticated users get 'read' access by default.
+    // Start with a base of read access for any authenticated user.
     const finalRoles = new Set<AccessLevel>(['read']);
     
     // Check for 'change' and 'full' group memberships.
@@ -112,13 +118,16 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
         finalRoles.add('full');
     }
     
-    // Ensure 'full' implies 'change' (and 'read' is already default)
+    // Enforce role hierarchy: Full > Change > Read
     if (finalRoles.has('full')) {
         finalRoles.add('change');
+        finalRoles.add('read');
+    }
+    if(finalRoles.has('change')) {
+        finalRoles.add('read');
     }
 
     if(finalRoles.size === 0) {
-        // This case should theoretically not be hit anymore, but left for safety.
         return { ok: false, reason: 'User has no assigned roles for this application.' };
     }
 
