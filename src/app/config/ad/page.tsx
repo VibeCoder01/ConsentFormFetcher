@@ -9,20 +9,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Save, Loader2, TestTube2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, TestTube2, Info } from 'lucide-react';
 import type { ADConfig } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { cn } from '@/lib/utils';
 
+const emptyConfig: Partial<ADConfig> = {
+    url: '',
+    baseDN: '',
+    bindDN: '',
+    caFile: '',
+    groupDNs: {
+        read: '',
+        change: '',
+        full: ''
+    }
+};
 
 export default function ADConfigPage() {
   const { toast } = useToast();
-  const [config, setConfig] = useState<Partial<ADConfig>>({});
-  const [initialConfig, setInitialConfig] = useState<Partial<ADConfig>>({});
+  const [config, setConfig] = useState<Partial<ADConfig>>(emptyConfig);
+  const [initialConfig, setInitialConfig] = useState<Partial<ADConfig>>(emptyConfig);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
-  const [password, setPassword] = useState('');
+  const [bindPassword, setBindPassword] = useState('');
   const [passwordChanged, setPasswordChanged] = useState(false);
 
   const isModified = JSON.stringify(config) !== JSON.stringify(initialConfig) || passwordChanged;
@@ -32,7 +42,7 @@ export default function ADConfigPage() {
       try {
         const res = await fetch('/api/config/ad');
         if (!res.ok) throw new Error('Failed to fetch AD config');
-        const data: Omit<ADConfig, 'password'> = await res.json();
+        const data: Omit<ADConfig, 'bindPassword'> = await res.json();
         setConfig(data);
         setInitialConfig(data);
       } catch (error) {
@@ -50,20 +60,30 @@ export default function ADConfigPage() {
     fetchConfig();
   }, [toast]);
 
-  const handleFieldChange = (field: keyof Omit<ADConfig, 'password'>, value: string) => {
+  const handleFieldChange = (field: keyof Omit<ADConfig, 'bindPassword' | 'groupDNs'>, value: string) => {
     setConfig(prev => ({...prev, [field]: value}));
+  };
+  
+   const handleGroupDNChange = (role: 'read' | 'change' | 'full', value: string) => {
+    setConfig(prev => ({
+        ...prev,
+        groupDNs: {
+            ...prev.groupDNs,
+            [role]: value,
+        }
+    }));
   };
 
   const handlePasswordChange = (value: string) => {
-      setPassword(value);
+      setBindPassword(value);
       setPasswordChanged(true);
   }
 
   const handleSaveChanges = async () => {
     setIsSaving(true);
     const updates = { ...config };
-    if (passwordChanged && password) {
-        (updates as ADConfig).password = password;
+    if (passwordChanged && bindPassword) {
+        (updates as ADConfig).bindPassword = bindPassword;
     }
 
     try {
@@ -85,7 +105,7 @@ export default function ADConfigPage() {
       // Refetch config to update initial state, excluding password
       const newConfig = { ...config };
       setInitialConfig(newConfig);
-      setPassword('');
+      setBindPassword('');
       setPasswordChanged(false);
 
     } catch (error) {
@@ -102,7 +122,6 @@ export default function ADConfigPage() {
 
   const handleTestConnection = async () => {
     setIsTesting(true);
-    // You might want to save unsaved changes before testing
     if (isModified) {
         toast({
             variant: "destructive",
@@ -139,7 +158,7 @@ export default function ADConfigPage() {
   
   const loadingSkeleton = (
     <CardContent className="space-y-6">
-        {[...Array(4)].map((_, i) => (
+        {[...Array(8)].map((_, i) => (
              <div className="space-y-2" key={i}>
                 <Skeleton className="h-4 w-1/4" />
                 <Skeleton className="h-10 w-full" />
@@ -175,36 +194,63 @@ export default function ADConfigPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Connection Settings</CardTitle>
-                    <CardDescription>Configure the details for connecting to your MS Windows Active Directory server.</CardDescription>
+                    <CardDescription>Configure the details for connecting to your Active Directory server. Use a read-only service account for the bind credentials.</CardDescription>
                 </CardHeader>
                 {isLoading ? loadingSkeleton : (
                     <CardContent className="space-y-4">
                         <div className="space-y-1.5">
-                            <Label htmlFor="url">LDAP URL</Label>
-                            <Input id="url" value={config.url || ''} onChange={(e) => handleFieldChange('url', e.target.value)} placeholder="ldap://your-dc.domain.com" />
+                            <Label htmlFor="url">LDAPS URL</Label>
+                            <Input id="url" value={config.url || ''} onChange={(e) => handleFieldChange('url', e.target.value)} placeholder="ldaps://your-dc.domain.com:636" />
                         </div>
                          <div className="space-y-1.5">
                             <Label htmlFor="baseDN">Base DN</Label>
-                            <Input id="baseDN" value={config.baseDN || ''} onChange={(e) => handleFieldChange('baseDN', e.target.value)} placeholder="dc=domain,dc=com" />
+                            <Input id="baseDN" value={config.baseDN || ''} onChange={(e) => handleFieldChange('baseDN', e.target.value)} placeholder="DC=domain,DC=com" />
                         </div>
                         <div className="space-y-1.5">
-                            <Label htmlFor="username">Bind Username</Label>
-                            <Input id="username" value={config.username || ''} onChange={(e) => handleFieldChange('username', e.target.value)} placeholder="CN=Binder,OU=Users,DC=domain,DC=com" />
+                            <Label htmlFor="bindDN">Bind DN</Label>
+                            <Input id="bindDN" value={config.bindDN || ''} onChange={(e) => handleFieldChange('bindDN', e.target.value)} placeholder="CN=ServiceAccount,OU=Users,DC=domain,DC=com" />
                         </div>
                         <div className="space-y-1.5">
-                            <Label htmlFor="password">Bind Password</Label>
-                            <Input id="password" type="password" value={password} onChange={(e) => handlePasswordChange(e.target.value)} placeholder="Leave blank to keep existing password" />
+                            <Label htmlFor="bindPassword">Bind Password</Label>
+                            <Input id="bindPassword" type="password" value={bindPassword} onChange={(e) => handlePasswordChange(e.target.value)} placeholder="Leave blank to keep existing password" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="caFile">CA Certificate File Path (Optional)</Label>
+                            <Input id="caFile" value={config.caFile || ''} onChange={(e) => handleFieldChange('caFile', e.target.value)} placeholder="/path/to/your/ca.pem" />
                         </div>
                     </CardContent>
                 )}
                  <CardFooter>
                     <Alert>
+                        <Info className="h-4 w-4" />
                         <AlertTitle>Security Note</AlertTitle>
                         <AlertDescription>
-                            The Bind Password is write-only. It is stored securely on the server and will not be displayed here again. If you need to change it, simply enter a new password and save.
+                            The Bind Password is not displayed. It is stored securely and write-only. To change it, enter a new password and save. If no CA file is provided, certificate validation will be skipped (not recommended for production).
                         </AlertDescription>
                     </Alert>
                 </CardFooter>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Role-Based Access Control</CardTitle>
+                    <CardDescription>Map Active Directory security groups to application access levels. A user's highest role will be used. 'Full' includes 'Change' and 'Read'.</CardDescription>
+                </CardHeader>
+                {isLoading ? <div className="p-6"><Skeleton className="h-32 w-full" /></div> : (
+                     <CardContent className="space-y-4">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="groupRead">Read Access Group DN</Label>
+                            <Input id="groupRead" value={config.groupDNs?.read || ''} onChange={(e) => handleGroupDNChange('read', e.target.value)} placeholder="CN=AppAdmins-Read,OU=Groups,DC=domain,DC=com" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="groupChange">Change Access Group DN</Label>
+                            <Input id="groupChange" value={config.groupDNs?.change || ''} onChange={(e) => handleGroupDNChange('change', e.target.value)} placeholder="CN=AppAdmins-Change,OU=Groups,DC=domain,DC=com" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="groupFull">Full Access Group DN</Label>
+                            <Input id="groupFull" value={config.groupDNs?.full || ''} onChange={(e) => handleGroupDNChange('full', e.target.value)} placeholder="CN=AppAdmins-Full,OU=Groups,DC=domain,DC=com" />
+                        </div>
+                    </CardContent>
+                )}
             </Card>
         </div>
       </main>

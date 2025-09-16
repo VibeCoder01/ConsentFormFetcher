@@ -2,112 +2,157 @@
 'use server';
 
 import { z } from 'zod';
-import ActiveDirectory from 'activedirectory2';
-import type { ADConfig } from '@/lib/types';
+import { Client } from 'ldapts';
+import type { ADConfig, AccessLevel } from '@/lib/types';
 import * as path from 'path';
 import * as fs from 'fs/promises';
+import { TlsOptions } from 'tls';
 
-// Helper to get config without direct imports in server code
 async function getAdConfig(): Promise<ADConfig> {
     const configPath = path.join(process.cwd(), 'src', 'config', 'ad.json');
     const jsonData = await fs.readFile(configPath, 'utf-8');
     return JSON.parse(jsonData);
 }
 
-const AdAuthInputSchema = z.object({
+function escapeLDAPfilter(value: string) {
+  // RFC4515: escape *, (, ), \, NUL
+  return value.replace(/[\0\*\(\)\\]/g, (c) => '\\' + c.charCodeAt(0).toString(16));
+}
+
+export const AdAuthInputSchema = z.object({
   username: z.string(),
   password: z.string(),
 });
 export type AdAuthInput = z.infer<typeof AdAuthInputSchema>;
 
-export interface AdAuthOutput {
-  success: boolean;
-  message: string;
-  user?: any;
+export type AuthResult = 
+    | { ok: true; userDN: string; roles: AccessLevel[] }
+    | { ok: false; reason: string };
+
+
+async function getTlsOptions(config: ADConfig): Promise<TlsOptions | undefined> {
+    if (!config.caFile) {
+        // In a dev environment, we might allow this, but for production, it's a risk.
+        // For this app, we will enforce it for security.
+        return {
+             rejectUnauthorized: false // Use with caution in production
+        };
+    }
+    try {
+        const caCert = await fs.readFile(config.caFile);
+        return {
+            ca: [caCert],
+            rejectUnauthorized: true, // This is critical for security
+        };
+    } catch (error) {
+        console.error(`Failed to read CA file at ${config.caFile}`, error);
+        throw new Error(`Could not read the specified CA file. Please check the path in your ad.json configuration.`);
+    }
 }
 
-function getFriendlyErrorMessage(err: any): string {
-    if (err.lde_message && err.lde_message.includes('data 52e')) {
-        return 'Invalid credentials. Please check the bind username and password.';
-    }
-    if (err.lde_message && err.lde_message.includes('data 525')) {
-        return 'User not found. The specified username does not exist in the directory.';
-    }
-     if (err.lde_message && err.lde_message.includes('data 775')) {
-        return 'User account is locked. Please contact your AD administrator.';
-    }
-    if (err.message) {
-        return err.message;
-    }
-    return 'An unknown authentication error occurred.';
-}
 
-export async function authenticateAdUser(input: AdAuthInput): Promise<AdAuthOutput> {
+export async function authenticateAndAuthorise(input: AdAuthInput): Promise<AuthResult> {
+  const username = input.username.trim();
+  const config = await getAdConfig();
+  const tlsOptions = await getTlsOptions(config);
+
+  const client = new Client({
+    url: config.url,
+    timeout: 7000,
+    tlsOptions: tlsOptions
+  });
+
   try {
-    const adConfig = await getAdConfig();
-    const ad = new ActiveDirectory(adConfig);
-    
-    return new Promise((resolve) => {
-        ad.authenticate(input.username, input.password, (err, auth) => {
-            if (err) {
-                console.error('AD Authentication Error:', err);
-                const friendlyMessage = getFriendlyErrorMessage(err);
-                resolve({ success: false, message: `Authentication failed: ${friendlyMessage}` });
-                return;
-            }
-            if (auth) {
-                ad.findUser(input.username, (err, user) => {
-                    if (err) {
-                        console.error('AD Find User Error:', err);
-                        resolve({ success: false, message: `Could not find user after authentication: ${getFriendlyErrorMessage(err)}` });
-                        return;
-                    }
-                    if (!user) {
-                         resolve({ success: false, message: 'User authenticated but could not be found in directory.' });
-                         return;
-                    }
-                    resolve({ success: true, message: 'Authentication successful.', user });
-                });
-            } else {
-                resolve({ success: false, message: 'Authentication failed. Please check your username and password.' });
-            }
-        });
-    });
+    // 1) Bind as service account
+    await client.bind(config.bindDN, config.bindPassword);
 
+    // 2) Find the user DN by sAMAccountName or userPrincipalName
+    const u = escapeLDAPfilter(username);
+    const { searchEntries } = await client.search(config.baseDN, {
+      scope: 'sub',
+      filter: `(&(objectClass=user)(|(sAMAccountName=${u})(userPrincipalName=${u})))`,
+      attributes: ['dn']
+    });
+    if (searchEntries.length !== 1) {
+      return { ok: false, reason: 'User not found or ambiguous.' };
+    }
+    const userDN = (searchEntries[0] as any).dn as string;
+
+    // 3) Verify password by binding as the user
+    try {
+      await client.bind(userDN, input.password);
+    } catch {
+      return { ok: false, reason: 'Invalid credentials.' };
+    }
+
+    // 4) Re-bind as service account for group checks
+    await client.bind(config.bindDN, config.bindPassword);
+
+    // Helper: nested group membership via matching-rule-in-chain
+    async function isMemberOf(groupDN: string) {
+      if (!groupDN) return false;
+      const g = escapeLDAPfilter(groupDN);
+      const { searchEntries: se } = await client.search(config.baseDN, {
+        scope: 'sub',
+        filter: `(&(objectClass=user)(distinguishedName=${escapeLDAPfilter(userDN)})(memberOf:1.2.840.113556.1.4.1941:=${g}))`,
+        attributes: ['dn']
+      });
+      return se.length === 1;
+    }
+
+    const roles: AccessLevel[] = [];
+    if (await isMemberOf(config.groupDNs.read)) roles.push('read');
+    if (await isMemberOf(config.groupDNs.change)) roles.push('change');
+    if (await isMemberOf(config.groupDNs.full)) roles.push('full');
+    
+    // Ensure 'full' implies 'change' and 'read', and 'change' implies 'read'
+    const finalRoles = new Set<AccessLevel>(roles);
+    if (finalRoles.has('full')) {
+        finalRoles.add('change');
+        finalRoles.add('read');
+    }
+    if(finalRoles.has('change')) {
+        finalRoles.add('read');
+    }
+
+    return { ok: true, userDN, roles: Array.from(finalRoles) };
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'An unknown error occurred during AD authentication.';
-    console.error('AD Flow Error:', message);
-    return { success: false, message };
+      console.error("LDAP Authentication Error:", error);
+      const message = error instanceof Error ? error.message : "An unknown LDAP error occurred.";
+      return { ok: false, reason: message };
+  }
+  finally {
+    try { await client.unbind(); } catch {}
   }
 }
 
-
 export async function testAdConnection(): Promise<{ success: boolean; message: string; }> {
     try {
-        const adConfig = await getAdConfig();
-        const ad = new ActiveDirectory(adConfig);
+        const config = await getAdConfig();
+        const tlsOptions = await getTlsOptions(config);
+        const client = new Client({ url: config.url, timeout: 5000, tlsOptions });
 
-        // A simple way to test is to try to find the bind user itself.
-        // This verifies credentials, URL, and baseDN are likely correct if it succeeds.
-        return new Promise((resolve) => {
-            ad.findUser(adConfig.username, (err, user) => {
-                if (err) {
-                    console.error('AD Connection Test Error:', err);
-                    const friendlyMessage = getFriendlyErrorMessage(err);
-                    resolve({ success: false, message: `Connection failed: ${friendlyMessage}` });
-                    return;
-                }
-                if (!user) {
-                    resolve({ success: false, message: 'Connection succeeded, but the bind user could not be found. Check username and baseDN.' });
-                    return;
-                }
-                resolve({ success: true, message: 'Active Directory connection successful.' });
-            });
-        });
+        await client.bind(config.bindDN, config.bindPassword);
+        await client.unbind();
+
+        return { success: true, message: 'Active Directory connection successful.' };
 
     } catch (error) {
-        const message = error instanceof Error ? error.message : 'An unknown error occurred during the connection test.';
-        console.error('AD Test Flow Error:', message);
-        return { success: false, message };
+        console.error('AD Connection Test Error:', error);
+        let message = 'An unknown error occurred.';
+        if (error instanceof Error) {
+            // Provide more specific feedback for common issues
+            if (error.name === 'ConnectionError' || error.message.includes('getaddrinfo ENOTFOUND')) {
+                message = 'Connection failed: The server URL could not be resolved. Check the hostname and port.';
+            } else if (error.name === 'InvalidCredentialsError' || (error as any).code === 49) {
+                message = 'Connection failed: Invalid bind credentials provided in ad.json.';
+            } else if (error.message.includes('self-signed certificate')) {
+                 message = 'Connection failed: The server is using a self-signed certificate. Please provide a path to a trusted CA file in ad.json.';
+            }
+             else {
+                message = `Connection failed: ${error.message}`;
+            }
+        }
+        return { success: false, message: message };
     }
 }
