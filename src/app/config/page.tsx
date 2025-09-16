@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,16 +16,19 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2, Download, Upload, Mail, MapPin, Network } from "lucide-react";
+import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2, Download, Upload, Mail, MapPin, Network, LogOut } from "lucide-react";
 import { scrapeRcrForms } from "@/ai/flows/scrape-forms-flow";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useSession } from "@/hooks/use-session";
 
 const DEFAULT_RCR_URL = "https://www.rcr.ac.uk/our-services/management-service-delivery/national-radiotherapy-consent-forms/";
 
 export default function ConfigPage() {
   const { toast } = useToast();
+  const router = useRouter();
+  const { session, isLoading: isSessionLoading } = useSession();
   const [isScraping, setIsScraping] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
@@ -153,6 +157,11 @@ export default function ConfigPage() {
         setIsSaving(false);
     }
   };
+  
+  const handleSignOut = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+  };
 
   const handleUpdate = async () => {
     setIsScraping(true);
@@ -257,6 +266,16 @@ export default function ConfigPage() {
       // Reset file input value to allow re-importing the same file
       event.target.value = '';
   };
+  
+  if (isSessionLoading || isLoadingConfig) {
+    return (
+        <div className="flex min-h-screen w-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+    )
+  }
+
+  const hasWriteAccess = session?.roles.includes('change') || session?.roles.includes('full');
 
   const dataSourceCardContent = () => {
     if (isLoadingConfig) {
@@ -280,15 +299,18 @@ export default function ConfigPage() {
                 onChange={(e) => setRcrUrl(e.target.value)}
                 aria-label="RCR Consent Forms URL"
                 className="font-mono text-sm"
+                disabled={!hasWriteAccess}
             />
            </div>
         </CardContent>
-        <CardFooter className="flex justify-start">
-            <Button onClick={handleRestoreDefaultUrl} variant="outline" disabled={isSaving}>
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Restore Default URL
-            </Button>
-        </CardFooter>
+        {hasWriteAccess && (
+            <CardFooter className="flex justify-start">
+                <Button onClick={handleRestoreDefaultUrl} variant="outline" disabled={isSaving}>
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Restore Default URL
+                </Button>
+            </CardFooter>
+        )}
       </>
     )
   }
@@ -323,6 +345,7 @@ export default function ConfigPage() {
                     id="validate-r-number" 
                     checked={validateRNumber}
                     onCheckedChange={setValidateRNumber}
+                    disabled={!hasWriteAccess}
                 />
                 <Label htmlFor="validate-r-number">Enable R Number format validation</Label>
             </div>
@@ -331,6 +354,7 @@ export default function ConfigPage() {
                     id="preview-pdf-fields" 
                     checked={previewPdfFields}
                     onCheckedChange={setPreviewPdfFields}
+                    disabled={!hasWriteAccess}
                 />
                 <Label htmlFor="preview-pdf-fields">Preview PDF fields before generating</Label>
             </div>
@@ -339,6 +363,7 @@ export default function ConfigPage() {
                     id="prepopulate-with-fake-data" 
                     checked={prepopulateWithFakeData}
                     onCheckedChange={setPrepopulateWithFakeData}
+                    disabled={!hasWriteAccess}
                 />
                 <Label htmlFor="prepopulate-with-fake-data">Pre-populate form with dummy data</Label>
             </div>
@@ -347,6 +372,7 @@ export default function ConfigPage() {
                     id="show-welsh-forms" 
                     checked={showWelshForms}
                     onCheckedChange={setShowWelshForms}
+                    disabled={!hasWriteAccess}
                 />
                 <Label htmlFor="show-welsh-forms">Display Welsh PDF forms</Label>
             </div>
@@ -355,6 +381,7 @@ export default function ConfigPage() {
                     id="koms-api-debug-mode" 
                     checked={komsApiDebugMode}
                     onCheckedChange={setKomsApiDebugMode}
+                    disabled={!hasWriteAccess}
                 />
                 <Label htmlFor="koms-api-debug-mode">Enable KOMS API debug mode</Label>
             </div>
@@ -380,6 +407,7 @@ export default function ConfigPage() {
             value={pdfOpenMethod} 
             onValueChange={(value) => setPdfOpenMethod(value as 'browser' | 'acrobat')}
             className="space-y-2"
+            disabled={!hasWriteAccess}
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="browser" id="open-browser" />
@@ -418,6 +446,7 @@ export default function ConfigPage() {
               aria-label="RT Consent Folder Path"
               className="font-mono text-sm"
               placeholder="e.g., \\server\\share\\consent_forms"
+              disabled={!hasWriteAccess}
           />
          </div>
       </CardContent>
@@ -437,13 +466,19 @@ export default function ConfigPage() {
             <h1 className="ml-4 text-xl font-bold">Configuration</h1>
         </div>
         <div className="flex items-center gap-4">
-            <Button onClick={handleSaveChanges} disabled={!isModified || isSaving}>
-              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-              Save Changes
-            </Button>
-             <Button onClick={handleUpdate} disabled={isScraping || isModified}>
+            {hasWriteAccess && (
+                 <Button onClick={handleSaveChanges} disabled={!isModified || isSaving}>
+                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    Save Changes
+                </Button>
+            )}
+             <Button onClick={handleUpdate} disabled={isScraping || (isModified && hasWriteAccess)}>
               <RefreshCw className={`mr-2 h-4 w-4 ${isScraping ? 'animate-spin' : ''}`} />
               Check for Updated Forms
+            </Button>
+            <Button variant="outline" onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
             </Button>
         </div>
       </header>
@@ -498,7 +533,7 @@ export default function ConfigPage() {
             </CardHeader>
             <CardFooter>
                <Link href="/config/staff" passHref>
-                  <Button variant="outline">
+                  <Button variant="outline" disabled={!hasWriteAccess}>
                     <Users className="mr-2 h-4 w-4" />
                     Edit Staff List
                   </Button>
@@ -515,7 +550,7 @@ export default function ConfigPage() {
             </CardHeader>
             <CardFooter>
                <Link href="/config/tumour-sites" passHref>
-                  <Button variant="outline">
+                  <Button variant="outline" disabled={!hasWriteAccess}>
                     <MapPin className="mr-2 h-4 w-4" />
                     Edit Tumour Sites
                   </Button>
@@ -532,7 +567,7 @@ export default function ConfigPage() {
             </CardHeader>
             <CardFooter>
                <Link href="/config/email" passHref>
-                  <Button variant="outline">
+                  <Button variant="outline" disabled={!hasWriteAccess}>
                     <Mail className="mr-2 h-4 w-4" />
                     Edit Email Config
                   </Button>
@@ -540,20 +575,22 @@ export default function ConfigPage() {
             </CardFooter>
           </Card>
           
-          <Card>
-            <CardHeader>
-                <CardTitle>Authentication</CardTitle>
-                <CardDescription>Configure and test the connection to your Active Directory server for user authentication.</CardDescription>
-            </CardHeader>
-            <CardFooter>
-                <Link href="/config/ad" passHref>
-                    <Button variant="outline">
-                        <Network className="mr-2 h-4 w-4" />
-                        Configure Active Directory
-                    </Button>
-                </Link>
-            </CardFooter>
-          </Card>
+          {hasWriteAccess && (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Authentication</CardTitle>
+                    <CardDescription>Configure and test the connection to your Active Directory server for user authentication.</CardDescription>
+                </CardHeader>
+                <CardFooter>
+                    <Link href="/config/ad" passHref>
+                        <Button variant="outline">
+                            <Network className="mr-2 h-4 w-4" />
+                            Configure Active Directory
+                        </Button>
+                    </Link>
+                </CardFooter>
+            </Card>
+          )}
 
            <Card>
             <CardHeader>
@@ -565,17 +602,21 @@ export default function ConfigPage() {
                     <Download className="mr-2 h-4 w-4" />
                     Export App Settings
                 </Button>
-                <Button variant="outline" onClick={handleImportClick}>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Import App Settings
-                </Button>
-                <input
-                    type="file"
-                    ref={importFileRef}
-                    onChange={handleFileImport}
-                    accept="application/json"
-                    className="hidden"
-                />
+                {hasWriteAccess && (
+                    <>
+                    <Button variant="outline" onClick={handleImportClick}>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Import App Settings
+                    </Button>
+                    <input
+                        type="file"
+                        ref={importFileRef}
+                        onChange={handleFileImport}
+                        accept="application/json"
+                        className="hidden"
+                    />
+                    </>
+                )}
             </CardContent>
           </Card>
 

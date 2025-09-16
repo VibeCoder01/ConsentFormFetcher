@@ -27,7 +27,7 @@ const AdAuthInputSchema = z.object({
 
 
 export type AuthResult = 
-    | { ok: true; userDN: string; roles: AccessLevel[] }
+    | { ok: true; userDN: string; username: string; roles: AccessLevel[] }
     | { ok: false; reason: string };
 
 
@@ -116,7 +116,11 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
         finalRoles.add('read');
     }
 
-    return { ok: true, userDN, roles: Array.from(finalRoles) };
+    if(finalRoles.size === 0) {
+        return { ok: false, reason: 'User has no assigned roles for this application.' };
+    }
+
+    return { ok: true, userDN, username, roles: Array.from(finalRoles) };
   } catch (error) {
       console.error("LDAP Authentication Error:", error);
       const message = error instanceof Error ? error.message : "An unknown LDAP error occurred.";

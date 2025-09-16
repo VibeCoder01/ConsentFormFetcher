@@ -80,6 +80,12 @@ export interface TumourGroup {
 
 export type AccessLevel = 'read' | 'change' | 'full';
 
+export interface SessionData {
+  username: string;
+  roles: AccessLevel[];
+  isLoggedIn: true;
+}
+
 export interface AdminUser {
     username: string;
     access: AccessLevel;
