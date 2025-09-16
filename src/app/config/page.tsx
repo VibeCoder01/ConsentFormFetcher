@@ -305,7 +305,7 @@ export default function ConfigPage() {
         </CardContent>
         {hasWriteAccess && (
             <CardFooter className="flex justify-start">
-                <Button onClick={handleRestoreDefaultUrl} variant="outline" disabled={isSaving}>
+                <Button onClick={handleRestoreDefaultUrl} variant="outline" disabled={isSaving || !hasWriteAccess}>
                 <RotateCcw className="mr-2 h-4 w-4" />
                 Restore Default URL
                 </Button>
@@ -606,7 +606,7 @@ export default function ConfigPage() {
                 </Button>
                 {hasWriteAccess && (
                     <>
-                    <Button variant="outline" onClick={handleImportClick}>
+                    <Button variant="outline" onClick={handleImportClick} disabled={!hasWriteAccess}>
                         <Upload className="mr-2 h-4 w-4" />
                         Import App Settings
                     </Button>
