@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -15,12 +16,13 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2, Download, Upload, Mail, MapPin, Network, LogOut } from "lucide-react";
+import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2, Download, Upload, Mail, MapPin, Network, LogOut, AlertTriangle } from "lucide-react";
 import { scrapeRcrForms } from "@/ai/flows/scrape-forms-flow";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useSession } from "@/hooks/use-session";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const DEFAULT_RCR_URL = "https://www.rcr.ac.uk/our-services/management-service-delivery/national-radiotherapy-consent-forms/";
 
@@ -276,8 +278,13 @@ export default function ConfigPage() {
 
   const hasWriteAccess = session.isLoggedIn && session.roles.includes('change');
   const hasFullAccess = session.isLoggedIn && session.roles.includes('full');
+  const hasReadAccess = session.isLoggedIn && session.roles.includes('read');
+  const hasNoRoles = session.isLoggedIn && session.roles.length === 0;
 
-  const dataSourceCardContent = () => {
+  const allButtonsDisabled = hasReadAccess && !hasWriteAccess;
+
+
+  const dataSourceCard = () => {
     if (isLoadingConfig) {
       return (
         <CardContent>
@@ -289,7 +296,13 @@ export default function ConfigPage() {
       )
     }
     return (
-      <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Data Source</CardTitle>
+          <CardDescription>
+            The URL from which consent forms are scraped. This can be manually updated and saved.
+          </CardDescription>
+        </CardHeader>
         <CardContent>
            <div className="space-y-2">
             <Label htmlFor="rcrUrl">Data Source URL</Label>
@@ -311,7 +324,7 @@ export default function ConfigPage() {
                 </Button>
             </CardFooter>
         )}
-      </>
+      </Card>
     )
   }
 
@@ -424,32 +437,48 @@ export default function ConfigPage() {
     )
   }
   
-  const filePathsCardContent = () => {
+  const filePathsCard = () => {
     if (isLoadingConfig) {
       return (
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-1/4" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-        </CardContent>
+         <Card>
+            <CardHeader>
+              <CardTitle>File Paths</CardTitle>
+              <CardDescription>
+                Set the destination folder for generated and uploaded consent forms. Use UNC paths for network locations (e.g., `\\\\server\\share\\folder`).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-1/4" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </CardContent>
+        </Card>
       )
     }
     return (
-      <CardContent className="space-y-4">
-         <div className="space-y-2">
-          <Label htmlFor="rtConsentFolder">RT Consent Folder (for uploads & generated PDFs)</Label>
-          <Input 
-              id="rtConsentFolder"
-              value={rtConsentFolder}
-              onChange={(e) => setRtConsentFolder(e.target.value)}
-              aria-label="RT Consent Folder Path"
-              className="font-mono text-sm"
-              placeholder="e.g., \\\\server\\share\\consent_forms"
-              disabled={!hasWriteAccess}
-          />
-         </div>
-      </CardContent>
+        <Card>
+            <CardHeader>
+              <CardTitle>File Paths</CardTitle>
+              <CardDescription>
+                Set the destination folder for generated and uploaded consent forms. Use UNC paths for network locations (e.g., `\\\\server\\share\\folder`).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="rtConsentFolder">RT Consent Folder (for uploads & generated PDFs)</Label>
+                <Input 
+                    id="rtConsentFolder"
+                    value={rtConsentFolder}
+                    onChange={(e) => setRtConsentFolder(e.target.value)}
+                    aria-label="RT Consent Folder Path"
+                    className="font-mono text-sm"
+                    placeholder="e.g., \\\\server\\share\\consent_forms"
+                    disabled={!hasWriteAccess}
+                />
+            </div>
+            </CardContent>
+        </Card>
     )
   };
 
@@ -472,155 +501,153 @@ export default function ConfigPage() {
                     Save Changes
                 </Button>
             )}
-             <Button onClick={handleUpdate} disabled={isScraping || (isModified && hasWriteAccess)}>
+             <Button onClick={handleUpdate} disabled={isScraping || (isModified && hasWriteAccess) || allButtonsDisabled}>
               <RefreshCw className={`mr-2 h-4 w-4 ${isScraping ? 'animate-spin' : ''}`} />
               Check for Updated Forms
             </Button>
-            {session.isLoggedIn && session.username !== 'setup-admin' && (
+            {session.isLoggedIn && (
               <Button variant="outline" onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
+                  Sign Out ({session.username})
               </Button>
             )}
         </div>
       </header>
       <main className="flex-1 p-4 md:p-8 lg:p-12">
         <div className="mx-auto max-w-2xl space-y-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Data Source</CardTitle>
-              <CardDescription>
-                The URL from which consent forms are scraped. This can be manually updated and saved.
-              </CardDescription>
-            </CardHeader>
-            {dataSourceCardContent()}
-          </Card>
           
-          <Card>
-            <CardHeader>
-              <CardTitle>File Paths</CardTitle>
-              <CardDescription>
-                Set the destination folder for generated and uploaded consent forms. Use UNC paths for network locations (e.g., `\\\\server\\share\\folder`).
-              </CardDescription>
-            </CardHeader>
-            {filePathsCardContent()}
-          </Card>
-
-          <Card>
-            <CardHeader>
-                <CardTitle>Settings</CardTitle>
-                <CardDescription>
-                    Adjust application behavior and validation rules.
-                </CardDescription>
-            </CardHeader>
-            {settingsCardContent()}
-          </Card>
-
-           <Card>
-            <CardHeader>
-                <CardTitle>PDF Handling</CardTitle>
-                <CardDescription>
-                    Choose how to open the generated PDF file.
-                </CardDescription>
-            </CardHeader>
-            {pdfHandlingCardContent()}
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Staff Management</CardTitle>
-              <CardDescription>
-                Add, edit, or remove staff members from the list used to populate clinician details on forms.
-              </CardDescription>
-            </CardHeader>
-            <CardFooter>
-               <Link href="/config/staff" passHref>
-                  <Button variant="outline" disabled={!hasWriteAccess}>
-                    <Users className="mr-2 h-4 w-4" />
-                    Edit Staff List
-                  </Button>
-               </Link>
-            </CardFooter>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Tumour Site Management</CardTitle>
-              <CardDescription>
-                Manage the list of tumour sites used in the application.
-              </CardDescription>
-            </CardHeader>
-            <CardFooter>
-               <Link href="/config/tumour-sites" passHref>
-                  <Button variant="outline" disabled={!hasWriteAccess}>
-                    <MapPin className="mr-2 h-4 w-4" />
-                    Edit Tumour Sites
-                  </Button>
-               </Link>
-            </CardFooter>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Email Management</CardTitle>
-              <CardDescription>
-                Configure settings for sending email notifications.
-              </CardDescription>
-            </CardHeader>
-            <CardFooter>
-               <Link href="/config/email" passHref>
-                  <Button variant="outline" disabled={!hasWriteAccess}>
-                    <Mail className="mr-2 h-4 w-4" />
-                    Edit Email Config
-                  </Button>
-               </Link>
-            </CardFooter>
-          </Card>
-          
-          {hasFullAccess && (
-            <Card>
-                <CardHeader>
-                    <CardTitle>Authentication</CardTitle>
-                    <CardDescription>Configure and test the connection to your Active Directory server for user authentication.</CardDescription>
-                </CardHeader>
-                <CardFooter>
-                    <Link href="/config/ad" passHref>
-                        <Button variant="outline">
-                            <Network className="mr-2 h-4 w-4" />
-                            Configure Active Directory
-                        </Button>
-                    </Link>
-                </CardFooter>
-            </Card>
+          {hasNoRoles && (
+              <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Limited Access</AlertTitle>
+                  <AlertDescription>
+                      You have successfully authenticated, but your account does not have any administrative roles assigned for this application. You can view basic configuration below. Please contact a full administrator to be granted access.
+                  </AlertDescription>
+              </Alert>
           )}
 
-           <Card>
-            <CardHeader>
-                <CardTitle>Backup & Restore Settings</CardTitle>
-                <CardDescription>Export or import the full application configuration (including staff). The staff list can also be managed separately.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={handleExport}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Export App Settings
-                </Button>
-                {hasWriteAccess && (
-                    <>
-                    <Button variant="outline" onClick={handleImportClick} disabled={!hasWriteAccess}>
-                        <Upload className="mr-2 h-4 w-4" />
-                        Import App Settings
-                    </Button>
-                    <input
-                        type="file"
-                        ref={importFileRef}
-                        onChange={handleFileImport}
-                        accept="application/json"
-                        className="hidden"
-                    />
-                    </>
+          {dataSourceCard()}
+          {filePathsCard()}
+
+          {!hasNoRoles && (
+              <>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Settings</CardTitle>
+                        <CardDescription>
+                            Adjust application behavior and validation rules.
+                        </CardDescription>
+                    </CardHeader>
+                    {settingsCardContent()}
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>PDF Handling</CardTitle>
+                        <CardDescription>
+                            Choose how to open the generated PDF file.
+                        </CardDescription>
+                    </CardHeader>
+                    {pdfHandlingCardContent()}
+                </Card>
+                
+                <Card>
+                    <CardHeader>
+                    <CardTitle>Staff Management</CardTitle>
+                    <CardDescription>
+                        Add, edit, or remove staff members from the list used to populate clinician details on forms.
+                    </CardDescription>
+                    </CardHeader>
+                    <CardFooter>
+                    <Link href="/config/staff" passHref>
+                        <Button variant="outline" disabled={allButtonsDisabled}>
+                            <Users className="mr-2 h-4 w-4" />
+                            Edit Staff List
+                        </Button>
+                    </Link>
+                    </CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                    <CardTitle>Tumour Site Management</CardTitle>
+                    <CardDescription>
+                        Manage the list of tumour sites used in the application.
+                    </CardDescription>
+                    </CardHeader>
+                    <CardFooter>
+                    <Link href="/config/tumour-sites" passHref>
+                        <Button variant="outline" disabled={allButtonsDisabled}>
+                            <MapPin className="mr-2 h-4 w-4" />
+                            Edit Tumour Sites
+                        </Button>
+                    </Link>
+                    </CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                    <CardTitle>Email Management</CardTitle>
+                    <CardDescription>
+                        Configure settings for sending email notifications.
+                    </CardDescription>
+                    </CardHeader>
+                    <CardFooter>
+                    <Link href="/config/email" passHref>
+                        <Button variant="outline" disabled={allButtonsDisabled}>
+                            <Mail className="mr-2 h-4 w-4" />
+                            Edit Email Config
+                        </Button>
+                    </Link>
+                    </CardFooter>
+                </Card>
+                
+                {hasFullAccess && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Authentication</CardTitle>
+                            <CardDescription>Configure and test the connection to your Active Directory server for user authentication.</CardDescription>
+                        </CardHeader>
+                        <CardFooter>
+                            <Link href="/config/ad" passHref>
+                                <Button variant="outline">
+                                    <Network className="mr-2 h-4 w-4" />
+                                    Configure Active Directory
+                                </Button>
+                            </Link>
+                        </CardFooter>
+                    </Card>
                 )}
-            </CardContent>
-          </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Backup & Restore Settings</CardTitle>
+                        <CardDescription>Export or import the full application configuration (including staff). The staff list can also be managed separately.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-wrap gap-2">
+                        <Button variant="outline" onClick={handleExport} disabled={allButtonsDisabled}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Export App Settings
+                        </Button>
+                        {hasWriteAccess && (
+                            <>
+                            <Button variant="outline" onClick={handleImportClick} disabled={!hasWriteAccess}>
+                                <Upload className="mr-2 h-4 w-4" />
+                                Import App Settings
+                            </Button>
+                            <input
+                                type="file"
+                                ref={importFileRef}
+                                onChange={handleFileImport}
+                                accept="application/json"
+                                className="hidden"
+                            />
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
+              </>
+          )}
 
         </div>
       </main>
