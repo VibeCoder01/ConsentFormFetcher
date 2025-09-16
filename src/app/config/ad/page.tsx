@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Save, Loader2, TestTube2, Info } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, TestTube2, AlertTriangle } from 'lucide-react';
 import type { ADConfig } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -191,6 +191,15 @@ export default function ADConfigPage() {
       </header>
       <main className="flex-1 p-4 md:p-8 lg:p-12">
         <div className="mx-auto max-w-2xl space-y-8">
+             {!isLoading && !config.caFile && (
+                <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Insecure Connection</AlertTitle>
+                    <AlertDescription>
+                        No CA certificate file is provided. The connection to Active Directory will not be secure. This is not recommended for production environments.
+                    </AlertDescription>
+                </Alert>
+            )}
             <Card>
                 <CardHeader>
                     <CardTitle>Connection Settings</CardTitle>
@@ -221,12 +230,11 @@ export default function ADConfigPage() {
                     </CardContent>
                 )}
                  <CardFooter>
-                    <Alert variant={!config.caFile ? "destructive" : "default"}>
-                        <Info className="h-4 w-4" />
+                    <Alert>
+                        <AlertTriangle className="h-4 w-4" />
                         <AlertTitle>Security Note</AlertTitle>
                         <AlertDescription>
                             The Bind Password is not displayed. To change it, enter a new password and save. 
-                            If no CA file is provided, certificate validation will be skipped, making the connection insecure. This is not recommended for production environments.
                         </AlertDescription>
                     </Alert>
                 </CardFooter>
