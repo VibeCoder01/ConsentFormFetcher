@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import type { SessionData } from '@/lib/types';
+import type { SessionData, AccessLevel } from '@/lib/types';
 import adConfig from '@/config/ad.json';
 
 type SessionHookResult = {
@@ -18,7 +17,8 @@ export function useSession(): SessionHookResult {
   const [session, setSession] = useState<(SessionData & { isLoggedIn: true }) | { isLoggedIn: false }>({ isLoggedIn: false });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Enter setup mode if the full access group is missing or is still the default placeholder.
+  // This check MUST mirror the logic in middleware.ts.
+  // It determines if the UI should render in "setup mode" with full permissions.
   const isInSetupMode = !adConfig.groupDNs.full || adConfig.groupDNs.full === "CN=AppAdmins-Full,OU=Groups,DC=domain,DC=com";
 
   useEffect(() => {
