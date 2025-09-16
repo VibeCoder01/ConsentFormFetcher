@@ -274,7 +274,8 @@ export default function ConfigPage() {
     )
   }
 
-  const hasWriteAccess = session.isLoggedIn && (session.roles.includes('change') || session.roles.includes('full'));
+  const hasWriteAccess = session.isLoggedIn && session.roles.includes('change');
+  const hasFullAccess = session.isLoggedIn && session.roles.includes('full');
 
   const dataSourceCardContent = () => {
     if (isLoadingConfig) {
@@ -576,7 +577,7 @@ export default function ConfigPage() {
             </CardFooter>
           </Card>
           
-          {hasWriteAccess && (
+          {hasFullAccess && (
             <Card>
                 <CardHeader>
                     <CardTitle>Authentication</CardTitle>
