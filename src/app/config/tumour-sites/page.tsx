@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { useSession } from '@/hooks/use-session';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,10 @@ export default function TumourSitesConfigPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  const { session, isLoading: isSessionLoading } = useSession();
+  const hasFullAccess = session.isLoggedIn && session.roles.includes('full');
+  const canEdit = session.isLoggedIn && (session.roles.includes('change') || hasFullAccess);
 
   const isModified = JSON.stringify(sites) !== JSON.stringify(initialSites);
 
@@ -47,21 +52,25 @@ export default function TumourSitesConfigPage() {
   }, [toast]);
 
   const handleFieldChange = (index: number, value: string) => {
+    if (!canEdit) return;
     const updatedSites = [...sites];
     updatedSites[index] = { ...updatedSites[index], name: value };
     setSites(updatedSites);
   };
 
   const addSite = () => {
+    if (!canEdit) return;
     setSites([...sites, { id: `new_${Date.now()}`, name: '' }]);
   };
 
   const removeSite = (index: number) => {
+    if (!canEdit) return;
     const updatedSites = sites.filter((_, i) => i !== index);
     setSites(updatedSites);
   };
 
   const handleSaveChanges = async () => {
+    if (!canEdit) return;
     setIsSaving(true);
     const validSites = sites.filter(site => site.name.trim() !== '');
     try {
@@ -95,6 +104,7 @@ export default function TumourSitesConfigPage() {
   };
   
   const handleClearList = () => {
+      if (!canEdit) return;
       setSites([]);
       setShowClearConfirm(false);
       toast({
@@ -130,6 +140,14 @@ export default function TumourSitesConfigPage() {
     </div>
   );
 
+  if (isSessionLoading) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="flex h-16 items-center border-b bg-card px-4 md:px-6 justify-between">
@@ -142,15 +160,15 @@ export default function TumourSitesConfigPage() {
             <h1 className="ml-4 text-xl font-bold">Edit Tumour Sites</h1>
          </div>
          <div className="flex items-center gap-2">
-            <Button onClick={addSite} disabled={isLastSiteEmpty()}>
+            <Button onClick={addSite} disabled={!canEdit || isLastSiteEmpty()}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Site
             </Button>
-             <Button variant="outline" onClick={() => setShowClearConfirm(true)} disabled={sites.length === 0}>
+             <Button variant="outline" onClick={() => setShowClearConfirm(true)} disabled={!canEdit || sites.length === 0}>
                 <Eraser className="mr-2 h-4 w-4" />
                 Clear List
             </Button>
-            <Button onClick={handleSaveChanges} disabled={isSaving || !isModified}>
+            <Button onClick={handleSaveChanges} disabled={!canEdit || isSaving || !isModified}>
               {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
               Save Changes
             </Button>
@@ -176,12 +194,13 @@ export default function TumourSitesConfigPage() {
                                     id={`site-${index}`} 
                                     value={site.name} 
                                     onChange={(e) => handleFieldChange(index, e.target.value)} 
-                                    placeholder="e.g., Head & Neck" 
+                                    placeholder="e.g., Head & Neck"
+                                    disabled={!canEdit} 
                                 />
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button variant="destructive" size="sm" onClick={() => removeSite(index)}>
+                            <Button variant="destructive" size="sm" onClick={() => removeSite(index)} disabled={!canEdit}>
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Remove
                             </Button>

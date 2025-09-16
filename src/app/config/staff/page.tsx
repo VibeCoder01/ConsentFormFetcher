@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { useSession } from '@/hooks/use-session';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -28,6 +29,10 @@ export default function StaffConfigPage() {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const importFileRef = useRef<HTMLInputElement>(null);
+
+  const { session, isLoading: isSessionLoading } = useSession();
+  const hasFullAccess = session.isLoggedIn && session.roles.includes('full');
+  const canEdit = session.isLoggedIn && (session.roles.includes('change') || hasFullAccess);
 
   const isModified = selectedStaff && editedStaff && JSON.stringify(selectedStaff) !== JSON.stringify(editedStaff);
 
@@ -80,19 +85,21 @@ export default function StaffConfigPage() {
   };
 
   const handleFieldChange = (field: keyof Omit<StaffMember, 'id'>, value: string | null) => {
+    if (!canEdit) return;
     if (editedStaff) {
       setEditedStaff({ ...editedStaff, [field]: value });
     }
   };
 
   const addStaffMember = () => {
+    if (!canEdit) return;
     const newMember: StaffMember = { id: `new_${Date.now()}`, name: '', title: '', phone: '', speciality1: null, speciality2: null, speciality3: null, emailRecipients: '' };
     setStaff([...staff, newMember]);
     handleSelectStaff(newMember);
   };
 
   const removeStaffMember = async () => {
-    if (!selectedStaff) return;
+    if (!canEdit || !selectedStaff) return;
     
     const updatedStaff = staff.filter(s => s.id !== selectedStaff.id);
     setStaff(updatedStaff);
@@ -103,6 +110,7 @@ export default function StaffConfigPage() {
   };
 
   const persistChanges = async (staffList: StaffMember[]) => {
+      if (!canEdit) return false;
       setIsSaving(true);
       try {
           const response = await fetch('/api/staff', {
@@ -126,7 +134,7 @@ export default function StaffConfigPage() {
 
 
   const handleUpdate = async () => {
-    if (!editedStaff || !selectedStaff) return;
+    if (!canEdit || !editedStaff || !selectedStaff) return;
     
     const updatedList = staff.map(s => s.id === selectedStaff.id ? editedStaff : s).sort((a,b) => a.name.localeCompare(b.name));
     
@@ -144,6 +152,7 @@ export default function StaffConfigPage() {
   };
 
   const handleClearList = async () => {
+      if (!canEdit) return;
       setShowClearConfirm(false);
       const success = await persistChanges([]);
       if (success) {
@@ -153,6 +162,7 @@ export default function StaffConfigPage() {
   };
 
   const handleExport = async () => {
+    if (!canEdit) return;
     if (staff.length === 0) {
         toast({ title: 'Nothing to Export', description: 'The staff list is empty.' });
         return;
@@ -170,9 +180,13 @@ export default function StaffConfigPage() {
     toast({ title: 'Success', description: 'The current staff list has been exported.'});
   };
 
-  const handleImportClick = () => { importFileRef.current?.click(); };
+  const handleImportClick = () => {
+      if (!canEdit) return;
+      importFileRef.current?.click();
+  };
 
   const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (!canEdit) return;
       const file = event.target.files?.[0];
       if (!file) return;
 
@@ -209,14 +223,23 @@ export default function StaffConfigPage() {
     </div>
   );
 
+  if (isSessionLoading) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   const SpecialitySelector = ({ field }: { field: 'speciality1' | 'speciality2' | 'speciality3' }) => (
     <div className="space-y-1.5 relative">
         <Label htmlFor={field}>Tumour Site Speciality</Label>
         <Select
             value={editedStaff?.[field] || ''}
             onValueChange={(value) => handleFieldChange(field, value)}
+            disabled={!canEdit}
         >
-            <SelectTrigger id={field}>
+            <SelectTrigger id={field} disabled={!canEdit}>
                 <SelectValue placeholder="Select speciality..." />
             </SelectTrigger>
             <SelectContent>
@@ -231,6 +254,7 @@ export default function StaffConfigPage() {
                 size="icon"
                 className="absolute top-6 right-8 h-6 w-6"
                 onClick={() => handleFieldChange(field, null)}
+                disabled={!canEdit}
             >
                 <X className="h-4 w-4" />
             </Button>
@@ -248,11 +272,23 @@ export default function StaffConfigPage() {
             <h1 className="ml-4 text-xl font-bold">Edit Staff List</h1>
          </div>
          <div className="flex items-center gap-2">
-            <Button onClick={addStaffMember}> <PlusCircle className="mr-2 h-4 w-4" /> Add Staff Member </Button>
-            <Button variant="outline" onClick={handleImportClick}> <Upload className="mr-2 h-4 w-4" /> Import </Button>
-            <Button variant="outline" onClick={handleExport} disabled={staff.length === 0}> <Download className="mr-2 h-4 w-4" /> Export </Button>
-            <Button variant="destructive" onClick={() => setShowClearConfirm(true)} disabled={staff.length === 0}> <Eraser className="mr-2 h-4 w-4" /> Clear List </Button>
-             <input type="file" ref={importFileRef} onChange={handleFileImport} accept="application/json" className="hidden"/>
+            <Button onClick={addStaffMember} disabled={!canEdit}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Staff Member
+            </Button>
+            <Button variant="outline" onClick={handleImportClick} disabled={!canEdit}>
+                <Upload className="mr-2 h-4 w-4" />
+                Import
+            </Button>
+            <Button variant="outline" onClick={handleExport} disabled={!canEdit || staff.length === 0}>
+                <Download className="mr-2 h-4 w-4" />
+                Export
+            </Button>
+            <Button variant="destructive" onClick={() => setShowClearConfirm(true)} disabled={!canEdit || staff.length === 0}>
+                <Eraser className="mr-2 h-4 w-4" />
+                Clear List
+            </Button>
+            <input type="file" ref={importFileRef} onChange={handleFileImport} accept="application/json" className="hidden" disabled={!canEdit}/>
          </div>
       </header>
       <div className="flex flex-1 overflow-hidden">
@@ -297,27 +333,27 @@ export default function StaffConfigPage() {
                     <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         <div className="space-y-1.5">
                             <Label htmlFor="name">Full Name</Label>
-                            <Input id="name" value={editedStaff.name} onChange={(e) => handleFieldChange('name', e.target.value)} placeholder="e.g., Dr. Jane Doe"/>
+                            <Input id="name" disabled={!canEdit} value={editedStaff.name} onChange={(e) => handleFieldChange('name', e.target.value)} placeholder="e.g., Dr. Jane Doe"/>
                         </div>
                         <div className="space-y-1.5">
                             <Label htmlFor="title">Job Title</Label>
-                            <Input id="title" value={editedStaff.title} onChange={(e) => handleFieldChange('title', e.target.value)} placeholder="e.g., Consultant Oncologist"/>
+                            <Input id="title" disabled={!canEdit} value={editedStaff.title} onChange={(e) => handleFieldChange('title', e.target.value)} placeholder="e.g., Consultant Oncologist"/>
                         </div>
                         <div className="space-y-1.5">
                             <Label htmlFor="phone">Phone/Bleep</Label>
-                            <Input id="phone" value={editedStaff.phone} onChange={(e) => handleFieldChange('phone', e.target.value)} placeholder="e.g., 1234"/>
+                            <Input id="phone" disabled={!canEdit} value={editedStaff.phone} onChange={(e) => handleFieldChange('phone', e.target.value)} placeholder="e.g., 1234"/>
                         </div>
                          <SpecialitySelector field="speciality1" />
                          <SpecialitySelector field="speciality2" />
                          <SpecialitySelector field="speciality3" />
                          <div className="space-y-1.5 md:col-span-3">
                             <Label htmlFor="emailRecipients">Email Recipients (comma-separated)</Label>
-                            <Input id="emailRecipients" value={editedStaff.emailRecipients} onChange={(e) => handleFieldChange('emailRecipients', e.target.value)} placeholder="e.g., recipient1@nhs.net, recipient2@nhs.net"/>
+                            <Input id="emailRecipients" disabled={!canEdit} value={editedStaff.emailRecipients} onChange={(e) => handleFieldChange('emailRecipients', e.target.value)} placeholder="e.g., recipient1@nhs.net, recipient2@nhs.net"/>
                         </div>
                     </CardContent>
                     <CardFooter className="justify-end gap-2">
-                        <Button variant="destructive" onClick={removeStaffMember}> <Trash2 className="mr-2 h-4 w-4" /> Remove </Button>
-                        <Button onClick={handleUpdate} disabled={isSaving || !isModified}>
+                        <Button variant="destructive" onClick={removeStaffMember} disabled={!canEdit}> <Trash2 className="mr-2 h-4 w-4" /> Remove </Button>
+                        <Button onClick={handleUpdate} disabled={!canEdit || isSaving || !isModified}>
                           {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                           Update
                         </Button>

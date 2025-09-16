@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { useSession } from '@/hooks/use-session';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,10 @@ export default function EmailConfigPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [errors, setErrors] = useState<Record<number, string>>({});
+
+  const { session, isLoading: isSessionLoading } = useSession();
+  const hasFullAccess = session.isLoggedIn && session.roles.includes('full');
+  const canEdit = session.isLoggedIn && (session.roles.includes('change') || hasFullAccess);
 
   const isModified = JSON.stringify(emails) !== JSON.stringify(initialEmails);
 
@@ -52,6 +57,7 @@ export default function EmailConfigPage() {
   }, [toast]);
 
   const handleFieldChange = (index: number, value: string) => {
+    if (!canEdit) return;
     const updatedEmails = [...emails];
     updatedEmails[index] = { ...updatedEmails[index], email: value };
     setEmails(updatedEmails);
@@ -64,10 +70,12 @@ export default function EmailConfigPage() {
   };
 
   const addEmail = () => {
+    if (!canEdit) return;
     setEmails([...emails, { id: `new_${Date.now()}`, email: '' }]);
   };
 
   const removeEmail = (index: number) => {
+    if (!canEdit) return;
     const updatedEmails = emails.filter((_, i) => i !== index);
     setEmails(updatedEmails);
   };
@@ -104,6 +112,7 @@ export default function EmailConfigPage() {
   }
 
   const handleSaveChanges = async () => {
+    if (!canEdit) return;
     if (!validateEmails()) {
         toast({
             variant: "destructive",
@@ -147,6 +156,7 @@ export default function EmailConfigPage() {
   };
   
   const handleClearList = () => {
+      if (!canEdit) return;
       setEmails([]);
       setErrors({});
       setShowClearConfirm(false);
@@ -183,6 +193,14 @@ export default function EmailConfigPage() {
     </div>
   );
 
+  if (isSessionLoading) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="flex h-16 items-center border-b bg-card px-4 md:px-6 justify-between">
@@ -195,15 +213,15 @@ export default function EmailConfigPage() {
             <h1 className="ml-4 text-xl font-bold">Edit Email List</h1>
          </div>
          <div className="flex items-center gap-2">
-            <Button onClick={addEmail} disabled={isLastEmailEmpty()}>
+            <Button onClick={addEmail} disabled={!canEdit || isLastEmailEmpty()}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Email
             </Button>
-             <Button variant="outline" onClick={() => setShowClearConfirm(true)} disabled={emails.length === 0}>
+             <Button variant="outline" onClick={() => setShowClearConfirm(true)} disabled={!canEdit || emails.length === 0}>
                 <Eraser className="mr-2 h-4 w-4" />
                 Clear List
             </Button>
-            <Button onClick={handleSaveChanges} disabled={isSaving || !isModified}>
+            <Button onClick={handleSaveChanges} disabled={!canEdit || isSaving || !isModified}>
               {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
               Save Changes
             </Button>
@@ -232,12 +250,13 @@ export default function EmailConfigPage() {
                                     placeholder="e.g., user@example.com" 
                                     type="email"
                                     className={cn(errors[index] && "border-destructive focus-visible:ring-destructive")}
+                                    disabled={!canEdit}
                                 />
                                 {errors[index] && <p className="text-sm text-destructive mt-1">{errors[index]}</p>}
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button variant="destructive" size="sm" onClick={() => removeEmail(index)}>
+                            <Button variant="destructive" size="sm" onClick={() => removeEmail(index)} disabled={!canEdit}>
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Remove
                             </Button>
