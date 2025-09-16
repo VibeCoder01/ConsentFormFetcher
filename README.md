@@ -75,10 +75,10 @@ After the consent form has been generated, located using the UNC path, signed, a
 
 ### 7. Configuration
 
--   Click the **Settings** icon (⚙️) in the top-right corner to go to the Configuration page. Access is restricted to authorized administrators who are logged into KOMS.
--   From here, you can manage the application's data sources, settings, and staff list.
+-   Click the **Settings** icon (⚙️) in the top-right corner to go to the Configuration page. Access is restricted to authorized administrators who are logged into the network via Active Directory. If AD groups are not yet configured, the application enters an "initial setup" mode, allowing unauthenticated access to the configuration page so an admin can set up the AD connection.
+-   From here, you can manage the application's data sources, settings, and staff list according to your access level.
 
--   **Data Source**: You can view and edit the URL from which the application scrapes consent forms. Click **Save Changes** to apply, or **Restore Default** to revert.
+-   **Data Source**: You can view and edit the URL from which the application scrapes consent forms.
 -   **File Paths**:
     -   **RT Consent Folder**: Set the full server-side path where successfully uploaded and signed consent forms should be stored (e.g., `C:\VC01\RT_Consent`).
 -   **Settings**:
@@ -101,18 +101,15 @@ After the consent form has been generated, located using the UNC path, signed, a
 
 ### 8. Admin & Access Control
 
-Access to the main Configuration page is restricted to authorized administrators. The system uses a live connection to KOMS to verify the user's identity on every visit.
+Access to the Configuration page is managed by Active Directory security groups. There are four levels of access:
 
-- **Access Levels**: There are three levels of administrative access:
-    - **Read**: Can view all application settings but cannot make any changes.
-    - **Change**: Can view and modify all settings, but cannot manage the list of administrators.
-    - **Full**: Can modify all settings and has full control over adding, editing, and removing other administrators.
+-   **Authenticated (No Roles)**: A user who successfully logs in but is not a member of any of the application's admin groups. They can see the "Data Source" and "File Paths" configuration, but all fields are disabled (read-only). All other configuration sections are hidden.
 
-- **Admin Management**: Users with `Full` access will see an **"Edit Admins"** button on the Configuration page. This leads to a dedicated page where they can:
-    - Add new administrators by providing their KOMS username.
-    - Change the access level of existing administrators.
-    - Remove administrators from the list.
-    - Use a "Clear List" function, which safely removes only `Read` and `Change` level admins, leaving `Full` admins untouched.
+-   **Read Admin**: A member of the "Read Access" AD group. They can view all application settings, but all controls (buttons, inputs, switches) are disabled. This is a true read-only role for the entire configuration.
+
+-   **Change Admin**: A member of the "Change Access" AD group. They have full read/write access to all application settings, including data sources, file paths, staff lists, and behavior toggles. They **cannot**, however, change the core Active Directory authentication settings.
+
+-   **Full Admin**: A member of the "Full Access" AD group. This is the super-administrator. They have all the permissions of a `Change` admin, plus the exclusive ability to configure the Active Directory connection itself. This role is required for the initial setup and for managing the application's security.
 
 ---
 
