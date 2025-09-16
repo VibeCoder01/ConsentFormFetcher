@@ -5,7 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sessionOptions, SessionData } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
-  const session = await getIronSession<SessionData>(cookies(), sessionOptions);
+  const cookieStore = await cookies();
+  const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
 
   if (session.isLoggedIn !== true) {
     return NextResponse.json({
