@@ -629,8 +629,7 @@ export default function ConfigPage() {
                             <Download className="mr-2 h-4 w-4" />
                             Export App Settings
                         </Button>
-                        {hasWriteAccess && (
-                            <>
+                        <>
                             <Button variant="outline" onClick={handleImportClick} disabled={!hasWriteAccess}>
                                 <Upload className="mr-2 h-4 w-4" />
                                 Import App Settings
@@ -641,9 +640,9 @@ export default function ConfigPage() {
                                 onChange={handleFileImport}
                                 accept="application/json"
                                 className="hidden"
+                                disabled={!hasWriteAccess}
                             />
-                            </>
-                        )}
+                        </>
                     </CardContent>
                 </Card>
               </>

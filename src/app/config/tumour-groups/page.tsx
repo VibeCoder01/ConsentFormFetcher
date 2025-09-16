@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { useSession } from '@/hooks/use-session';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,10 @@ export default function TumourGroupsConfigPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  const { session, isLoading: isSessionLoading } = useSession();
+  const hasFullAccess = session.isLoggedIn && session.roles.includes('full');
+  const canEdit = session.isLoggedIn && (session.roles.includes('change') || hasFullAccess);
 
   const isModified = JSON.stringify(groups) !== JSON.stringify(initialGroups);
 
@@ -47,21 +52,25 @@ export default function TumourGroupsConfigPage() {
   }, [toast]);
 
   const handleFieldChange = (index: number, value: string) => {
+    if (!canEdit) return;
     const updatedGroups = [...groups];
     updatedGroups[index] = { ...updatedGroups[index], name: value };
     setGroups(updatedGroups);
   };
 
   const addGroup = () => {
+    if (!canEdit) return;
     setGroups([...groups, { id: `new_${Date.now()}`, name: '' }]);
   };
 
   const removeGroup = (index: number) => {
+    if (!canEdit) return;
     const updatedGroups = groups.filter((_, i) => i !== index);
     setGroups(updatedGroups);
   };
 
   const handleSaveChanges = async () => {
+    if (!canEdit) return;
     setIsSaving(true);
     const validGroups = groups.filter(group => group.name.trim() !== '');
     try {
@@ -95,6 +104,7 @@ export default function TumourGroupsConfigPage() {
   };
   
   const handleClearList = () => {
+      if (!canEdit) return;
       setGroups([]);
       setShowClearConfirm(false);
       toast({
@@ -130,6 +140,14 @@ export default function TumourGroupsConfigPage() {
     </div>
   );
 
+  if (isSessionLoading) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="flex h-16 items-center border-b bg-card px-4 md:px-6 justify-between">
@@ -142,15 +160,15 @@ export default function TumourGroupsConfigPage() {
             <h1 className="ml-4 text-xl font-bold">Edit Tumour Groups</h1>
          </div>
          <div className="flex items-center gap-2">
-            <Button onClick={addGroup} disabled={isLastGroupEmpty()}>
+            <Button onClick={addGroup} disabled={!canEdit || isLastGroupEmpty()}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Group
             </Button>
-             <Button variant="outline" onClick={() => setShowClearConfirm(true)} disabled={groups.length === 0}>
+             <Button variant="outline" onClick={() => setShowClearConfirm(true)} disabled={!canEdit || groups.length === 0}>
                 <Eraser className="mr-2 h-4 w-4" />
                 Clear List
             </Button>
-            <Button onClick={handleSaveChanges} disabled={isSaving || !isModified}>
+            <Button onClick={handleSaveChanges} disabled={!canEdit || isSaving || !isModified}>
               {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
               Save Changes
             </Button>
@@ -176,12 +194,13 @@ export default function TumourGroupsConfigPage() {
                                     id={`group-${index}`} 
                                     value={group.name} 
                                     onChange={(e) => handleFieldChange(index, e.target.value)} 
-                                    placeholder="e.g., Head & Neck" 
+                                    placeholder="e.g., Head & Neck"
+                                    disabled={!canEdit} 
                                 />
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button variant="destructive" size="sm" onClick={() => removeGroup(index)}>
+                            <Button variant="destructive" size="sm" onClick={() => removeGroup(index)} disabled={!canEdit}>
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Remove
                             </Button>
