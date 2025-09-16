@@ -29,7 +29,8 @@ export async function POST(req: NextRequest) {
     }
     
     // Get session and save data
-    const session = await getIronSession<SessionData>(cookies(), sessionOptions);
+    const cookieStore = await cookies();
+    const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
     session.username = authResult.username;
     session.roles = authResult.roles;
     session.isLoggedIn = true;
