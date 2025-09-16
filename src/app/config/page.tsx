@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -275,7 +274,7 @@ export default function ConfigPage() {
     )
   }
 
-  const hasWriteAccess = session?.roles.includes('change') || session?.roles.includes('full');
+  const hasWriteAccess = session.isLoggedIn && (session.roles.includes('change') || session.roles.includes('full'));
 
   const dataSourceCardContent = () => {
     if (isLoadingConfig) {
@@ -445,7 +444,7 @@ export default function ConfigPage() {
               onChange={(e) => setRtConsentFolder(e.target.value)}
               aria-label="RT Consent Folder Path"
               className="font-mono text-sm"
-              placeholder="e.g., \\server\\share\\consent_forms"
+              placeholder="e.g., \\\\server\\share\\consent_forms"
               disabled={!hasWriteAccess}
           />
          </div>
@@ -476,10 +475,12 @@ export default function ConfigPage() {
               <RefreshCw className={`mr-2 h-4 w-4 ${isScraping ? 'animate-spin' : ''}`} />
               Check for Updated Forms
             </Button>
-            <Button variant="outline" onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-            </Button>
+            {session.isLoggedIn && session.username !== 'setup-admin' && (
+              <Button variant="outline" onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+              </Button>
+            )}
         </div>
       </header>
       <main className="flex-1 p-4 md:p-8 lg:p-12">
@@ -498,7 +499,7 @@ export default function ConfigPage() {
             <CardHeader>
               <CardTitle>File Paths</CardTitle>
               <CardDescription>
-                Set the destination folder for generated and uploaded consent forms. Use UNC paths for network locations (e.g., `\\server\share\folder`).
+                Set the destination folder for generated and uploaded consent forms. Use UNC paths for network locations (e.g., `\\\\server\\share\\folder`).
               </CardDescription>
             </CardHeader>
             {filePathsCardContent()}
