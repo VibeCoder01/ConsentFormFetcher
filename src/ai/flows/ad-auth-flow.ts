@@ -101,22 +101,24 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
       return se.length === 1;
     }
 
-    const roles: AccessLevel[] = [];
-    if (await isMemberOf(config.groupDNs.read)) roles.push('read');
-    if (await isMemberOf(config.groupDNs.change)) roles.push('change');
-    if (await isMemberOf(config.groupDNs.full)) roles.push('full');
+    // All authenticated users get 'read' access by default.
+    const finalRoles = new Set<AccessLevel>(['read']);
     
-    // Ensure 'full' implies 'change' and 'read', and 'change' implies 'read'
-    const finalRoles = new Set<AccessLevel>(roles);
+    // Check for 'change' and 'full' group memberships.
+    if (config.groupDNs.change && await isMemberOf(config.groupDNs.change)) {
+        finalRoles.add('change');
+    }
+    if (config.groupDNs.full && await isMemberOf(config.groupDNs.full)) {
+        finalRoles.add('full');
+    }
+    
+    // Ensure 'full' implies 'change' (and 'read' is already default)
     if (finalRoles.has('full')) {
         finalRoles.add('change');
-        finalRoles.add('read');
-    }
-    if(finalRoles.has('change')) {
-        finalRoles.add('read');
     }
 
     if(finalRoles.size === 0) {
+        // This case should theoretically not be hit anymore, but left for safety.
         return { ok: false, reason: 'User has no assigned roles for this application.' };
     }
 
@@ -166,3 +168,4 @@ export async function testAdConnection(): Promise<{ success: boolean; message: s
         return { success: false, message: message };
     }
 }
+
