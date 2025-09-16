@@ -75,7 +75,7 @@ After the consent form has been generated, located using the UNC path, signed, a
 
 ### 7. Configuration
 
--   Click the **Settings** icon (⚙️) in the top-right corner to go to the Configuration page.
+-   Click the **Settings** icon (⚙️) in the top-right corner to go to the Configuration page. Access is restricted to authorized administrators who are logged into KOMS.
 -   From here, you can manage the application's data sources, settings, and staff list.
 
 -   **Data Source**: You can view and edit the URL from which the application scrapes consent forms. Click **Save Changes** to apply, or **Restore Default** to revert.
@@ -99,6 +99,21 @@ After the consent form has been generated, located using the UNC path, signed, a
 -   **Tumour Site Management**: Click **Edit Tumour Sites** to manage the list of tumour sites that can be assigned as specialities to staff members.
 -   **Email Management**: Click **Edit Email Config** to navigate to a page where you can manage a list of email recipients. Emails must be in a valid format and unique.
 
+### 8. Admin & Access Control
+
+Access to the main Configuration page is restricted to authorized administrators. The system uses a live connection to KOMS to verify the user's identity on every visit.
+
+- **Access Levels**: There are three levels of administrative access:
+    - **Read**: Can view all application settings but cannot make any changes.
+    - **Change**: Can view and modify all settings, but cannot manage the list of administrators.
+    - **Full**: Can modify all settings and has full control over adding, editing, and removing other administrators.
+
+- **Admin Management**: Users with `Full` access will see an **"Edit Admins"** button on the Configuration page. This leads to a dedicated page where they can:
+    - Add new administrators by providing their KOMS username.
+    - Change the access level of existing administrators.
+    - Remove administrators from the list.
+    - Use a "Clear List" function, which safely removes only `Read` and `Change` level admins, leaving `Full` admins untouched.
+
 ---
 
 ## In-built clinical-safety controls
@@ -109,6 +124,7 @@ After the consent form has been generated, located using the UNC path, signed, a
 | Automatic blanking of first witness fields immediately before PDF generation | Prevents patient data creeping into witness/sign-off boxes – a known safety hazard in radiology consent. | DCB 0129 risk control; DTAC C1 (“no erroneous clinical data”) |
 | Automatic blanking of final date fields | Prevents auto-population of witness signature dates, reducing the risk of a user overlooking a required manual entry. | DCB 0129 risk control; DTAC C1 (“no erroneous clinical data”) |
 | Always fetches the latest RCR template from the live website | Removes the risk of using outdated consent forms whose wording or complication lists have been revised. | DCB 0129 safety requirement to “maintain current clinical content”; NICE ESF B5 (currency of content) |
+| Live KOMS session check for config access | Ensures only currently authenticated KOMS users with explicit admin rights can change application settings. | DSPT / local IG policy; NCSC CAF B2 (access control) |
 
 ## Data-protection & information-governance niceties
 | Feature | Positive impact | IG artefact it aligns with |
@@ -116,6 +132,7 @@ After the consent form has been generated, located using the UNC path, signed, a
 | KOMS “R-number” format validation (‘R’ + 7 digits) | Reduces the chance of pulling the wrong patient record – speaks to the GDPR accuracy principle. | Art 5(1)(d) UK GDPR accuracy • DSPT outcome A1 (“accurate data”) |
 | No form templates cached; filled PDFs stored only in /tmp with random IDs | Minimises long-term personal-data footprint and aids secure-deletion; supports storage-limitation and data-minimisation. | GDPR Art 5(1)(c)(e); DSPT outcome B2 (“only necessary data retained”) |
 | User decides whether the PDF opens in-browser or downloads | Lets trusts disable browser rendering if their IG policy forbids patient PDFs in cache. | DSPT / local IG policy flexibility |
+| Role-based access control for all settings | Granular permissions (`Read`, `Change`, `Full`) limit who can alter critical application configurations. | GDPR Art 32 (security of processing); DSPT outcome 5A (managing access) |
 
 ## Technical-security posture
 | Feature | Positive impact | Cyber baseline it helps tick |
@@ -140,6 +157,3 @@ After the consent form has been generated, located using the UNC path, signed, a
 | DSPT / CAF | Low data-at-rest, no unmanaged third-party services, optional download flow – all count as good-practice evidence for DSPT questions 8-A and 9-C. |
 | UK GDPR & common-law confidentiality | Validation of patient identifiers, no long-term storage, and explicit under-16 warnings support accuracy, data-minimisation and lawful-consent duties. |
 | Consent law for minors | Under-16 alert directly operationalises Gillick-competence checks |
-
-
-    
