@@ -26,6 +26,22 @@ export interface AdAuthOutput {
   user?: any;
 }
 
+function getFriendlyErrorMessage(err: any): string {
+    if (err.lde_message && err.lde_message.includes('data 52e')) {
+        return 'Invalid credentials. Please check the bind username and password.';
+    }
+    if (err.lde_message && err.lde_message.includes('data 525')) {
+        return 'User not found. The specified username does not exist in the directory.';
+    }
+     if (err.lde_message && err.lde_message.includes('data 775')) {
+        return 'User account is locked. Please contact your AD administrator.';
+    }
+    if (err.message) {
+        return err.message;
+    }
+    return 'An unknown authentication error occurred.';
+}
+
 export async function authenticateAdUser(input: AdAuthInput): Promise<AdAuthOutput> {
   try {
     const adConfig = await getAdConfig();
@@ -35,14 +51,15 @@ export async function authenticateAdUser(input: AdAuthInput): Promise<AdAuthOutp
         ad.authenticate(input.username, input.password, (err, auth) => {
             if (err) {
                 console.error('AD Authentication Error:', err);
-                resolve({ success: false, message: `Authentication failed: ${err.message}` });
+                const friendlyMessage = getFriendlyErrorMessage(err);
+                resolve({ success: false, message: `Authentication failed: ${friendlyMessage}` });
                 return;
             }
             if (auth) {
                 ad.findUser(input.username, (err, user) => {
                     if (err) {
                         console.error('AD Find User Error:', err);
-                        resolve({ success: false, message: `Could not find user after authentication: ${err.message}` });
+                        resolve({ success: false, message: `Could not find user after authentication: ${getFriendlyErrorMessage(err)}` });
                         return;
                     }
                     if (!user) {
@@ -76,7 +93,8 @@ export async function testAdConnection(): Promise<{ success: boolean; message: s
             ad.findUser(adConfig.username, (err, user) => {
                 if (err) {
                     console.error('AD Connection Test Error:', err);
-                    resolve({ success: false, message: `Connection failed: ${err.message}` });
+                    const friendlyMessage = getFriendlyErrorMessage(err);
+                    resolve({ success: false, message: `Connection failed: ${friendlyMessage}` });
                     return;
                 }
                 if (!user) {
