@@ -107,10 +107,12 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
       return se.length === 1;
     }
 
-    // Start with a base of read access for any authenticated user.
-    const finalRoles = new Set<AccessLevel>(['read']);
+    const finalRoles = new Set<AccessLevel>();
     
-    // Check for 'change' and 'full' group memberships.
+    // Check for 'read', 'change', and 'full' group memberships.
+    if (config.groupDNs.read && await isMemberOf(config.groupDNs.read)) {
+        finalRoles.add('read');
+    }
     if (config.groupDNs.change && await isMemberOf(config.groupDNs.change)) {
         finalRoles.add('change');
     }
@@ -128,7 +130,9 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
     }
 
     if(finalRoles.size === 0) {
-        return { ok: false, reason: 'User has no assigned roles for this application.' };
+        // Authenticated user but not a member of any required groups.
+        // Return success but with an empty roles array.
+        return { ok: true, userDN, username, roles: [] };
     }
 
     return { ok: true, userDN, username, roles: Array.from(finalRoles) };
@@ -177,4 +181,3 @@ export async function testAdConnection(): Promise<{ success: boolean; message: s
         return { success: false, message: message };
     }
 }
-
