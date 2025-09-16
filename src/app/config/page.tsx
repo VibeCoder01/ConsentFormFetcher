@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2, Download, Upload, Mail, MapPin } from "lucide-react";
+import { ArrowLeft, RefreshCw, Users, Save, RotateCcw, Loader2, Download, Upload, Mail, MapPin, Network } from "lucide-react";
 import { scrapeRcrForms } from "@/ai/flows/scrape-forms-flow";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -537,6 +537,21 @@ export default function ConfigPage() {
                     Edit Email Config
                   </Button>
                </Link>
+            </CardFooter>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+                <CardTitle>Authentication</CardTitle>
+                <CardDescription>Configure and test the connection to your Active Directory server for user authentication.</CardDescription>
+            </CardHeader>
+            <CardFooter>
+                <Link href="/config/ad" passHref>
+                    <Button variant="outline">
+                        <Network className="mr-2 h-4 w-4" />
+                        Configure Active Directory
+                    </Button>
+                </Link>
             </CardFooter>
           </Card>
 
