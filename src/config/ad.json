@@ -1,7 +1,13 @@
 
 {
-  "url": "ldap://your-dc.domain.com",
-  "baseDN": "dc=domain,dc=com",
-  "username": "your-bind-username",
-  "password": "your-bind-password"
+  "url": "ldaps://your-dc.domain.com:636",
+  "baseDN": "DC=domain,DC=com",
+  "bindDN": "CN=svc_ldap,OU=Service Accounts,DC=domain,DC=com",
+  "bindPassword": "your-bind-password",
+  "caFile": "/path/to/your/ca.pem",
+  "groupDNs": {
+    "read": "CN=AppAdmins-Read,OU=Groups,DC=domain,DC=com",
+    "change": "CN=AppAdmins-Change,OU=Groups,DC=domain,DC=com",
+    "full": "CN=AppAdmins-Full,OU=Groups,DC=domain,DC=com"
+  }
 }

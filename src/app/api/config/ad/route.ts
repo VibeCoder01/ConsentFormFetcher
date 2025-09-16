@@ -12,12 +12,17 @@ async function readConfig(): Promise<ADConfig> {
         return JSON.parse(jsonData);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            // If file doesn't exist, return a default structure
             return {
                 url: "",
                 baseDN: "",
-                username: "",
-                password: ""
+                bindDN: "",
+                bindPassword: "",
+                caFile: "",
+                groupDNs: {
+                    read: "",
+                    change: "",
+                    full: "",
+                }
             };
         }
         throw error;
@@ -27,8 +32,7 @@ async function readConfig(): Promise<ADConfig> {
 export async function GET() {
   try {
     const config = await readConfig();
-    // Do not return the password to the client
-    const { password, ...clientConfig } = config;
+    const { bindPassword, ...clientConfig } = config;
     return NextResponse.json(clientConfig);
   } catch (error) {
     console.error("Failed to read AD config file:", error);
@@ -39,20 +43,22 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const updates: Partial<ADConfig> = await request.json();
-
         const currentConfig = await readConfig();
         
-        // Merge the updates with the current config
-        // If the password is not included in the update, keep the existing one.
         const updatedConfig: ADConfig = {
             url: updates.url ?? currentConfig.url,
             baseDN: updates.baseDN ?? currentConfig.baseDN,
-            username: updates.username ?? currentConfig.username,
-            password: updates.password || currentConfig.password, // Keep old password if new one is empty
+            bindDN: updates.bindDN ?? currentConfig.bindDN,
+            bindPassword: updates.bindPassword || currentConfig.bindPassword,
+            caFile: updates.caFile ?? currentConfig.caFile,
+            groupDNs: {
+                read: updates.groupDNs?.read ?? currentConfig.groupDNs.read,
+                change: updates.groupDNs?.change ?? currentConfig.groupDNs.change,
+                full: updates.groupDNs?.full ?? currentConfig.groupDNs.full,
+            }
         };
 
         const jsonData = JSON.stringify(updatedConfig, null, 2);
-        
         await fs.writeFile(configPath, jsonData, 'utf-8');
         
         return NextResponse.json({ message: "Active Directory configuration updated successfully." });
