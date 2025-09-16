@@ -32,8 +32,8 @@ export type AuthResult =
 
 
 async function getTlsOptions(config: ADConfig): Promise<TlsOptions | undefined> {
-    if (!config.caFile) {
-        // If no CA file is specified, proceed with caution.
+    if (!config.caFile || config.caFile.trim() === '') {
+        // If no CA file is specified, or the path is empty, proceed with caution.
         // This is not recommended for production environments.
         return {
              rejectUnauthorized: false
