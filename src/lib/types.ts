@@ -78,9 +78,22 @@ export interface TumourGroup {
     name: string;
 }
 
+export type AccessLevel = 'read' | 'change' | 'full';
+
+export interface AdminUser {
+    username: string;
+    access: AccessLevel;
+}
+
 export interface ADConfig {
     url: string;
     baseDN: string;
-    username: string;
-    password?: string;
+    bindDN: string;
+    bindPassword?: string;
+    caFile?: string;
+    groupDNs: {
+        read: string;
+        change: string;
+        full: string;
+    };
 }
