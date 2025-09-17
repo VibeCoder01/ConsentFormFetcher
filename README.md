@@ -91,7 +91,7 @@ After the consent form has been generated, located using the UNC path, signed, a
     -   **Automatically open in Browser**: Opens the PDF in a new browser tab.
     -   **Download for Adobe Acrobat**: Downloads the PDF to your computer, allowing you to open it in a dedicated application like Adobe Acrobat.
 -   **Update Forms**: Click **Check for Updated Forms** to manually trigger a scrape of the currently saved URL to refresh the list of available forms.
--   **Backup & Restore Settings**: You can export the application's entire configuration (including settings, emails, staff, and tumour sites) to a single JSON file for backup. You can also import a settings file to restore a previous configuration.
+-   **Backup & Restore Settings**: You can export the application's entire configuration (including settings, emails, staff, tumour sites, and Active Directory config) to a single JSON file for backup. You can also import a settings file to restore a previous configuration. The AD bind password is not exported for security.
 -   **Staff Management**: Click **Edit Staff List** to navigate to a separate page to manage staff members.
     - The page features a two-column layout. The left column contains a searchable list of all staff members.
     - Clicking a member in the list will display their full, editable details in the right-hand column, where you can update their name, title, phone number, specialities, and email recipients.
