@@ -61,7 +61,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Admin Login</CardTitle>
-          <CardDescription>Enter your mtw.nhs.uk credentials to access the configuration area.</CardDescription>
+          <CardDescription>Enter your Windows login credentials to access the configuration area.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
