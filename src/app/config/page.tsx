@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useSession } from "@/hooks/use-session";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 const DEFAULT_RCR_URL = "https://www.rcr.ac.uk/our-services/management-service-delivery/national-radiotherapy-consent-forms/";
 
@@ -277,11 +278,25 @@ export default function ConfigPage() {
   }
 
   const hasFullAccess = session.isLoggedIn && session.roles.includes('full');
-  const hasWriteAccess = session.isLoggedIn && (session.roles.includes('change') || hasFullAccess);
-  const hasReadOnlyAccess = session.isLoggedIn && session.roles.includes('read') && !hasWriteAccess;
+  const hasChangeAccess = session.isLoggedIn && session.roles.includes('change');
+  const hasReadAccess = session.isLoggedIn && session.roles.includes('read');
   const hasNoRoles = session.isLoggedIn && session.roles.length === 0;
 
-  const allButtonsDisabled = hasReadOnlyAccess;
+  const hasWriteAccess = hasChangeAccess || hasFullAccess;
+  const isReadOnly = hasReadAccess && !hasWriteAccess;
+  
+  let accessLevelLabel: string | null = null;
+  if(session.isLoggedIn) {
+      if (hasFullAccess) {
+          accessLevelLabel = "Full Access";
+      } else if (hasChangeAccess) {
+          accessLevelLabel = "Change Access";
+      } else if (hasReadAccess) {
+          accessLevelLabel = "Read-Only Access";
+      } else {
+           accessLevelLabel = "No Roles";
+      }
+  }
 
 
   const dataSourceCard = () => {
@@ -486,13 +501,16 @@ export default function ConfigPage() {
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="flex h-16 items-center border-b px-4 md:px-6 bg-card justify-between">
-        <div className="flex items-center">
+        <div className="flex items-center gap-4">
             <Link href="/" aria-label="Back to home">
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-6 w-6" />
               </Button>
             </Link>
-            <h1 className="ml-4 text-xl font-bold">Configuration</h1>
+            <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold">Configuration</h1>
+                {accessLevelLabel && <Badge variant={hasWriteAccess ? "default" : "secondary"}>{accessLevelLabel}</Badge>}
+            </div>
         </div>
         <div className="flex items-center gap-4">
             {hasWriteAccess && (
@@ -501,7 +519,7 @@ export default function ConfigPage() {
                     Save Changes
                 </Button>
             )}
-             <Button onClick={handleUpdate} disabled={isScraping || (isModified && hasWriteAccess) || !hasWriteAccess}>
+             <Button onClick={handleUpdate} disabled={isScraping || (isModified && hasWriteAccess) || isReadOnly}>
               <RefreshCw className={`mr-2 h-4 w-4 ${isScraping ? 'animate-spin' : ''}`} />
               Check for Updated Forms
             </Button>
@@ -560,7 +578,7 @@ export default function ConfigPage() {
                     </CardHeader>
                     <CardFooter>
                     <Link href="/config/staff" passHref>
-                        <Button variant="outline" disabled={allButtonsDisabled}>
+                        <Button variant="outline" disabled={!hasWriteAccess}>
                             <Users className="mr-2 h-4 w-4" />
                             Edit Staff List
                         </Button>
@@ -577,7 +595,7 @@ export default function ConfigPage() {
                     </CardHeader>
                     <CardFooter>
                     <Link href="/config/tumour-sites" passHref>
-                        <Button variant="outline" disabled={allButtonsDisabled}>
+                        <Button variant="outline" disabled={!hasWriteAccess}>
                             <MapPin className="mr-2 h-4 w-4" />
                             Edit Tumour Sites
                         </Button>
@@ -594,7 +612,7 @@ export default function ConfigPage() {
                     </CardHeader>
                     <CardFooter>
                     <Link href="/config/email" passHref>
-                        <Button variant="outline" disabled={allButtonsDisabled}>
+                        <Button variant="outline" disabled={!hasWriteAccess}>
                             <Mail className="mr-2 h-4 w-4" />
                             Edit Email Config
                         </Button>
@@ -625,7 +643,7 @@ export default function ConfigPage() {
                         <CardDescription>Export or import the full application configuration (including staff). The staff list can also be managed separately.</CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-wrap gap-2">
-                        <Button variant="outline" onClick={handleExport} disabled={allButtonsDisabled}>
+                        <Button variant="outline" onClick={handleExport} disabled={isReadOnly}>
                             <Download className="mr-2 h-4 w-4" />
                             Export App Settings
                         </Button>
