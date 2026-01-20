@@ -3,7 +3,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +28,6 @@ const DEFAULT_RCR_URL = "https://www.rcr.ac.uk/our-services/management-service-d
 
 export default function ConfigPage() {
   const { toast } = useToast();
-  const router = useRouter();
   const { session, isLoading: isSessionLoading } = useSession();
   const [isScraping, setIsScraping] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -158,11 +156,6 @@ export default function ConfigPage() {
     } finally {
         setIsSaving(false);
     }
-  };
-  
-  const handleSignOut = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
   };
 
   const handleUpdate = async () => {
@@ -524,7 +517,7 @@ export default function ConfigPage() {
               Check for Updated Forms
             </Button>
             {session.isLoggedIn && (
-              <Button variant="outline" onClick={handleSignOut}>
+              <Button variant="outline">
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out ({session.username})
               </Button>
