@@ -43,6 +43,7 @@ You can hover over the main title, "ConsentForm Fetcher," to see the application
 
 In the top-right corner, you will find several controls, each with a helpful tooltip that appears when you hover over it:
 -   **SEND EMAILS**: Clicking this button will display a notification, as the email functionality is not yet implemented.
+-   **Sign Out**: Logs the current user out of the application. The session also ends automatically when the browser tab is closed.
 -   **Theme Toggle (Sun/Moon icon)**: For changing between light and dark mode.
 -   **Settings (Gear icon)**: For accessing the configuration page.
 
@@ -154,6 +155,7 @@ There are three levels of access:
 | No form templates cached; filled PDFs stored only in /tmp with random IDs | Minimises long-term personal-data footprint and aids secure-deletion; supports storage-limitation and data-minimisation. | GDPR Art 5(1)(c)(e); DSPT outcome B2 (“only necessary data retained”) |
 | User decides whether the PDF opens in-browser or downloads | Lets trusts disable browser rendering if their IG policy forbids patient PDFs in cache. | DSPT / local IG policy flexibility |
 | Role-based access control for all settings | Granular permissions (`Read`, `Change`, `Full`) limit who can alter critical application configurations. | GDPR Art 32 (security of processing); DSPT outcome 5A (managing access) |
+| Automatic logout on tab close | Prevents unauthorised access from unattended workstations by automatically destroying the session when the page is closed. | DSPT outcome 5B (managing sessions); NCSC CAF B2 (secure logout) |
 
 ## Technical-security posture
 | Feature | Positive impact | Cyber baseline it helps tick |
