@@ -2,19 +2,22 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, Settings, FileText, Mail } from "lucide-react";
+import { Menu, Settings, FileText, Mail, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { version } from "../../package.json";
+import type { SessionData } from "@/lib/types";
 
 interface AppHeaderProps {
   isMobile: boolean;
   onMenuClick: () => void;
   onSendEmailsClick: () => void;
+  session: (SessionData & { isLoggedIn: true }) | { isLoggedIn: false };
+  onSignOut: () => void;
 }
 
-export function AppHeader({ isMobile, onMenuClick, onSendEmailsClick }: AppHeaderProps) {
+export function AppHeader({ isMobile, onMenuClick, onSendEmailsClick, session, onSignOut }: AppHeaderProps) {
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-6 z-10 bg-card">
       <div className="flex items-center gap-2 sm:gap-4">
@@ -53,6 +56,23 @@ export function AppHeader({ isMobile, onMenuClick, onSendEmailsClick }: AppHeade
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+
+        {session.isLoggedIn && (
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="outline" onClick={onSignOut}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Sign Out ({session.username})
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>End your session</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        )}
+
         <ThemeToggle />
         <TooltipProvider>
           <Tooltip>
