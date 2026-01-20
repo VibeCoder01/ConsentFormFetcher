@@ -89,9 +89,10 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
     // 4) Re-bind as service account for group checks
     await client.bind(config.bindDN, config.bindPassword);
     
+    const { user, change, full } = config.groupDNs;
+
     // Check for initial setup: if no groups are defined, grant full access
-    const { read, change, full } = config.groupDNs;
-    if (!read && !change && !full) {
+    if (!user && !change && !full) {
       return { ok: true, userDN, username, roles: ['full', 'change', 'read'] };
     }
 
@@ -107,17 +108,24 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
       return se.length === 1;
     }
 
+    const isUser = user ? await isMemberOf(user) : false;
+
+    // If a user group is defined, membership is mandatory for any authenticated access.
+    if (user && !isUser) {
+        return { ok: false, reason: 'Access denied. You must be a member of the User Access Group.' };
+    }
+
     const finalRoles = new Set<AccessLevel>();
     
-    // Check for 'read', 'change', and 'full' group memberships.
-    if (config.groupDNs.read && await isMemberOf(config.groupDNs.read)) {
-        finalRoles.add('read');
+    // Check for 'full', 'change', and 'user' group memberships.
+    if (full && await isMemberOf(full)) {
+        finalRoles.add('full');
     }
-    if (config.groupDNs.change && await isMemberOf(config.groupDNs.change)) {
+    if (change && await isMemberOf(change)) {
         finalRoles.add('change');
     }
-    if (config.groupDNs.full && await isMemberOf(config.groupDNs.full)) {
-        finalRoles.add('full');
+    if (isUser) { // If they are in the user group, they get 'read' access.
+        finalRoles.add('read');
     }
     
     // Enforce role hierarchy: Full > Change > Read

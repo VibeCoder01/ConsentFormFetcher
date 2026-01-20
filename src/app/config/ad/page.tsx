@@ -19,7 +19,7 @@ const emptyConfig: Partial<ADConfig> = {
     bindDN: '',
     caFile: '',
     groupDNs: {
-        read: '',
+        user: '',
         change: '',
         full: ''
     }
@@ -64,7 +64,7 @@ export default function ADConfigPage() {
     setConfig(prev => ({...prev, [field]: value}));
   };
   
-   const handleGroupDNChange = (role: 'read' | 'change' | 'full', value: string) => {
+   const handleGroupDNChange = (role: 'user' | 'change' | 'full', value: string) => {
     setConfig(prev => ({
         ...prev,
         groupDNs: {
@@ -242,13 +242,13 @@ export default function ADConfigPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Role-Based Access Control</CardTitle>
-                    <CardDescription>Map Active Directory security groups to application access levels. A user's highest role will be used. 'Full' includes 'Change' and 'Read'.</CardDescription>
+                    <CardDescription>Map Active Directory security groups to application access levels. A user's highest role will be used. 'Full' includes 'Change' and 'User' access.</CardDescription>
                 </CardHeader>
                 {isLoading ? <div className="p-6"><Skeleton className="h-32 w-full" /></div> : (
                      <CardContent className="space-y-4">
                         <div className="space-y-1.5">
-                            <Label htmlFor="groupRead">Read Access Group DN</Label>
-                            <Input id="groupRead" value={config.groupDNs?.read || ''} onChange={(e) => handleGroupDNChange('read', e.target.value)} placeholder="CN=AppAdmins-Read,OU=Groups,DC=domain,DC=com" />
+                            <Label htmlFor="groupUser">User Access Group DN</Label>
+                            <Input id="groupUser" value={config.groupDNs?.user || ''} onChange={(e) => handleGroupDNChange('user', e.target.value)} placeholder="CN=AppUsers,OU=Groups,DC=domain,DC=com" />
                         </div>
                         <div className="space-y-1.5">
                             <Label htmlFor="groupChange">Change Access Group DN</Label>
