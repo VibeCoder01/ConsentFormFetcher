@@ -20,7 +20,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const from = searchParams.get('from') || '/config';
+  const from = searchParams.get('from') || '/';
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -45,7 +45,7 @@ export default function LoginPage() {
         description: `Welcome, ${username}!`,
       });
 
-      // Redirect to the original destination or the config page
+      // Redirect to the original destination or the main page
       router.push(from);
 
     } catch (err) {
