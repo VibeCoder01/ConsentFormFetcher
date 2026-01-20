@@ -1,4 +1,3 @@
-
 import type { IronSessionOptions } from 'iron-session';
 import type { SessionData } from './types';
 
