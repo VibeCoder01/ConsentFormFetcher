@@ -8,30 +8,51 @@ export async function middleware(request: NextRequest) {
   // We need to use the absolute URL for fetches within middleware.
   const setupStatusUrl = new URL('/api/auth/setup-status', request.url);
   const setupStatusResponse = await fetch(setupStatusUrl);
+  
+  // If the status check fails, we can't determine if we're in setup mode.
+  // It's safest to redirect to login with an error.
+  if (!setupStatusResponse.ok) {
+    console.error("Middleware error: Failed to fetch /api/auth/setup-status");
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('from', request.nextUrl.pathname);
+    loginUrl.searchParams.set('error', 'middleware_error');
+    return NextResponse.redirect(loginUrl);
+  }
+
   const { isInSetupMode } = await setupStatusResponse.json();
 
-  if (isInSetupMode && request.nextUrl.pathname.startsWith('/config')) {
+  // If in initial setup mode, allow access to all pages so the admin can configure AD.
+  if (isInSetupMode) {
       return NextResponse.next();
   }
   
   const session = await getIronSession<SessionData>(request.cookies, sessionOptions);
 
-  // If the user is not logged in, redirect them to the login page.
+  // If NOT in setup mode, and user is not logged in, redirect them to the login page.
   if (session.isLoggedIn !== true) {
-    // Store the original URL they were trying to access.
-    const from = request.nextUrl.pathname;
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    url.searchParams.set('from', from);
-
-    return NextResponse.redirect(url);
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('from', request.nextUrl.pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
-  // If the user is logged in, allow them to proceed.
+  // If user is logged in, allow them to proceed.
   return NextResponse.next();
 }
 
-// See "Matching Paths" below to learn more
+// This config applies the middleware to all routes except for the ones
+// explicitly excluded (API routes, static files, and the login page itself).
 export const config = {
-  matcher: '/config/:path*',
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - login (the login page)
+     * - any files with an extension (e.g. .ico, .json)
+     */
+    '/((?!api|_next/static|_next/image|login|.*\\.).*)',
+    // Match the root path explicitly to be safe.
+    '/',
+  ],
 };
