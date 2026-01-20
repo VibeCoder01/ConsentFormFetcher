@@ -5,6 +5,30 @@ This is a Next.js application designed to fetch, display, and intelligently pre-
 
 ---
 
+## Getting Started
+
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+
+### Prerequisites
+
+You need to have Node.js and npm (Node Package Manager) installed on your system. You can download them from [https://nodejs.org/](https://nodejs.org/).
+
+### Installation
+
+1.  Clone the repository to your local machine.
+2.  Navigate to the project directory in your terminal.
+3.  Install the required dependencies by running:
+    ```bash
+    npm install
+    ```
+4.  Once the installation is complete, you can start the development server:
+    ```bash
+    npm run dev
+    ```
+5.  Open [http://localhost:9002](http://localhost:9002) with your browser to see the application.
+
+---
+
 ## User Guide
 
 This guide explains how to use the application to prepare and submit a consent form.
