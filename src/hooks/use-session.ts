@@ -1,6 +1,9 @@
 
+'use client';
+
 import { useState, useEffect } from 'react';
-import type { SessionData, AccessLevel } from '@/lib/types';
+import { useRouter, usePathname } from 'next/navigation';
+import type { SessionData } from '@/lib/types';
 import adConfig from '@/config/ad.json';
 
 type SessionHookResult = {
@@ -17,6 +20,8 @@ const setupModeSession: SessionData & { isLoggedIn: true } = {
 export function useSession(): SessionHookResult {
   const [session, setSession] = useState<(SessionData & { isLoggedIn: true }) | { isLoggedIn: false }>({ isLoggedIn: false });
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
 
   // This check MUST mirror the logic in middleware.ts.
   // It determines if the UI should render in "setup mode" with full permissions.
@@ -32,18 +37,29 @@ export function useSession(): SessionHookResult {
 
       try {
         const response = await fetch('/api/auth/session');
+        if (!response.ok) {
+            throw new Error('Session check failed');
+        }
         const data = await response.json();
-        setSession(data);
+
+        if (data.isLoggedIn === true) {
+            setSession(data);
+        } else {
+            // Not logged in, replace current history entry and redirect to login page.
+            router.replace(`/login?from=${pathname}`);
+        }
+
       } catch (error) {
         console.error('Failed to fetch session:', error);
-        setSession({ isLoggedIn: false });
+        // Also redirect on any fetch error.
+        router.replace(`/login?from=${pathname}`);
       } finally {
         setIsLoading(false);
       }
     }
 
     fetchSession();
-  }, [isInSetupMode]);
+  }, [isInSetupMode, pathname, router]);
 
   return { session, isLoading };
 }
