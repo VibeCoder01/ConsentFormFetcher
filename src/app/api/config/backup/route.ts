@@ -43,7 +43,7 @@ export async function GET() {
         readJsonFile(emailConfigPath, []),
         readJsonFile(staffConfigPath, []),
         readJsonFile(tumourSitesConfigPath, []),
-        readJsonFile<ADConfig>(adConfigPath, { url: '', baseDN: '', bindDN: '', groupDNs: { read: '', change: '', full: '' } }),
+        readJsonFile<ADConfig>(adConfigPath, { url: '', baseDN: '', bindDN: '', groupDNs: { user: '', change: '', full: '' } }),
     ]);
 
     // Securely remove the password before sending to the client
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
         const tumourSitesJsonData = JSON.stringify(data.tumourSites, null, 2);
         
         // Securely handle AD config import
-        const currentAdConfig = await readJsonFile<ADConfig>(adConfigPath, { url: '', baseDN: '', bindDN: '', groupDNs: { read: '', change: '', full: '' } });
+        const currentAdConfig = await readJsonFile<ADConfig>(adConfigPath, { url: '', baseDN: '', bindDN: '', groupDNs: { user: '', change: '', full: '' } });
         const importedAdConfig = data.ad;
 
         // Preserve existing password if not provided in the import

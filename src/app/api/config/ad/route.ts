@@ -19,7 +19,7 @@ async function readConfig(): Promise<ADConfig> {
                 bindPassword: "",
                 caFile: "",
                 groupDNs: {
-                    read: "",
+                    user: "",
                     change: "",
                     full: "",
                 }
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
             bindPassword: updates.bindPassword || currentConfig.bindPassword,
             caFile: updates.caFile ?? currentConfig.caFile,
             groupDNs: {
-                read: updates.groupDNs?.read ?? currentConfig.groupDNs.read,
+                user: updates.groupDNs?.user ?? currentConfig.groupDNs.user,
                 change: updates.groupDNs?.change ?? currentConfig.groupDNs.change,
                 full: updates.groupDNs?.full ?? currentConfig.groupDNs.full,
             }
