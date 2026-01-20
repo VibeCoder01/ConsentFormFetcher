@@ -2,14 +2,15 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/auth';
-import adConfig from './config/ad.json';
-
 
 export async function middleware(request: NextRequest) {
-  // If the 'full' access group DN is not set or is the default placeholder, assume initial setup and bypass auth for config pages.
-  const isSetupMode = !adConfig.groupDNs.full || adConfig.groupDNs.full === "CN=AppAdmins-Full,OU=Groups,DC=domain,DC=com";
+  // Fetch the setup mode status from our new API endpoint.
+  // We need to use the absolute URL for fetches within middleware.
+  const setupStatusUrl = new URL('/api/auth/setup-status', request.url);
+  const setupStatusResponse = await fetch(setupStatusUrl);
+  const { isInSetupMode } = await setupStatusResponse.json();
 
-  if (isSetupMode && request.nextUrl.pathname.startsWith('/config')) {
+  if (isInSetupMode && request.nextUrl.pathname.startsWith('/config')) {
       return NextResponse.next();
   }
   

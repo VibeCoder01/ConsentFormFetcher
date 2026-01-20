@@ -4,7 +4,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import type { SessionData } from '@/lib/types';
-import adConfig from '@/config/ad.json';
 
 type SessionHookResult = {
   session: (SessionData & { isLoggedIn: true }) | { isLoggedIn: false };
@@ -20,14 +19,31 @@ const setupModeSession: SessionData & { isLoggedIn: true } = {
 export function useSession(): SessionHookResult {
   const [session, setSession] = useState<(SessionData & { isLoggedIn: true }) | { isLoggedIn: false }>({ isLoggedIn: false });
   const [isLoading, setIsLoading] = useState(true);
+  const [isInSetupMode, setIsInSetupMode] = useState<boolean | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
-  // This check MUST mirror the logic in middleware.ts.
-  // It determines if the UI should render in "setup mode" with full permissions.
-  const isInSetupMode = !adConfig.groupDNs.full || adConfig.groupDNs.full === "CN=AppAdmins-Full,OU=Groups,DC=domain,DC=com";
+  useEffect(() => {
+    async function fetchSetupStatus() {
+        try {
+            const response = await fetch('/api/auth/setup-status');
+            const data = await response.json();
+            setIsInSetupMode(data.isInSetupMode);
+        } catch (error) {
+            console.error("Failed to fetch setup status", error);
+            // Default to not being in setup mode on error to be safe
+            setIsInSetupMode(false);
+        }
+    }
+    fetchSetupStatus();
+  }, []);
 
   useEffect(() => {
+    // Wait until we know the setup mode status
+    if (isInSetupMode === null) {
+      return;
+    }
+
     async function fetchSession() {
       if (isInSetupMode) {
         setSession(setupModeSession);
@@ -61,5 +77,5 @@ export function useSession(): SessionHookResult {
     fetchSession();
   }, [isInSetupMode, pathname, router]);
 
-  return { session, isLoading };
+  return { session, isLoading: isLoading || isInSetupMode === null };
 }
