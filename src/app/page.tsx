@@ -4,6 +4,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import type { ConsentForm, ConsentFormCategory, PatientData, IdentifierType, StaffMember, TumourSite } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSession } from "@/hooks/use-session";
+import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { FormList } from "@/components/form-list";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -126,6 +128,9 @@ export default function Home() {
   
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const { session } = useSession();
+  const router = useRouter();
+
 
   const handlePatientDataChange = (newData: PatientData, fromDemographics = false) => {
     // Also update fullAddress if one of the address fields changes
@@ -598,6 +603,12 @@ export default function Home() {
     });
   };
 
+  const handleSignOut = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    toast({ title: "Signed Out", description: "You have been successfully signed out." });
+    router.push('/login');
+  };
+
   const formListComponent = (
     <FormList
       formCategories={filteredFormCategories}
@@ -745,6 +756,8 @@ export default function Home() {
         isMobile={isMobile}
         onMenuClick={() => setSheetOpen(true)}
         onSendEmailsClick={handleSendEmailsClick}
+        session={session}
+        onSignOut={handleSignOut}
       />
       <main className="flex flex-1 overflow-hidden">
         {/* Desktop Sidebar */}
