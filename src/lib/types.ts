@@ -98,7 +98,7 @@ export interface ADConfig {
     bindPassword?: string;
     caFile?: string;
     groupDNs: {
-        read: string;
+        user: string;
         change: string;
         full: string;
     };
