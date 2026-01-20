@@ -125,15 +125,15 @@ After the consent form has been generated, located using the UNC path, signed, a
 
 ### 8. Admin & Access Control
 
-Access to the Configuration page is managed by Active Directory security groups. There are four levels of access:
+Access to the application and its configuration page is managed by Active Directory security groups. If groups are configured, all users must be a member of the base **User Access Group** to log in. Additional permissions are granted by adding users to the `Change` and `Full` access groups. A user's highest-level role determines their permissions.
 
--   **Authenticated (No Roles)**: A user who successfully logs in but is not a member of any of the application's admin groups. They can see the "Data Source" and "File Paths" configuration, but all fields are disabled (read-only). All other configuration sections are hidden.
+There are three levels of access:
 
--   **Read Admin**: A member of the "Read Access" AD group. They can view all application settings, but all controls (buttons, inputs, switches) are disabled. This is a true read-only role for the entire configuration.
+-   **User Access (Read-Only)**: A member of the "User Access" AD group. They can view all application settings, but all controls (buttons, inputs, switches) are disabled. This is a read-only role for the entire configuration page and the minimum requirement to use the application.
 
--   **Change Admin**: A member of the "Change Access" AD group. They have full read/write access to all application settings, including data sources, file paths, staff lists, and behavior toggles. They **cannot**, however, change the core Active Directory authentication settings.
+-   **Change Admin**: A member of the "Change Access" AD group (and by extension, the User Access group). They have full read/write access to all application settings, including data sources, file paths, staff lists, and behavior toggles. They **cannot**, however, change the core Active Directory authentication settings.
 
--   **Full Admin**: A member of the "Full Access" AD group. This is the super-administrator. They have all the permissions of a `Change` admin, plus the exclusive ability to configure the Active Directory connection itself. This role is required for the initial setup and for managing the application's security.
+-   **Full Admin**: A member of the "Full Access" AD group (and by extension, the other groups). This is the super-administrator. They have all the permissions of a `Change` admin, plus the exclusive ability to configure the Active Directory connection itself. This role is required for the initial setup and for managing the application's security.
 
 ---
 
