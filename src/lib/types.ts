@@ -102,4 +102,5 @@ export interface ADConfig {
         change: string;
         full: string;
     };
+    mfaMachineGroup?: string;
 }

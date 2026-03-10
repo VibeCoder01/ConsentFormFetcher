@@ -23,6 +23,7 @@ export type AdAuthInput = z.infer<typeof AdAuthInputSchema>;
 const AdAuthInputSchema = z.object({
   username: z.string(),
   password: z.string(),
+  hostname: z.string().optional(),
 });
 
 
@@ -89,6 +90,45 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
     // 4) Re-bind as service account for group checks
     await client.bind(config.bindDN, config.bindPassword);
     
+    // Helper: nested group membership via matching-rule-in-chain
+    // This works for both users and computers as security principals.
+    async function isMemberOf(principalDN: string, groupDN: string) {
+      if (!groupDN || !principalDN) return false;
+      const g = escapeLDAPfilter(groupDN);
+      const { searchEntries: se } = await client.search(config.baseDN, {
+        scope: 'base', // Search only on the principal's object
+        base: principalDN,
+        filter: `(memberOf:1.2.840.113556.1.4.1941:=${g})`,
+        attributes: ['dn']
+      });
+      return se.length === 1;
+    }
+
+    // 5) MFA Check: If a machine group is configured, verify device membership
+    if (config.mfaMachineGroup) {
+        if (!input.hostname) {
+            return { ok: false, reason: 'Could not determine client machine name for MFA check.' };
+        }
+        
+        // Find computer object by its FQDN
+        const { searchEntries: computerEntries } = await client.search(config.baseDN, {
+            scope: 'sub',
+            filter: `(&(objectClass=computer)(dNSHostName=${escapeLDAPfilter(input.hostname)}))`,
+            attributes: ['dn']
+        });
+
+        if (computerEntries.length !== 1) {
+            return { ok: false, reason: 'This device is not a recognized member of this domain.'};
+        }
+        const computerDN = (computerEntries[0] as any).dn as string;
+
+        const isMfaDevice = await isMemberOf(computerDN, config.mfaMachineGroup);
+        if (!isMfaDevice) {
+            return { ok: false, reason: 'This device is not authorized for access. Please contact an administrator.' };
+        }
+    }
+    
+    // 6) Role-Based Access Control Check
     const { user, change, full } = config.groupDNs;
 
     // Check for initial setup: if no groups are defined, grant full access
@@ -96,19 +136,7 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
       return { ok: true, userDN, username, roles: ['full', 'change', 'read'] };
     }
 
-    // Helper: nested group membership via matching-rule-in-chain
-    async function isMemberOf(groupDN: string) {
-      if (!groupDN) return false;
-      const g = escapeLDAPfilter(groupDN);
-      const { searchEntries: se } = await client.search(config.baseDN, {
-        scope: 'sub',
-        filter: `(&(objectClass=user)(distinguishedName=${escapeLDAPfilter(userDN)})(memberOf:1.2.840.113556.1.4.1941:=${g}))`,
-        attributes: ['dn']
-      });
-      return se.length === 1;
-    }
-
-    const isUser = user ? await isMemberOf(user) : false;
+    const isUser = user ? await isMemberOf(userDN, user) : false;
 
     // If a user group is defined, membership is mandatory for any authenticated access.
     if (user && !isUser) {
@@ -118,10 +146,10 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
     const finalRoles = new Set<AccessLevel>();
     
     // Check for 'full', 'change', and 'user' group memberships.
-    if (full && await isMemberOf(full)) {
+    if (full && await isMemberOf(userDN, full)) {
         finalRoles.add('full');
     }
-    if (change && await isMemberOf(change)) {
+    if (change && await isMemberOf(userDN, change)) {
         finalRoles.add('change');
     }
     if (isUser) { // If they are in the user group, they get 'read' access.
@@ -139,7 +167,6 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
 
     if(finalRoles.size === 0) {
         // Authenticated user but not a member of any required groups.
-        // Return success but with an empty roles array.
         return { ok: true, userDN, username, roles: [] };
     }
 
