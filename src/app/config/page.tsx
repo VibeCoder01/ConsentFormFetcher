@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -172,17 +173,21 @@ export default function ConfigPage() {
       if (result.success) {
         toast({
           title: "Update Successful",
-          description: `Successfully scraped ${result.formCount} forms. The form list is now up-to-date. Please navigate back to the home page to see the changes.`,
+          description: `Successfully scraped ${result.formCount} forms. The form list is now up-to-date. Please refresh the main page to see the changes.`,
         });
       } else {
-        throw new Error(result.error || "An unknown error occurred.");
+        toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: `Could not connect to the RCR website. The application will continue to use the last saved version of the forms. (Error: ${result.error})`,
+        });
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       toast({
         variant: "destructive",
-        title: "Update Failed",
-        description: `Could not update the form list. ${errorMessage}`,
+        title: "An Unexpected Error Occurred",
+        description: `An error occurred during the update process: ${errorMessage}`,
       });
     } finally {
       setIsScraping(false);
