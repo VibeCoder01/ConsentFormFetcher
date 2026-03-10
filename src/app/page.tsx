@@ -224,7 +224,7 @@ export default function Home() {
 
     checkForFormUpdates()
       .then((result) => {
-        if (result.hasUpdates && result.newData) {
+        if (result?.hasUpdates && result.newData) {
           setUpdateAvailable(result.newData);
           setShowAlert(true);
         }
