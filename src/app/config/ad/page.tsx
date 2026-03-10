@@ -9,9 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Save, Loader2, TestTube2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, TestTube2, AlertTriangle, ShieldCheck } from 'lucide-react';
 import type { ADConfig } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useSession } from '@/hooks/use-session';
 
 const emptyConfig: Partial<ADConfig> = {
     url: '',
@@ -22,11 +23,13 @@ const emptyConfig: Partial<ADConfig> = {
         user: '',
         change: '',
         full: ''
-    }
+    },
+    mfaMachineGroup: '',
 };
 
 export default function ADConfigPage() {
   const { toast } = useToast();
+  const { session } = useSession();
   const [config, setConfig] = useState<Partial<ADConfig>>(emptyConfig);
   const [initialConfig, setInitialConfig] = useState<Partial<ADConfig>>(emptyConfig);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,6 +38,7 @@ export default function ADConfigPage() {
   const [bindPassword, setBindPassword] = useState('');
   const [passwordChanged, setPasswordChanged] = useState(false);
 
+  const hasFullAccess = session.isLoggedIn && session.roles.includes('full');
   const isModified = JSON.stringify(config) !== JSON.stringify(initialConfig) || passwordChanged;
 
   const fetchConfig = async () => {
@@ -261,6 +265,24 @@ export default function ADConfigPage() {
                     </CardContent>
                 )}
             </Card>
+            {hasFullAccess && (
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Machine-Based MFA</CardTitle>
+                        <CardDescription>
+                            (Optional) Restrict access to devices that are members of a specific Active Directory security group. This requires a reliable reverse DNS setup on your network.
+                        </CardDescription>
+                    </CardHeader>
+                    {isLoading ? <div className="p-6"><Skeleton className="h-16 w-full" /></div> : (
+                        <CardContent className="space-y-4">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="mfaMachineGroup">MFA Machine Group DN</Label>
+                                <Input id="mfaMachineGroup" value={config.mfaMachineGroup || ''} onChange={(e) => handleFieldChange('mfaMachineGroup', e.target.value)} placeholder="CN=AppMfaDevices,OU=Groups,DC=domain,DC=com" />
+                            </div>
+                        </CardContent>
+                    )}
+                </Card>
+            )}
         </div>
       </main>
     </div>
