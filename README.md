@@ -145,7 +145,8 @@ There are three levels of access:
 | Clinician role check (flag if not a Consultant/Doctor) | Consent forms for IR/oncology procedures normally need a consultant or equivalent as the performer; the orange warning nudges users to the right signatory. | DCB 0160 deployment duty to ensure “appropriate clinical responsibility” |
 | Automatic blanking of first witness fields immediately before PDF generation | Prevents patient data creeping into witness/sign-off boxes – a known safety hazard in radiology consent. | DCB 0129 risk control; DTAC C1 (“no erroneous clinical data”) |
 | Automatic blanking of final date fields | Prevents auto-population of witness signature dates, reducing the risk of a user overlooking a required manual entry. | DCB 0129 risk control; DTAC C1 (“no erroneous clinical data”) |
-| Always fetches the latest RCR template from the live website | Removes the risk of using outdated consent forms whose wording or complication lists have been revised. | DCB 0129 safety requirement to “maintain current clinical content”; NICE ESF B5 (currency of content) |
+| On-demand form updates from live source | Administrators can refresh the list from the RCR website, ensuring access to the latest forms. The app otherwise uses a stable local copy to guarantee availability. | DCB 0129 safety requirement to “maintain current clinical content”; NICE ESF B5 (currency of content) |
+| Local caching of consent forms | Ensures core functionality remains available even if the RCR website is offline. The app uses a local backup of forms, preventing downtime. | DCB 0129 business continuity; DTAC C2 (mitigates external system failures) |
 | Live KOMS session check for config access | Ensures only currently authenticated KOMS users with explicit admin rights can change application settings. | DSPT / local IG policy; NCSC CAF B2 (access control) |
 
 ## Data-protection & information-governance niceties
