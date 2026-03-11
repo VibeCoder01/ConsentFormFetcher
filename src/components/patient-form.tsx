@@ -296,7 +296,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
                     <SelectTrigger 
                         id="macmillanContact" 
                         className={cn(
-                        (!patientData.macmillanContactId && !demographicsLoaded) && "bg-red-100 dark:bg-red-900/30",
+                        !patientData.macmillanContactId && "bg-red-100 dark:bg-red-900/30",
                         showMacmillanWarning && "bg-orange-200 dark:bg-orange-800/50"
                         )}
                     >

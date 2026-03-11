@@ -723,28 +723,31 @@ export default function Home() {
                 <strong>Get Patient Details:</strong> Use the form on the left or the "Get Live Patient Demographics" button to enter patient information.
               </li>
               <li>
-                <strong>Select Macmillan Contact:</strong> Choose the appropriate Macmillan contact from the dropdown menu.
+                <strong>Select Macmillan Contact:</strong> Optionally, choose the appropriate Macmillan contact from the dropdown menu.
               </li>
               <li>
-                <strong>Select Clinician:</strong> First filter by tumour site, then select the responsible clinician.
+                <strong>Select Clinician:</strong> Optionally, filter by tumour site, then select the responsible clinician.
               </li>
               <li>
-                <strong>Check Details:</strong> Ensure all entered information is correct.
+                <strong>Check Details:</strong> Ensure all Patient and other details are correct.
+              </li>
+              <li>
+                <strong>Select Unique Patient Identifier:</strong> e.g. NHS Number.
               </li>
               <li>
                 <strong>Select Consent Form:</strong> Choose the appropriate form from the "Available Forms" list. The partially pre-populated PDF will be generated.
               </li>
               <li>
-                <strong>Copy the Path to the PDF</strong> and paste into the Windows Search bar, press ENTER.
+                <strong>Click the &quot;Copy Path&quot; button</strong> to copy the path to the PDF and paste into the Windows Search bar, press ENTER.
               </li>
               <li>
-                <strong>Acrobat Reader will open with the document - Fill & Sign PDF.</strong>
+                <strong>The PDF should open in Acrobat Reader</strong> - Finish filling in then sign the PDF as normal.
               </li>
               <li>
                 <strong>Click Save in Acrobat Reader,</strong> choose the Clinicians NAME as the folder to save to, and exit Acrobat.
               </li>
               <li>
-                <strong>Use the SEND EMAILS button</strong> to email the PDF to the configured recipients.
+                <strong>Note:</strong> If the PDF does not open in Acrobat Reader speak to IT to have Acrobat made the default PDF Reader.
               </li>
             </ol>
           </CardContent>
