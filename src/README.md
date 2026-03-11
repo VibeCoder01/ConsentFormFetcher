@@ -17,15 +17,36 @@ You need to have Node.js and npm (Node Package Manager) installed on your system
 
 1.  Clone the repository to your local machine.
 2.  Navigate to the project directory in your terminal.
-3.  Install the required dependencies by running:
+3.  Create local-only configuration files from the safe templates:
+    ```powershell
+    Copy-Item .env.example .env
+    Copy-Item src/config/ad.example.json src/config/ad.json
+    Copy-Item src/config/email.example.json src/config/email.json
+    Copy-Item src/config/staff.example.json src/config/staff.json
+    ```
+4.  Update the local copies with your own environment values, passwords, AD group DNs, staff list, and email recipients. These local files are git-ignored and are not intended to be committed.
+5.  Install the required dependencies by running:
     ```bash
     npm install
     ```
-4.  Once the installation is complete, you can start the development server:
+6.  Once the installation is complete, you can start the development server:
     ```bash
     npm run dev
     ```
-5.  Open [http://localhost:9002](http://localhost:9002) with your browser to see the application.
+7.  Open [http://localhost:9002](http://localhost:9002) with your browser to see the application. If the app is in initial setup mode, the root URL will redirect you to the Configuration page.
+
+If you access `npm run dev` from another hostname, set `NEXT_ALLOWED_DEV_ORIGINS` in `.env` to a comma-separated list of permitted hostnames, for example `NEXT_ALLOWED_DEV_ORIGINS=workstation.example.local`. This only affects the Next.js development server.
+
+### GitHub-safe local files
+
+The following files are intentionally local-only and are ignored by git:
+
+- `.env`
+- `src/config/ad.json`
+- `src/config/email.json`
+- `src/config/staff.json`
+
+They may contain secrets, internal hostnames, AD distinguished names, staff contact details, or recipient lists. Use the `*.example` versions in the repo as templates and keep the real files on the deployment machine only.
 
 ---
 
@@ -89,7 +110,7 @@ The application's behavior after you select a form is controlled by settings on 
 -   **If "Preview PDF fields before generating" is OFF**:
     -   When you click a form, the application will immediately generate the filled PDF and save it to the server, skipping the preview step.
 
-In both cases, after the PDF is generated, it will be saved with the filename `[patient_identifier] CONSENT.pdf` inside a `TEMP` subfolder within the clinician's folder (e.g., `C:\VC01\RT_Consent\Dr_John_Doe\TEMP\`). A success notification will appear in the middle of the screen containing the full UNC path to the file. You can use the "Copy Path" button and paste it into Windows Search or File Explorer to quickly access the file. The `TEMP` folder is automatically emptied before each new PDF is saved, ensuring it only ever contains the latest document.
+In both cases, after the PDF is generated, it will be saved with the filename `[patient_identifier] CONSENT.pdf` inside a `TEMP` subfolder within the clinician's folder (e.g., `C:\Consent\Dr_John_Doe\TEMP\`). A success notification will appear in the middle of the screen containing the full UNC path to the file. You can use the "Copy Path" button and paste it into Windows Search or File Explorer to quickly access the file. The `TEMP` folder is automatically emptied before each new PDF is saved, ensuring it only ever contains the latest document.
 
 ### 6. Sending the Signed Form
 
@@ -100,12 +121,12 @@ After the consent form has been generated, located using the UNC path, signed, a
 
 ### 7. Configuration
 
--   Click the **Settings** icon (⚙️) in the top-right corner to go to the Configuration page. Access is restricted to authorized administrators who are logged into the network via Active Directory. If AD groups are not yet configured, the application enters an "initial setup" mode, allowing unauthenticated access to the configuration page so an admin can set up the AD connection.
+-   Click the **Settings** icon (⚙️) in the top-right corner to go to the Configuration page. Access is restricted to authorized administrators who are logged into the network via Active Directory. If AD groups are not yet configured, the application enters an "initial setup" mode and the root URL redirects to the Configuration page so an admin can set up the AD connection.
 -   From here, you can manage the application's data sources, settings, and staff list according to your access level.
 
 -   **Data Source**: You can view and edit the URL from which the application scrapes consent forms.
 -   **File Paths**:
-    -   **RT Consent Folder**: Set the full server-side path where successfully uploaded and signed consent forms should be stored (e.g., `C:\VC01\RT_Consent`).
+    -   **RT Consent Folder**: Set the full server-side path where successfully uploaded and signed consent forms should be stored (e.g., `C:\Consent`).
 -   **Settings**:
     -   **Enable R Number format validation**: When enabled, the application will check that the KOMS patient number entered in the demographics pop-up matches the required format ('R' followed by 7 digits).
     -   **Preview PDF fields before generating**: This switch controls the workflow after selecting a form. If ON, you can review and edit fields before generating the PDF. If OFF, the PDF is generated and opened immediately. Defaults to OFF.
@@ -116,7 +137,8 @@ After the consent form has been generated, located using the UNC path, signed, a
     -   **Automatically open in Browser**: Opens the PDF in a new browser tab.
     -   **Download for Adobe Acrobat**: Downloads the PDF to your computer, allowing you to open it in a dedicated application like Adobe Acrobat.
 -   **Update Forms**: Click **Check for Updated Forms** to manually trigger a scrape of the currently saved URL to refresh the list of available forms.
--   **Backup & Restore Settings**: You can export the application's entire configuration (including settings, emails, staff, tumour sites, and Active Directory config) to a single JSON file for backup. You can also import a settings file to restore a previous configuration. The AD bind password is not exported for security.
+-   **Backup & Restore Settings**: You can export the application's entire configuration (including settings, emails, staff, tumour sites, and Active Directory config) to a single JSON file for backup. You can also import a settings file to restore a previous configuration. The AD bind password is encrypted at rest on the server and is not exported in backups.
+-   **Machine-Based MFA**: If an MFA machine group is configured, the application checks that the client machine is authorised before displaying the login form. Unauthorised devices are blocked with the message `This machine is not authorised to use this application.`
 -   **Staff Management**: Click **Edit Staff List** to navigate to a separate page to manage staff members.
     - The page features a two-column layout. The left column contains a searchable list of all staff members.
     - Clicking a member in the list will display their full, editable details in the right-hand column, where you can update their name, title, phone number, specialities, and email recipients.
@@ -126,15 +148,15 @@ After the consent form has been generated, located using the UNC path, signed, a
 
 ### 8. Admin & Access Control
 
-Access to the application and its configuration page is managed by Active Directory security groups. If groups are configured, all users must be a member of the base **User Access Group** to log in. Additional permissions are granted by adding users to the `Change` and `Full` access groups. A user's highest-level role determines their permissions.
+Access to the application and its configuration page is managed by Active Directory security groups. If groups are configured, all users must be a member of the base **User Access Group** to log in. Additional permissions are granted by adding users to the `Change` and `Full` access groups. The recommended setup is to nest `Full` inside `Change`, and `Change` inside `User Access`, so elevated admins inherit baseline access cleanly.
 
 There are three levels of access:
 
 -   **User Access (Read-Only)**: A member of the "User Access" AD group. They can view all application settings, but all controls (buttons, inputs, switches) are disabled. This is a read-only role for the entire configuration page and the minimum requirement to use the application.
 
--   **Change Admin**: A member of the "Change Access" AD group (and by extension, the User Access group). They have full read/write access to all application settings, including data sources, file paths, staff lists, and behavior toggles. They **cannot**, however, change the core Active Directory authentication settings.
+-   **Change Admin**: A member of the "Change Access" AD group. In the recommended AD structure this group is nested inside the User Access group. They have full read/write access to all application settings, including data sources, file paths, staff lists, and behavior toggles. They **cannot**, however, change the core Active Directory authentication settings.
 
--   **Full Admin**: A member of the "Full Access" AD group (and by extension, the other groups). This is the super-administrator. They have all the permissions of a `Change` admin, plus the exclusive ability to configure the Active Directory connection itself. This role is required for the initial setup and for managing the application's security.
+-   **Full Admin**: A member of the "Full Access" AD group. In the recommended AD structure this group is nested inside the Change Access group, and therefore inherits the lower access groups as well. This is the super-administrator. They have all the permissions of a `Change` admin, plus the exclusive ability to configure the Active Directory connection itself. This role is required for the initial setup and for managing the application's security.
 
 ---
 

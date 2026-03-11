@@ -1,0 +1,13 @@
+{
+  "url": "ldaps://dc01.example.local:636",
+  "baseDN": "DC=example,DC=local",
+  "bindDN": "CN=ServiceAccount,OU=Users,DC=example,DC=local",
+  "caFile": "",
+  "groupDNs": {
+    "user": "CN=AppUsers,OU=Groups,DC=example,DC=local",
+    "change": "CN=AppAdmins-Change,OU=Groups,DC=example,DC=local",
+    "full": "CN=AppAdmins-Full,OU=Groups,DC=example,DC=local"
+  },
+  "mfaMachineGroup": "CN=AppMfaDevices,OU=Groups,DC=example,DC=local",
+  "encryptedBindPassword": ""
+}

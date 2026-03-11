@@ -3,14 +3,13 @@ import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 import { EmailContact, StaffMember, TumourSite, ADConfig } from '@/lib/types';
+import { defaultAdConfig, normaliseAdConfig, readAdConfig, stripAdConfigSecrets, writeAdConfig } from '@/lib/ad-config';
 
 // Define paths
 const appConfigPath = path.join(process.cwd(), 'src', 'config', 'app.json');
 const emailConfigPath = path.join(process.cwd(), 'src', 'config', 'email.json');
 const staffConfigPath = path.join(process.cwd(), 'src', 'config', 'staff.json');
 const tumourSitesConfigPath = path.join(process.cwd(), 'src', 'config', 'tumour-sites.json');
-const adConfigPath = path.join(process.cwd(), 'src', 'config', 'ad.json');
-
 
 // Define a type for the combined data for type safety
 interface BackupData {
@@ -43,18 +42,15 @@ export async function GET() {
         readJsonFile(emailConfigPath, []),
         readJsonFile(staffConfigPath, []),
         readJsonFile(tumourSitesConfigPath, []),
-        readJsonFile<ADConfig>(adConfigPath, { url: '', baseDN: '', bindDN: '', groupDNs: { user: '', change: '', full: '' } }),
+        readAdConfig(),
     ]);
-
-    // Securely remove the password before sending to the client
-    const { bindPassword, ...secureAdConfig } = adConfig;
 
     const backupData: BackupData = {
         settings,
         emails,
         staff,
         tumourSites,
-        ad: secureAdConfig,
+        ad: stripAdConfigSecrets(adConfig),
     };
 
     return NextResponse.json(backupData);
@@ -86,14 +82,22 @@ export async function POST(request: Request) {
         const tumourSitesJsonData = JSON.stringify(data.tumourSites, null, 2);
         
         // Securely handle AD config import
-        const currentAdConfig = await readJsonFile<ADConfig>(adConfigPath, { url: '', baseDN: '', bindDN: '', groupDNs: { user: '', change: '', full: '' } });
+        const currentAdConfig = await readAdConfig();
         const importedAdConfig = data.ad;
 
         // Preserve existing password if not provided in the import
         if (!importedAdConfig.bindPassword) {
             importedAdConfig.bindPassword = currentAdConfig.bindPassword;
         }
-        const adJsonData = JSON.stringify(importedAdConfig, null, 2);
+        const mergedAdConfig = normaliseAdConfig({
+            ...defaultAdConfig,
+            ...currentAdConfig,
+            ...importedAdConfig,
+            groupDNs: {
+                ...currentAdConfig.groupDNs,
+                ...importedAdConfig.groupDNs,
+            },
+        });
 
 
         // Write all files
@@ -102,7 +106,7 @@ export async function POST(request: Request) {
             fs.writeFile(emailConfigPath, emailsJsonData, 'utf-8'),
             fs.writeFile(staffConfigPath, staffJsonData, 'utf-8'),
             fs.writeFile(tumourSitesConfigPath, tumourSitesJsonData, 'utf-8'),
-            fs.writeFile(adConfigPath, adJsonData, 'utf-8'),
+            writeAdConfig(mergedAdConfig),
         ]);
         
         return NextResponse.json({ message: "Full application configuration imported successfully." });

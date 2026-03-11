@@ -246,7 +246,7 @@ export default function ADConfigPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Role-Based Access Control</CardTitle>
-                    <CardDescription>Map Active Directory security groups to application access levels. A user's highest role will be used. 'Full' includes 'Change' and 'User' access.</CardDescription>
+                    <CardDescription>Map Active Directory security groups to application access levels. All users must be in the User Access Group. Nest the Change and Full groups under it in Active Directory so elevated users inherit baseline access.</CardDescription>
                 </CardHeader>
                 {isLoading ? <div className="p-6"><Skeleton className="h-32 w-full" /></div> : (
                      <CardContent className="space-y-4">

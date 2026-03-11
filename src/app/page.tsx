@@ -128,7 +128,7 @@ export default function Home() {
   
   const isMobile = useIsMobile();
   const { toast } = useToast();
-  const { session } = useSession();
+  const { session, isLoading: isSessionLoading } = useSession();
   const router = useRouter();
 
 
@@ -220,6 +220,10 @@ export default function Home() {
 
 
   useEffect(() => {
+    if (isSessionLoading || session.isLoggedIn !== true) {
+      return;
+    }
+
     fetchInitialData();
 
     checkForFormUpdates()
@@ -231,7 +235,7 @@ export default function Home() {
       })
       .catch(console.error)
       .finally(() => setIsCheckingForUpdates(false));
-  }, []);
+  }, [isSessionLoading, session.isLoggedIn]);
 
   const patientMappings = useMemo(() => {
     const formattedDob = patientData.dob ? format(new Date(patientData.dob), 'dd/MM/yyyy') : '';
@@ -751,6 +755,16 @@ export default function Home() {
 
 
   return (
+    isSessionLoading || session.isLoggedIn !== true ? (
+      <div className="flex h-dvh w-full items-center justify-center bg-background p-8">
+        <Alert className="max-w-md">
+          <AlertTitle>Checking session...</AlertTitle>
+          <AlertDescription>
+            Confirming access before loading the application.
+          </AlertDescription>
+        </Alert>
+      </div>
+    ) : (
     <div className="flex h-dvh w-full flex-col bg-background">
       <AppHeader
         isMobile={isMobile}
@@ -792,5 +806,6 @@ export default function Home() {
       />
       
     </div>
+    )
   );
 }

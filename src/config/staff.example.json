@@ -1,0 +1,12 @@
+[
+  {
+    "id": "example_consultant",
+    "name": "Example Consultant",
+    "title": "Consultant Clinical Oncologist",
+    "phone": "",
+    "speciality1": null,
+    "speciality2": null,
+    "speciality3": null,
+    "emailRecipients": ""
+  }
+]
