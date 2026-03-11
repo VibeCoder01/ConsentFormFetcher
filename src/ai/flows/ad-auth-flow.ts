@@ -13,8 +13,12 @@ function escapeLDAPfilter(value: string) {
   return value.replace(/[\0\*\(\)\\]/g, (c) => '\\' + c.charCodeAt(0).toString(16));
 }
 
+function normaliseHostname(value: string) {
+  return value.trim().toLowerCase().replace(/\.$/, '');
+}
+
 function buildComputerSearchFilters(hostname: string) {
-  const trimmed = hostname.trim().toLowerCase();
+  const trimmed = normaliseHostname(hostname);
   const shortName = trimmed.split('.')[0] ?? trimmed;
   const variants = Array.from(new Set([
     trimmed,
@@ -23,6 +27,25 @@ function buildComputerSearchFilters(hostname: string) {
   ])).filter(Boolean);
 
   return variants.map(escapeLDAPfilter);
+}
+
+function buildComputerSearchFilter(hostname: string) {
+  const trimmed = normaliseHostname(hostname);
+  const shortName = trimmed.split('.')[0] ?? trimmed;
+  const escapedFqdn = escapeLDAPfilter(trimmed);
+  const escapedShort = escapeLDAPfilter(shortName);
+  const escapedSam = escapeLDAPfilter(`${shortName}$`);
+
+  return `(|` +
+    `(dNSHostName=${escapedFqdn})` +
+    `(cn=${escapedShort})` +
+    `(name=${escapedShort})` +
+    `(sAMAccountName=${escapedSam})` +
+    `(servicePrincipalName=HOST/${escapedFqdn})` +
+    `(servicePrincipalName=HOST/${escapedShort})` +
+    `(servicePrincipalName=RestrictedKrbHost/${escapedFqdn})` +
+    `(servicePrincipalName=RestrictedKrbHost/${escapedShort})` +
+  `)`;
 }
 
 export type AdAuthInput = z.infer<typeof AdAuthInputSchema>;
@@ -101,30 +124,56 @@ async function validateMachineAuthorisation(client: Client, config: ADConfig, ho
   }
 
   const hostnameVariants = buildComputerSearchFilters(hostname);
-  const hostnameFilter = hostnameVariants.length === 1
-    ? `(dNSHostName=${hostnameVariants[0]})`
-    : `(|${hostnameVariants.map((value) => `(dNSHostName=${value})(cn=${value})(name=${value})(sAMAccountName=${value})`).join('')})`;
+  const hostnameFilter = buildComputerSearchFilter(hostname);
 
   const { searchEntries } = await client.search(config.baseDN, {
     scope: 'sub',
     filter: `(&(objectClass=computer)${hostnameFilter})`,
-    attributes: ['dn'],
+    attributes: ['dn', 'cn', 'name', 'dNSHostName', 'sAMAccountName'],
   });
 
-  const computerDns = Array.from(new Set(
-    searchEntries
-      .map((entry) => (entry as any).dn as string | undefined)
-      .filter((dn): dn is string => Boolean(dn))
-  ));
+  const computers = searchEntries
+    .map((entry) => ({
+      dn: (entry as any).dn as string | undefined,
+      cn: (entry as any).cn as string | string[] | undefined,
+      name: (entry as any).name as string | string[] | undefined,
+      dnsHostName: (entry as any).dNSHostName as string | string[] | undefined,
+      samAccountName: (entry as any).sAMAccountName as string | string[] | undefined,
+    }))
+    .filter((entry): entry is { dn: string; cn?: string | string[]; name?: string | string[]; dnsHostName?: string | string[]; samAccountName?: string | string[] } => Boolean(entry.dn));
+
+  const computerDns = Array.from(new Set(computers.map((entry) => entry.dn)));
 
   if (computerDns.length === 0) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('AD machine authorisation check', {
+        hostname,
+        hostnameVariants,
+        mfaMachineGroup: config.mfaMachineGroup,
+        computers: [],
+        membershipChecks: [],
+      });
+    }
     return { ok: false as const, reason: machineAccessDeniedMessage };
   }
 
   const membershipChecks = await Promise.all(
-    computerDns.map((computerDN) => isMemberOf(client, computerDN, config.mfaMachineGroup))
+    computerDns.map(async (computerDN) => ({
+      computerDN,
+      matched: await isMemberOf(client, computerDN, config.mfaMachineGroup),
+    }))
   );
-  const isAuthorised = membershipChecks.some(Boolean);
+  const isAuthorised = membershipChecks.some((result) => result.matched);
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('AD machine authorisation check', {
+      hostname,
+      hostnameVariants,
+      mfaMachineGroup: config.mfaMachineGroup,
+      computers,
+      membershipChecks,
+    });
+  }
 
   return isAuthorised
     ? { ok: true as const }

@@ -183,9 +183,13 @@ There are three levels of access:
 ## Technical-security posture
 | Feature | Positive impact | Cyber baseline it helps tick |
 | --- | --- | --- |
-| Next.js 14 + ShadCN on the client, with server-side flows isolated from the UI | Separation of concerns simplifies threat modelling; fits CAF principle PR.DS-3 (segmented architectures). | NCSC CAF-aligned DSPT section 3 |
-| Ignores PDF encryption instead of trying to break it | Means the app never sees password-protected documents – avoids storing decryption keys. | DSPT outcome C4 (“don’t weaken third-party crypto”) |
-| All external calls are HTTPS and the RCR source is configurable | Lets the trust pin certificates or proxy through an allow-listed egress gateway. | CAF SR.A – secure external services |
+| Next.js 15 + React on the client, with auth, LDAP, and file operations isolated to server-side handlers and flows | Separation of concerns simplifies threat modelling and keeps credential-handling logic off the client. | NCSC CAF-aligned DSPT section 3 |
+| Session state is stored in an `httpOnly` cookie, marked `secure` in production | The browser cannot read the session cookie via client-side JavaScript, reducing exposure to trivial token theft. | DSPT outcome 5B; NCSC CAF B2 |
+| AD bind password is encrypted at rest with AES-256-GCM and omitted from exported backups | Reduces the chance of plaintext credential disclosure from config files or routine backup exports. | GDPR Art 32; DSPT outcome 9-C |
+| Machine-based access is checked before the login form is shown and re-checked on the login API | Prevents unauthorised workstations from reaching an authenticated session through client-side bypass or stale UI state. | NCSC CAF B2 (access control) |
+| LDAP over TLS is supported, with certificate validation enforced when a CA file is configured | Allows a trust to validate the AD server certificate properly. If no CA file is configured, the app currently permits an insecure fallback and this should be treated as a reduced-security deployment mode. | CAF B3 / secure communications |
+| Ignores PDF encryption instead of trying to break it | Means the app never attempts to bypass password-protected documents or manage decryption keys. | DSPT outcome C4 (“don’t weaken third-party crypto”) |
+| The RCR source is fetched over HTTPS, while KOMS and AD endpoints are deployment-configurable | Public content uses TLS by default; internal integrations can be routed through trusted internal networks or secured with local TLS policy. | CAF SR.A – secure external services |
 
 ## Interoperability & usability
 | Feature | Why it scores | Corresponding DTAC criterion |
