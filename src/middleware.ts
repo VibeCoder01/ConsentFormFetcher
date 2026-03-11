@@ -21,8 +21,11 @@ export async function middleware(request: NextRequest) {
 
   const { isInSetupMode } = await setupStatusResponse.json();
 
-  // If in initial setup mode, allow access to all pages so the admin can configure AD.
+  // In setup mode, send the root route directly to configuration to make first-run behavior explicit.
   if (isInSetupMode) {
+      if (request.nextUrl.pathname === '/') {
+        return NextResponse.redirect(new URL('/config', request.url));
+      }
       return NextResponse.next();
   }
   

@@ -6,8 +6,10 @@ import { Menu, Settings, FileText, Mail, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { version } from "../../package.json";
+import packageJson from "../../package.json";
 import type { SessionData } from "@/lib/types";
+
+const { version } = packageJson;
 
 interface AppHeaderProps {
   isMobile: boolean;

@@ -1,39 +1,12 @@
 
 import { NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs/promises';
 import { ADConfig } from '@/lib/types';
-
-const configPath = path.join(process.cwd(), 'src', 'config', 'ad.json');
-
-async function readConfig(): Promise<ADConfig> {
-    try {
-        const jsonData = await fs.readFile(configPath, 'utf-8');
-        return JSON.parse(jsonData);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return {
-                url: "",
-                baseDN: "",
-                bindDN: "",
-                bindPassword: "",
-                caFile: "",
-                groupDNs: {
-                    user: "",
-                    change: "",
-                    full: "",
-                }
-            };
-        }
-        throw error;
-    }
-}
+import { normaliseAdConfig, readAdConfig, stripAdConfigSecrets, writeAdConfig } from '@/lib/ad-config';
 
 export async function GET() {
   try {
-    const config = await readConfig();
-    const { bindPassword, ...clientConfig } = config;
-    return NextResponse.json(clientConfig);
+    const config = await readAdConfig();
+    return NextResponse.json(stripAdConfigSecrets(config));
   } catch (error) {
     console.error("Failed to read AD config file:", error);
     return NextResponse.json({ message: "Could not load AD configuration." }, { status: 500 });
@@ -43,23 +16,19 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const updates: Partial<ADConfig> = await request.json();
-        const currentConfig = await readConfig();
+        const currentConfig = await readAdConfig();
         
-        const updatedConfig: ADConfig = {
-            url: updates.url ?? currentConfig.url,
-            baseDN: updates.baseDN ?? currentConfig.baseDN,
-            bindDN: updates.bindDN ?? currentConfig.bindDN,
+        const updatedConfig = normaliseAdConfig({
+            ...currentConfig,
+            ...updates,
             bindPassword: updates.bindPassword || currentConfig.bindPassword,
-            caFile: updates.caFile ?? currentConfig.caFile,
             groupDNs: {
-                user: updates.groupDNs?.user ?? currentConfig.groupDNs.user,
-                change: updates.groupDNs?.change ?? currentConfig.groupDNs.change,
-                full: updates.groupDNs?.full ?? currentConfig.groupDNs.full,
-            }
-        };
+                ...currentConfig.groupDNs,
+                ...updates.groupDNs,
+            },
+        });
 
-        const jsonData = JSON.stringify(updatedConfig, null, 2);
-        await fs.writeFile(configPath, jsonData, 'utf-8');
+        await writeAdConfig(updatedConfig);
         
         return NextResponse.json({ message: "Active Directory configuration updated successfully." });
 

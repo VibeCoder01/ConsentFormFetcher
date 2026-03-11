@@ -35,7 +35,20 @@ yarn-error.log*
 pnpm-debug.log*
 
 # local env files
+.env
+.env.*
 .env*.local
+!.env.example
+
+# local runtime config / confidential data
+/src/config/ad.json
+/src/config/email.json
+/src/config/staff.json
+
+# local exports and backups
+*.backup.json
+*.bak
+*.tmp
 
 # vercel
 .vercel
