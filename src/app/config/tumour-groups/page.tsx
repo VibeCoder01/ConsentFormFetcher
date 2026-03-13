@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useSession } from '@/hooks/use-session';
@@ -28,7 +28,7 @@ export default function TumourGroupsConfigPage() {
 
   const isModified = JSON.stringify(groups) !== JSON.stringify(initialGroups);
 
-  const fetchGroups = async () => {
+  const fetchGroups = useCallback(async () => {
       setIsLoading(true);
       try {
         const res = await fetch('/api/tumour-groups');
@@ -36,7 +36,7 @@ export default function TumourGroupsConfigPage() {
         const data: TumourGroup[] = await res.json();
         setGroups(data);
         setInitialGroups(data);
-      } catch (error) {
+      } catch {
         toast({
           variant: 'destructive',
           title: 'Error',
@@ -45,11 +45,11 @@ export default function TumourGroupsConfigPage() {
       } finally {
         setIsLoading(false);
       }
-    }
+    }, [toast]);
 
   useEffect(() => {
-    fetchGroups();
-  }, [toast]);
+    void fetchGroups();
+  }, [fetchGroups]);
 
   const handleFieldChange = (index: number, value: string) => {
     if (!canEdit) return;

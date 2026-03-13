@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useSession } from '@/hooks/use-session';
@@ -28,7 +28,7 @@ export default function TumourSitesConfigPage() {
 
   const isModified = JSON.stringify(sites) !== JSON.stringify(initialSites);
 
-  const fetchSites = async () => {
+  const fetchSites = useCallback(async () => {
       setIsLoading(true);
       try {
         const res = await fetch('/api/tumour-sites');
@@ -36,7 +36,7 @@ export default function TumourSitesConfigPage() {
         const data: TumourSite[] = await res.json();
         setSites(data);
         setInitialSites(data);
-      } catch (error) {
+      } catch {
         toast({
           variant: 'destructive',
           title: 'Error',
@@ -45,11 +45,11 @@ export default function TumourSitesConfigPage() {
       } finally {
         setIsLoading(false);
       }
-    }
+    }, [toast]);
 
   useEffect(() => {
-    fetchSites();
-  }, [toast]);
+    void fetchSites();
+  }, [fetchSites]);
 
   const handleFieldChange = (index: number, value: string) => {
     if (!canEdit) return;

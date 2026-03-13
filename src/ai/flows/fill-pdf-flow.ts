@@ -1,7 +1,6 @@
 
 'use server';
 
-import { z } from 'zod';
 import { PDFDocument, PDFTextField, PDFDropdown, PDFRadioGroup, PDFCheckBox, StandardFonts } from 'pdf-lib';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -13,14 +12,13 @@ async function getConfig() {
     return JSON.parse(jsonData);
 }
 
-const FillPdfInputSchema = z.object({
-  formUrl: z.string().url(),
-  fields: z.record(z.string()), // Flexible key-value pairs
-  patientIdentifier: z.string(),
-  formTitle: z.string(),
-  clinicianName: z.string(),
-});
-type FillPdfInput = z.infer<typeof FillPdfInputSchema>;
+interface FillPdfInput {
+  formUrl: string;
+  fields: Record<string, string>;
+  patientIdentifier: string;
+  formTitle: string;
+  clinicianName: string;
+}
 
 export interface FillPdfOutput {
   success: boolean;
@@ -30,7 +28,7 @@ export interface FillPdfOutput {
 
 export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
   try {
-    const { formUrl, fields: fieldsToFill, patientIdentifier, formTitle, clinicianName } = input;
+    const { formUrl, fields: fieldsToFill, patientIdentifier, clinicianName } = input;
     const config = await getConfig();
 
     if (!config.rtConsentFolder) {
@@ -54,7 +52,9 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
             if (field instanceof PDFTextField) {
                 if (fieldName.toLowerCase().includes('contact detail')) {
                     field.enableMultiline();
-                    field.enableAutosizing();
+                    if ('enableAutosizing' in field && typeof field.enableAutosizing === 'function') {
+                        field.enableAutosizing();
+                    }
                 }
                 field.setText(value.toString());
             } else if (field instanceof PDFDropdown && !field.isMultiselect()) {
@@ -74,7 +74,7 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
                     field.uncheck();
                 }
             }
-        } catch(e) {
+        } catch {
             // Field not found, just log and continue
             console.warn(`Field "${fieldName}" not found in PDF, skipping.`);
         }

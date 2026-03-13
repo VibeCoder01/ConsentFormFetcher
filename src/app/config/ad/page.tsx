@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Save, Loader2, TestTube2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, TestTube2, AlertTriangle } from 'lucide-react';
 import type { ADConfig } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useSession } from '@/hooks/use-session';
@@ -41,7 +41,7 @@ export default function ADConfigPage() {
   const hasFullAccess = session.isLoggedIn && session.roles.includes('full');
   const isModified = JSON.stringify(config) !== JSON.stringify(initialConfig) || passwordChanged;
 
-  const fetchConfig = async () => {
+  const fetchConfig = useCallback(async () => {
       setIsLoading(true);
       try {
         const res = await fetch('/api/config/ad');
@@ -49,7 +49,7 @@ export default function ADConfigPage() {
         const data: Omit<ADConfig, 'bindPassword'> = await res.json();
         setConfig(data);
         setInitialConfig(data);
-      } catch (error) {
+      } catch {
         toast({
           variant: 'destructive',
           title: 'Error',
@@ -58,24 +58,29 @@ export default function ADConfigPage() {
       } finally {
         setIsLoading(false);
       }
-    }
+    }, [toast]);
 
   useEffect(() => {
-    fetchConfig();
-  }, [toast]);
+    void fetchConfig();
+  }, [fetchConfig]);
 
   const handleFieldChange = (field: keyof Omit<ADConfig, 'bindPassword' | 'groupDNs'>, value: string) => {
     setConfig(prev => ({...prev, [field]: value}));
   };
   
-   const handleGroupDNChange = (role: 'user' | 'change' | 'full', value: string) => {
-    setConfig(prev => ({
-        ...prev,
-        groupDNs: {
-            ...prev.groupDNs,
-            [role]: value,
-        }
-    }));
+  const handleGroupDNChange = (role: 'user' | 'change' | 'full', value: string) => {
+    setConfig(prev => {
+        const currentGroupDNs = prev.groupDNs ?? emptyConfig.groupDNs!;
+        return {
+            ...prev,
+            groupDNs: {
+                user: currentGroupDNs.user,
+                change: currentGroupDNs.change,
+                full: currentGroupDNs.full,
+                [role]: value,
+            }
+        };
+    });
   };
 
   const handlePasswordChange = (value: string) => {

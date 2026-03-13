@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import type { ConsentForm, ConsentFormCategory, PatientData, IdentifierType, StaffMember, TumourSite } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSession } from "@/hooks/use-session";
@@ -81,19 +81,18 @@ const UncPathToast = ({ uncPath }: { uncPath: string }) => {
 
     return (
         <div className="flex flex-col gap-2 w-full">
-            <p className="break-words">The PDF has been saved to the clinician's folder.</p>
+            <p className="break-words">The PDF has been saved to the clinician folder.</p>
             <p className="font-mono bg-muted p-2 rounded-md text-xs break-all">{uncPath}</p>
+            <Button
+                size="sm"
+                onClick={handleCopy}
+                className="w-fit"
+            >
+                Copy Path
+            </Button>
             {copied ? (
-                <p className="text-sm font-medium text-destructive">Copied! Now paste into the Windows Search bar.</p>
-            ) : (
-                <Button
-                    size="sm"
-                    onClick={handleCopy}
-                    className="w-fit"
-                >
-                    Copy Path
-                </Button>
-            )}
+                <p className="text-sm font-medium text-destructive">Copied. Now paste into the Windows Search bar.</p>
+            ) : null}
         </div>
     );
 };
@@ -124,6 +123,7 @@ export default function Home() {
   const [previewPdfFieldsConfig, setPreviewPdfFieldsConfig] = useState(false);
   const [showWelshFormsConfig, setShowWelshFormsConfig] = useState(false);
   const [komsApiDebugModeConfig, setKomsApiDebugModeConfig] = useState(false);
+  const [validateRNumberConfig, setValidateRNumberConfig] = useState(false);
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   
   const isMobile = useIsMobile();
@@ -158,7 +158,7 @@ export default function Home() {
     setSelectedStaffMember(selected);
   };
 
-  const fetchInitialData = async () => {
+  const fetchInitialData = useCallback(async () => {
     setIsLoading(true);
     setIsConfigLoading(true);
     try {
@@ -181,6 +181,7 @@ export default function Home() {
       setPreviewPdfFieldsConfig(configData.previewPdfFields);
       setShowWelshFormsConfig(configData.showWelshForms);
       setKomsApiDebugModeConfig(configData.komsApiDebugMode);
+      setValidateRNumberConfig(configData.validateRNumber);
 
       const initialData = configData.prepopulateWithFakeData ? fakePatientData : emptyPatientData;
       setPatientData(initialData);
@@ -197,7 +198,7 @@ export default function Home() {
       setIsLoading(false);
       setIsConfigLoading(false);
     }
-  };
+  }, [toast]);
 
   const filteredFormCategories = useMemo(() => {
     return formCategories
@@ -224,7 +225,7 @@ export default function Home() {
       return;
     }
 
-    fetchInitialData();
+    void fetchInitialData();
 
     checkForFormUpdates()
       .then((result) => {
@@ -235,7 +236,7 @@ export default function Home() {
       })
       .catch(console.error)
       .finally(() => setIsCheckingForUpdates(false));
-  }, [isSessionLoading, session.isLoggedIn]);
+  }, [fetchInitialData, isSessionLoading, session.isLoggedIn]);
 
   const patientMappings = useMemo(() => {
     const formattedDob = patientData.dob ? format(new Date(patientData.dob), 'dd/MM/yyyy') : '';
@@ -318,7 +319,7 @@ export default function Home() {
 
   const prePopulateData = (fields: string[]): { finalFields: PdfField[], finalFormData: Record<string, string> } => {
     const newPdfFields: PdfField[] = [];
-    let newPdfFormData: Record<string, string> = {};
+    const newPdfFormData: Record<string, string> = {};
 
     const specialStartsWithKeys = ['name', 'date'];
     
@@ -563,7 +564,7 @@ export default function Home() {
       if (result.success && result.uncPath) {
         toast({
             title: 'PDF Saved to Network',
-            duration: 10000,
+            duration: Number.POSITIVE_INFINITY,
             description: (
               <UncPathToast uncPath={result.uncPath} />
             ),
@@ -676,6 +677,8 @@ export default function Home() {
             setPatientData={handlePatientDataChange} 
             staffMembers={staffMembers} 
             komsApiDebugMode={komsApiDebugModeConfig}
+            validateRNumber={validateRNumberConfig}
+            isConfigLoading={isConfigLoading}
         />
         <ClinicianForm 
           staffMembers={staffMembers}
@@ -720,7 +723,7 @@ export default function Home() {
           <CardContent>
             <ol className="list-decimal list-inside space-y-3 text-sm text-muted-foreground">
               <li>
-                <strong>Get Patient Details:</strong> Use the form on the left or the "Get Live Patient Demographics" button to enter patient information.
+                <strong>Get Patient Details:</strong> Use the patient details panel on the left to enter a KOMS patient number and fetch live demographics, or fill the fields manually.
               </li>
               <li>
                 <strong>Select Macmillan Contact:</strong> Optionally, choose the appropriate Macmillan contact from the dropdown menu.
@@ -735,7 +738,7 @@ export default function Home() {
                 <strong>Select Unique Patient Identifier:</strong> e.g. NHS Number.
               </li>
               <li>
-                <strong>Select Consent Form:</strong> Choose the appropriate form from the "Available Forms" list. The partially pre-populated PDF will be generated.
+                <strong>Select Consent Form:</strong> Choose the appropriate form from the Available Forms list. The partially pre-populated PDF will be generated.
               </li>
               <li>
                 <strong>Click the &quot;Copy Path&quot; button</strong> to copy the path to the PDF and paste into the Windows Search bar, press ENTER.

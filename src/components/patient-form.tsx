@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils';
 import { useMemo, useState, useEffect } from 'react';
 import { AgeWarningDialog } from './age-warning-dialog';
 import { Button } from './ui/button';
-import { RNumberPromptDialog } from './r-number-prompt-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -22,6 +21,8 @@ interface PatientFormProps {
   setPatientData: (data: PatientData, fromDemographics?: boolean) => void;
   staffMembers: StaffMember[];
   komsApiDebugMode: boolean;
+  validateRNumber: boolean;
+  isConfigLoading: boolean;
 }
 
 const identifierOptions: { value: IdentifierType; label: string }[] = [
@@ -31,9 +32,29 @@ const identifierOptions: { value: IdentifierType; label: string }[] = [
     { value: 'hospitalNumberMTW', label: 'Hospital Number (MTW)' },
 ];
 
-export function PatientForm({ patientData, initialData, setPatientData, staffMembers, komsApiDebugMode }: PatientFormProps) {
+function getApiErrorMessage(responseData: unknown, status: number): string {
+  if (
+    responseData &&
+    typeof responseData === 'object' &&
+    'error' in responseData &&
+    typeof responseData.error === 'string'
+  ) {
+    return responseData.error;
+  }
+
+  return `Request failed with status ${status}`;
+}
+
+export function PatientForm({
+  patientData,
+  initialData,
+  setPatientData,
+  staffMembers,
+  komsApiDebugMode,
+  validateRNumber,
+  isConfigLoading,
+}: PatientFormProps) {
   const [showAgeWarning, setShowAgeWarning] = useState(false);
-  const [showRNumberPrompt, setShowRNumberPrompt] = useState(false);
   const [isFetchingDemographics, setIsFetchingDemographics] = useState(false);
   const [demographicsLoaded, setDemographicsLoaded] = useState(false);
   const [macmillanFilter, setMacmillanFilter] = useState<'macmillan' | 'other' | null>('macmillan');
@@ -77,17 +98,18 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
   }, [macmillanFilter, staffMembers]);
 
   const handleRNumberSubmit = async (rNumber: string) => {
+    const normalizedRNumber = rNumber.trim().toUpperCase();
+
     setIsFetchingDemographics(true);
-    setShowRNumberPrompt(false);
     toast({
       title: 'Fetching...',
-      description: `Getting demographics for ${rNumber}...`,
+      description: `Getting demographics for ${normalizedRNumber}...`,
     });
     
-    let rawResponseData: any;
+    let rawResponseData: unknown;
 
     try {
-        const response = await fetch(`/api/koms?RNumber=${rNumber}`);
+        const response = await fetch(`/api/koms?RNumber=${encodeURIComponent(normalizedRNumber)}`);
         rawResponseData = await response.json();
 
         if (komsApiDebugMode) {
@@ -98,12 +120,15 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
             });
         }
 
-        if (!response.ok || 'error' in rawResponseData) {
-            const errorMsg = 'error' in rawResponseData ? rawResponseData.error : `Request failed with status ${response.status}`;
+        if (
+          !response.ok ||
+          (rawResponseData && typeof rawResponseData === 'object' && 'error' in rawResponseData)
+        ) {
+            const errorMsg = getApiErrorMessage(rawResponseData, response.status);
             throw new Error(errorMsg);
         }
         
-        const data: KomsResponse = rawResponseData;
+        const data = rawResponseData as KomsResponse;
         
         // Check for placeholder response which indicates user is not logged into KOMS
         if (data.forename === '${forename}') {
@@ -125,7 +150,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
             forename: data.forename || '',
             surname: data.surname || '',
             dob: data.dob || '',
-            rNumber: data.rNumber || rNumber,
+            rNumber: data.rNumber || normalizedRNumber,
             addr1: data.addr1 || '',
             addr2: data.addr2 || '',
             addr3: data.addr3 || '',
@@ -158,7 +183,7 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
     } finally {
         setIsFetchingDemographics(false);
     }
-  }
+  };
 
   const isUnder16 = useMemo(() => {
     if (!patientData.dob) return false;
@@ -196,28 +221,74 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
       return !selectedStaff.title.toLowerCase().includes('macmillan');
   }, [patientData.macmillanContactId, staffMembers]);
 
+  const isRNumberValid = !validateRNumber || (!!patientData.rNumber && /^R\d{7}$/i.test(patientData.rNumber.trim()));
+
+  const handleFetchDemographics = () => {
+    if (!patientData.rNumber || !isRNumberValid || isFetchingDemographics || isConfigLoading) {
+      return;
+    }
+
+    handleRNumberSubmit(patientData.rNumber);
+  };
+
+  const handleRNumberKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleFetchDemographics();
+    }
+  };
+
 
   return (
     <div className="p-2 md:p-4 border-b">
-       <div className="flex justify-between items-center px-2 mb-4">
+       <div className="px-2 mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <h2 className="text-lg font-semibold tracking-tight">
             Patient Details
         </h2>
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <div className="w-[70%]">
-                        <Button onClick={() => setShowRNumberPrompt(true)} disabled={isFetchingDemographics} className="h-auto py-3 px-1 text-base">
-                            {isFetchingDemographics ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Get Live Patient Demographics
-                        </Button>
-                    </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>Fetch patient details from KOMS. You must be logged into KOMS for this to work.</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
+        <div className="w-full max-w-sm space-y-1.5">
+            <Label htmlFor="fetch-r-number" className="sr-only">KOMS patient number</Label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+                <Input
+                    id="fetch-r-number"
+                    type="text"
+                    name="rNumber"
+                    value={patientData.rNumber}
+                    onChange={handleChange}
+                    onKeyDown={handleRNumberKeyDown}
+                    placeholder="KOMS patient number"
+                    disabled={isFetchingDemographics || isConfigLoading}
+                    className={cn(
+                        "sm:flex-1",
+                        isInitialValue('rNumber') && "bg-red-100 dark:bg-red-900/30",
+                        patientData.rNumber && !isRNumberValid && "border-red-500 focus-visible:ring-red-500"
+                    )}
+                />
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div>
+                                <Button
+                                    onClick={handleFetchDemographics}
+                                    disabled={!patientData.rNumber || isFetchingDemographics || !isRNumberValid || isConfigLoading}
+                                    className="w-full sm:w-auto"
+                                >
+                                    {isFetchingDemographics ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                    Get Demographics
+                                </Button>
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Fetch patient details from KOMS. You must be logged into KOMS for this to work.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </div>
+            {validateRNumber ? (
+                <p className={cn("text-xs text-muted-foreground", patientData.rNumber && !isRNumberValid && "text-destructive")}>
+                    Enter an R number in the format R1234567.
+                </p>
+            ) : null}
+        </div>
        </div>
       <div className="space-y-4 px-2">
         <div className="grid w-full max-w-sm items-center gap-1.5">
@@ -311,10 +382,6 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
             </div>
         </div>
 
-        <div className="grid w-full max-w-sm items-center gap-1.5">
-          <Label htmlFor="rNumber">KOMS patient number</Label>
-          <Input type="text" id="rNumber" name="rNumber" value={patientData.rNumber} onChange={handleChange} className={cn(isInitialValue('rNumber') && "bg-red-100 dark:bg-red-900/30")} />
-        </div>
          <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="nhsNumber">NHS Number</Label>
           <Input type="text" id="nhsNumber" name="nhsNumber" value={patientData.nhsNumber} onChange={handleChange} className={cn(isInitialValue('nhsNumber') && "bg-red-100 dark:bg-red-900/30")} />
@@ -350,12 +417,6 @@ export function PatientForm({ patientData, initialData, setPatientData, staffMem
         </div>
       </div>
       <AgeWarningDialog open={showAgeWarning} onOpenChange={setShowAgeWarning} />
-      <RNumberPromptDialog 
-        open={showRNumberPrompt} 
-        onOpenChange={setShowRNumberPrompt}
-        onSubmit={handleRNumberSubmit}
-        isSubmitting={isFetchingDemographics}
-      />
     </div>
   );
 }

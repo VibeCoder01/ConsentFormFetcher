@@ -42,7 +42,7 @@ export async function checkForFormUpdates(): Promise<UpdateCheckResult> {
     try {
       const jsonData = await fs.readFile(jsonFilePath, 'utf-8');
       existingForms = JSON.parse(jsonData);
-    } catch (error) {
+    } catch {
       // If the file doesn't exist or is invalid, we'll treat it as an update.
     }
 

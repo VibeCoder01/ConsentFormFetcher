@@ -7,7 +7,7 @@ import { copyToClipboard } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 interface DebugToastProps {
-  data: any;
+  data: unknown;
 }
 
 export const DebugToast = ({ data }: DebugToastProps) => {
