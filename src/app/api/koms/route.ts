@@ -13,6 +13,16 @@ async function getConfig() {
     return JSON.parse(jsonData);
 }
 
+function getErrorCauseCode(error: Error): string | undefined {
+  const cause = (error as Error & { cause?: unknown }).cause;
+  if (!cause || typeof cause !== 'object' || !('code' in cause)) {
+    return undefined;
+  }
+
+  const { code } = cause as { code?: unknown };
+  return typeof code === 'string' ? code : undefined;
+}
+
 export async function GET(req: NextRequest) {
   const rNumber = new URL(req.url).searchParams.get('RNumber');
   const config = await getConfig();
@@ -67,7 +77,7 @@ export async function GET(req: NextRequest) {
                     dob = '';
                  }
             }
-        } catch (e) {
+        } catch {
             dob = ''; // Set to empty on error
         }
     }
@@ -103,13 +113,12 @@ export async function GET(req: NextRequest) {
 
     let message = 'An unknown network error occurred';
     if (error instanceof Error) {
-        // The actual error code (e.g., UND_ERR_CONNECT_TIMEOUT) is often nested in the 'cause' property.
-        const cause = (error as any).cause;
+        const causeCode = getErrorCauseCode(error);
 
-        if (cause?.code === 'UND_ERR_CONNECT_TIMEOUT') {
+        if (causeCode === 'UND_ERR_CONNECT_TIMEOUT') {
              message = 'Connection to KOMS timed out. Please ensure you are logged into KOMS and try again.';
-        } else if (cause && typeof cause.code === 'string') {
-            message = `Failed to connect to KOMS service: ${cause.code}`;
+        } else if (causeCode) {
+            message = `Failed to connect to KOMS service: ${causeCode}`;
         } else {
             message = error.message;
         }

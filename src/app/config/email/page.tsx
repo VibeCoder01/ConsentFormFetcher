@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useSession } from '@/hooks/use-session';
@@ -33,7 +33,7 @@ export default function EmailConfigPage() {
 
   const isModified = JSON.stringify(emails) !== JSON.stringify(initialEmails);
 
-  const fetchEmails = async () => {
+  const fetchEmails = useCallback(async () => {
       setIsLoading(true);
       try {
         const res = await fetch('/api/email');
@@ -41,7 +41,7 @@ export default function EmailConfigPage() {
         const data: EmailContact[] = await res.json();
         setEmails(data);
         setInitialEmails(data);
-      } catch (error) {
+      } catch {
         toast({
           variant: 'destructive',
           title: 'Error',
@@ -50,11 +50,11 @@ export default function EmailConfigPage() {
       } finally {
         setIsLoading(false);
       }
-    }
+    }, [toast]);
 
   useEffect(() => {
-    fetchEmails();
-  }, [toast]);
+    void fetchEmails();
+  }, [fetchEmails]);
 
   const handleFieldChange = (index: number, value: string) => {
     if (!canEdit) return;

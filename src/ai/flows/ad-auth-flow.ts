@@ -1,12 +1,49 @@
 
 'use server';
 
-import { z } from 'zod';
 import { Client } from 'ldapts';
 import type { ADConfig, AccessLevel } from '@/lib/types';
 import * as fs from 'fs/promises';
-import { TlsOptions } from 'tls';
+import type { ConnectionOptions } from 'tls';
 import { normaliseCaFile, readAdConfig } from '@/lib/ad-config';
+
+type DirectoryValue = string | string[] | undefined;
+
+interface DirectoryEntry {
+  dn?: string;
+  cn?: DirectoryValue;
+  name?: DirectoryValue;
+  dNSHostName?: DirectoryValue;
+  sAMAccountName?: DirectoryValue;
+  memberOf?: DirectoryValue;
+}
+
+interface ComputerLookupEntry {
+  dn?: string;
+  cn?: DirectoryValue;
+  name?: DirectoryValue;
+  dnsHostName?: DirectoryValue;
+  samAccountName?: DirectoryValue;
+}
+
+type ComputerLookupEntryWithDn = Omit<ComputerLookupEntry, 'dn'> & { dn: string };
+
+function asDirectoryEntry(entry: unknown): DirectoryEntry {
+  return entry && typeof entry === 'object' ? (entry as DirectoryEntry) : {};
+}
+
+function hasDn(entry: ComputerLookupEntry): entry is ComputerLookupEntryWithDn {
+  return typeof entry.dn === 'string' && entry.dn.length > 0;
+}
+
+function getErrorCode(error: unknown): number | string | undefined {
+  if (!error || typeof error !== 'object' || !('code' in error)) {
+    return undefined;
+  }
+
+  const { code } = error as { code?: unknown };
+  return typeof code === 'number' || typeof code === 'string' ? code : undefined;
+}
 
 function escapeLDAPfilter(value: string) {
   // RFC4515: escape *, (, ), \, NUL
@@ -48,12 +85,11 @@ function buildComputerSearchFilter(hostname: string) {
   `)`;
 }
 
-export type AdAuthInput = z.infer<typeof AdAuthInputSchema>;
-const AdAuthInputSchema = z.object({
-  username: z.string(),
-  password: z.string(),
-  hostname: z.string().optional(),
-});
+export interface AdAuthInput {
+  username: string;
+  password: string;
+  hostname?: string;
+}
 
 
 export type AuthResult = 
@@ -62,7 +98,7 @@ export type AuthResult =
 
 const machineAccessDeniedMessage = 'This machine is not authorised to use this application.';
 
-async function getTlsOptions(config: ADConfig): Promise<TlsOptions | undefined> {
+async function getTlsOptions(config: ADConfig): Promise<ConnectionOptions | undefined> {
     const caFile = normaliseCaFile(config.caFile);
 
     if (!caFile) {
@@ -104,7 +140,7 @@ async function isMemberOf(client: Client, principalDN: string, groupDN: string) 
     attributes: ['memberOf'],
   });
 
-  const memberOf = (principalEntries[0] as any)?.memberOf;
+  const memberOf = asDirectoryEntry(principalEntries[0]).memberOf;
   const directGroups = Array.isArray(memberOf)
     ? memberOf
     : memberOf
@@ -115,9 +151,11 @@ async function isMemberOf(client: Client, principalDN: string, groupDN: string) 
 }
 
 async function validateMachineAuthorisation(client: Client, config: ADConfig, hostname?: string) {
-  if (!config.mfaMachineGroup) {
+  const machineGroup = config.mfaMachineGroup;
+  if (!machineGroup) {
     return { ok: true as const };
   }
+  const requiredMachineGroup: string = machineGroup;
 
   if (!hostname) {
     return { ok: false as const, reason: machineAccessDeniedMessage };
@@ -133,23 +171,28 @@ async function validateMachineAuthorisation(client: Client, config: ADConfig, ho
   });
 
   const computers = searchEntries
-    .map((entry) => ({
-      dn: (entry as any).dn as string | undefined,
-      cn: (entry as any).cn as string | string[] | undefined,
-      name: (entry as any).name as string | string[] | undefined,
-      dnsHostName: (entry as any).dNSHostName as string | string[] | undefined,
-      samAccountName: (entry as any).sAMAccountName as string | string[] | undefined,
-    }))
-    .filter((entry): entry is { dn: string; cn?: string | string[]; name?: string | string[]; dnsHostName?: string | string[]; samAccountName?: string | string[] } => Boolean(entry.dn));
+    .map((entry) => {
+      const directoryEntry = asDirectoryEntry(entry);
+      return {
+        dn: directoryEntry.dn,
+        cn: directoryEntry.cn,
+        name: directoryEntry.name,
+        dnsHostName: directoryEntry.dNSHostName,
+        samAccountName: directoryEntry.sAMAccountName,
+      };
+    })
+    .filter(hasDn);
 
-  const computerDns = Array.from(new Set(computers.map((entry) => entry.dn)));
+  const computerDns: string[] = Array.from(
+    new Set(computers.map((entry) => entry.dn).filter((dn): dn is string => typeof dn === 'string'))
+  );
 
   if (computerDns.length === 0) {
     if (process.env.NODE_ENV !== 'production') {
       console.log('AD machine authorisation check', {
         hostname,
         hostnameVariants,
-        mfaMachineGroup: config.mfaMachineGroup,
+        mfaMachineGroup: requiredMachineGroup,
         computers: [],
         membershipChecks: [],
       });
@@ -160,7 +203,7 @@ async function validateMachineAuthorisation(client: Client, config: ADConfig, ho
   const membershipChecks = await Promise.all(
     computerDns.map(async (computerDN) => ({
       computerDN,
-      matched: await isMemberOf(client, computerDN, config.mfaMachineGroup),
+      matched: await isMemberOf(client, computerDN, requiredMachineGroup),
     }))
   );
   const isAuthorised = membershipChecks.some((result) => result.matched);
@@ -169,7 +212,7 @@ async function validateMachineAuthorisation(client: Client, config: ADConfig, ho
     console.log('AD machine authorisation check', {
       hostname,
       hostnameVariants,
-      mfaMachineGroup: config.mfaMachineGroup,
+      mfaMachineGroup: requiredMachineGroup,
       computers,
       membershipChecks,
     });
@@ -230,7 +273,10 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
     if (searchEntries.length !== 1) {
       return { ok: false, reason: 'User not found or ambiguous.' };
     }
-    const userDN = (searchEntries[0] as any).dn as string;
+    const userDN = asDirectoryEntry(searchEntries[0]).dn;
+    if (!userDN) {
+      return { ok: false, reason: 'User not found or ambiguous.' };
+    }
 
     // 3) Verify password by binding as the user
     try {
@@ -342,9 +388,9 @@ export async function testAdConnection(): Promise<{ success: boolean; message: s
             // Provide more specific feedback for common issues
             if (error.name === 'ConnectionError' || error.message.includes('getaddrinfo ENOTFOUND')) {
                 message = 'Connection failed: The server URL could not be resolved. Check the hostname and port.';
-            } else if (error.name === 'InvalidCredentialsError' || (error as any).code === 49) {
+            } else if (error.name === 'InvalidCredentialsError' || getErrorCode(error) === 49) {
                 message = 'Connection failed: Invalid bind credentials provided in ad.json.';
-            } else if ((error as any).code === 10 || error.message.includes('RefErr')) {
+            } else if (getErrorCode(error) === 10 || error.message.includes('RefErr')) {
                 message = 'Connection failed: The Base DN appears invalid or too broad. Use a plain distinguished name such as DC=example,DC=local, without a leading "DN:".';
             } else if (error.message.includes('self-signed certificate')) {
                  message = 'Connection failed: The server is using a self-signed certificate. Please provide a path to a trusted CA file in ad.json.';

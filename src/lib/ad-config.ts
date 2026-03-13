@@ -136,6 +136,7 @@ export async function writeAdConfig(config: ADConfig): Promise<void> {
 }
 
 export function stripAdConfigSecrets(config: ADConfig): Omit<ADConfig, 'bindPassword'> {
-  const { bindPassword, ...clientConfig } = normaliseAdConfig(config);
+  const clientConfig = normaliseAdConfig(config);
+  delete clientConfig.bindPassword;
   return clientConfig;
 }

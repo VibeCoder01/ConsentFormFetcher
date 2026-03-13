@@ -7,8 +7,6 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
-import { Button } from './ui/button';
-import { X } from 'lucide-react';
 
 interface ClinicianFormProps {
   staffMembers: StaffMember[];

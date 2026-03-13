@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -64,7 +64,7 @@ export default function ConfigPage() {
 
   const isModified = rcrUrl !== initialRcrUrl || validateRNumber !== initialValidateRNumber || previewPdfFields !== initialPreviewPdfFields || pdfOpenMethod !== initialPdfOpenMethod || rtConsentFolder !== initialRtConsentFolder || prepopulateWithFakeData !== initialPrepopulateWithFakeData || showWelshForms !== initialShowWelshForms || komsApiDebugMode !== initialKomsApiDebugMode;
 
-  const fetchConfig = async () => {
+  const fetchConfig = useCallback(async () => {
     setIsLoadingConfig(true);
     try {
       const res = await fetch('/api/config');
@@ -86,7 +86,7 @@ export default function ConfigPage() {
       setInitialShowWelshForms(config.showWelshForms);
       setKomsApiDebugMode(config.komsApiDebugMode);
       setInitialKomsApiDebugMode(config.komsApiDebugMode);
-    } catch (error) {
+    } catch {
        toast({
         variant: 'destructive',
         title: 'Error',
@@ -95,11 +95,11 @@ export default function ConfigPage() {
     } finally {
       setIsLoadingConfig(false);
     }
-  }
+  }, [toast]);
 
   useEffect(() => {
-    fetchConfig();
-  }, [toast]);
+    void fetchConfig();
+  }, [fetchConfig]);
 
   const handleRestoreDefaultUrl = () => {
     setRcrUrl(DEFAULT_RCR_URL);

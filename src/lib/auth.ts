@@ -1,7 +1,9 @@
-import type { IronSessionOptions } from 'iron-session';
+import type { SessionOptions } from 'iron-session';
 import type { SessionData } from './types';
 
-export const sessionOptions: IronSessionOptions = {
+export type { SessionData } from './types';
+
+export const sessionOptions: SessionOptions = {
   password: process.env.SECRET_COOKIE_PASSWORD as string,
   cookieName: 'consent-form-fetcher-session',
   cookieOptions: {
@@ -13,5 +15,9 @@ export const sessionOptions: IronSessionOptions = {
 
 // This is where we specify the typings for `session`.
 declare module 'iron-session' {
-  interface IronSessionData extends Partial<SessionData> {}
+  interface IronSessionData {
+    username?: SessionData['username'];
+    roles?: SessionData['roles'];
+    isLoggedIn?: SessionData['isLoggedIn'];
+  }
 }

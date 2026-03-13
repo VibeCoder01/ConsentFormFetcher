@@ -29,7 +29,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
   }
   
-  const session = await getIronSession<SessionData>(request.cookies, sessionOptions);
+  const response = NextResponse.next();
+  const session = await getIronSession<SessionData>(request, response, sessionOptions);
 
   // If NOT in setup mode, and user is not logged in, redirect them to the login page.
   if (session.isLoggedIn !== true) {
@@ -39,7 +40,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // If user is logged in, allow them to proceed.
-  return NextResponse.next();
+  return response;
 }
 
 // This config applies the middleware to all routes except for the ones

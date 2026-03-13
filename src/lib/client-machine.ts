@@ -26,7 +26,7 @@ function getClientIp(request: NextRequest): string | null {
     return normaliseIp(realIp.trim());
   }
 
-  return request.ip ? normaliseIp(request.ip) : null;
+  return null;
 }
 
 export async function resolveClientHostname(request: NextRequest): Promise<string> {

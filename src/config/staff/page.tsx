@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,7 @@ export default function StaffConfigPage() {
 
   const isModified = JSON.stringify(staff) !== JSON.stringify(initialStaff);
 
-  const fetchInitialData = async () => {
+  const fetchInitialData = useCallback(async () => {
       setIsLoading(true);
       try {
         const [staffRes, sitesRes] = await Promise.all([
@@ -43,7 +43,7 @@ export default function StaffConfigPage() {
         setStaff(staffData);
         setInitialStaff(staffData);
         setTumourSites(sitesData);
-      } catch (error) {
+      } catch {
         toast({
           variant: 'destructive',
           title: 'Error',
@@ -52,11 +52,11 @@ export default function StaffConfigPage() {
       } finally {
         setIsLoading(false);
       }
-    }
+    }, [toast]);
 
   useEffect(() => {
-    fetchInitialData();
-  }, [toast]);
+    void fetchInitialData();
+  }, [fetchInitialData]);
 
   const handleFieldChange = (index: number, field: keyof Omit<StaffMember, 'id'>, value: string | null) => {
     const updatedStaff = [...staff];

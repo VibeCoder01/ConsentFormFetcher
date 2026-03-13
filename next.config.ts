@@ -1,5 +1,7 @@
+import dotenv from 'dotenv';
 import type {NextConfig} from 'next';
-require('dotenv').config()
+
+dotenv.config();
 
 const allowedDevOrigins = process.env.NEXT_ALLOWED_DEV_ORIGINS
   ?.split(',')

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useSession } from '@/hooks/use-session';
@@ -46,7 +46,7 @@ export default function StaffConfigPage() {
     });
   }, [staff, searchQuery]);
 
-  const fetchInitialData = async () => {
+  const fetchInitialData = useCallback(async () => {
       setIsLoading(true);
       try {
         const [staffRes, sitesRes] = await Promise.all([
@@ -56,7 +56,7 @@ export default function StaffConfigPage() {
         if (!staffRes.ok) throw new Error('Failed to fetch staff');
         if (!sitesRes.ok) throw new Error('Failed to fetch tumour sites');
         
-        const staffData: StaffMember[] = (await staffRes.json()).sort((a,b) => a.name.localeCompare(b.name));
+        const staffData: StaffMember[] = (await staffRes.json()).sort((a: StaffMember, b: StaffMember) => a.name.localeCompare(b.name));
         const sitesData: TumourSite[] = await sitesRes.json();
 
         setStaff(staffData);
@@ -64,7 +64,7 @@ export default function StaffConfigPage() {
         setTumourSites(sitesData);
         setSelectedStaff(null);
         setEditedStaff(null);
-      } catch (error) {
+      } catch {
         toast({
           variant: 'destructive',
           title: 'Error',
@@ -73,11 +73,11 @@ export default function StaffConfigPage() {
       } finally {
         setIsLoading(false);
       }
-    }
+    }, [toast]);
 
   useEffect(() => {
-    fetchInitialData();
-  }, [toast]);
+    void fetchInitialData();
+  }, [fetchInitialData]);
 
   const handleSelectStaff = (member: StaffMember) => {
     setSelectedStaff(member);
@@ -309,7 +309,7 @@ export default function StaffConfigPage() {
             <ScrollArea className="flex-1">
                 {isLoading ? loadingSkeleton : (
                     <div className="p-2 space-y-1">
-                        {filteredStaff.map((member, index) => (
+                        {filteredStaff.map((member) => (
                             <Button
                                 key={member.id}
                                 variant={selectedStaff?.id === member.id ? "secondary" : "ghost"}

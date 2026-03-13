@@ -27,12 +27,6 @@ export interface ScrapeRcrFormsOutput {
   newData?: ConsentFormCategory[];
 }
 
-async function saveFormsToJson(data: ConsentFormCategory[]): Promise<void> {
-    const jsonFilePath = path.join(process.cwd(), 'public', 'consent-forms.json');
-    const jsonData = JSON.stringify(data, null, 2);
-    await fs.writeFile(jsonFilePath, jsonData, 'utf-8');
-}
-
 
 export async function scrapeRcrForms(url: string): Promise<ScrapeRcrFormsOutput> {
   try {

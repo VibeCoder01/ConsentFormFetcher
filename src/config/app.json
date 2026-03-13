@@ -1,11 +1,10 @@
-
 {
   "rcrConsentFormsUrl": "https://www.rcr.ac.uk/our-services/management-service-delivery/national-radiotherapy-consent-forms/",
   "rcrBaseUrl": "https://www.rcr.ac.uk",
   "validateRNumber": false,
   "previewPdfFields": false,
   "pdfOpenMethod": "acrobat",
-  "rtConsentFolder": "c:\\VC01\\RT_Consent",
+  "rtConsentFolder": "\\\\oncfile01\\RT_RCR_Consent_Prefilled",
   "prepopulateWithFakeData": true,
   "showWelshForms": false,
   "komsApiDebugMode": false
