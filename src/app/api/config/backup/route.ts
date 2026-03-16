@@ -4,16 +4,16 @@ import path from 'path';
 import fs from 'fs/promises';
 import { EmailContact, StaffMember, TumourSite, ADConfig } from '@/lib/types';
 import { defaultAdConfig, normaliseAdConfig, readAdConfig, stripAdConfigSecrets, writeAdConfig } from '@/lib/ad-config';
+import { AppConfig, readAppConfig, writeAppConfig } from '@/lib/app-config';
 
 // Define paths
-const appConfigPath = path.join(process.cwd(), 'src', 'config', 'app.json');
 const emailConfigPath = path.join(process.cwd(), 'src', 'config', 'email.json');
 const staffConfigPath = path.join(process.cwd(), 'src', 'config', 'staff.json');
 const tumourSitesConfigPath = path.join(process.cwd(), 'src', 'config', 'tumour-sites.json');
 
 // Define a type for the combined data for type safety
 interface BackupData {
-    settings: object;
+    settings: AppConfig;
     emails: EmailContact[];
     staff: StaffMember[];
     tumourSites: TumourSite[];
@@ -38,7 +38,7 @@ async function readJsonFile<T>(filePath: string, defaultValue: T): Promise<T> {
 export async function GET() {
   try {
     const [settings, emails, staff, tumourSites, adConfig] = await Promise.all([
-        readJsonFile(appConfigPath, {}),
+        readAppConfig(),
         readJsonFile(emailConfigPath, []),
         readJsonFile(staffConfigPath, []),
         readJsonFile(tumourSitesConfigPath, []),
@@ -76,7 +76,6 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: "Invalid backup file format. It must contain settings, emails, staff, tumourSites, and ad config." }, { status: 400 });
         }
         
-        const settingsJsonData = JSON.stringify(data.settings, null, 2);
         const emailsJsonData = JSON.stringify(data.emails, null, 2);
         const staffJsonData = JSON.stringify(data.staff, null, 2);
         const tumourSitesJsonData = JSON.stringify(data.tumourSites, null, 2);
@@ -102,7 +101,7 @@ export async function POST(request: Request) {
 
         // Write all files
         await Promise.all([
-            fs.writeFile(appConfigPath, settingsJsonData, 'utf-8'),
+            writeAppConfig(data.settings),
             fs.writeFile(emailConfigPath, emailsJsonData, 'utf-8'),
             fs.writeFile(staffConfigPath, staffJsonData, 'utf-8'),
             fs.writeFile(tumourSitesConfigPath, tumourSitesJsonData, 'utf-8'),

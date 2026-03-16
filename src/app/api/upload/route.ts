@@ -2,19 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
-
-// Helper function to read the config
-async function getConfig() {
-    const configPath = path.join(process.cwd(), 'src', 'config', 'app.json');
-    try {
-        const jsonData = await fs.readFile(configPath, 'utf-8');
-        return JSON.parse(jsonData);
-    } catch (error) {
-        console.error("Could not read config file for upload route:", error);
-        // Return a default or throw an error
-        throw new Error("Server configuration is missing or unreadable.");
-    }
-}
+import { readAppConfig } from '@/lib/app-config';
 
 async function getUniqueFilePath(destinationDir: string, originalName: string): Promise<string> {
     const parsedPath = path.parse(originalName);
@@ -60,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Get config to find the destination folder
-    const config = await getConfig();
+    const config = await readAppConfig();
     const destinationDir = config.rtConsentFolder;
 
     if (!destinationDir) {

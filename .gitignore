@@ -41,6 +41,7 @@ pnpm-debug.log*
 !.env.example
 
 # local runtime config / confidential data
+/src/config/app.json
 /src/config/ad.json
 /src/config/email.json
 /src/config/staff.json

@@ -1,33 +1,11 @@
 
 import { NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs/promises';
-
-const configPath = path.join(process.cwd(), 'src', 'config', 'app.json');
-
-// Define a type for the config for better type safety
-interface AppConfig {
-    rcrConsentFormsUrl: string;
-    rcrBaseUrl: string;
-    validateRNumber: boolean;
-    previewPdfFields: boolean;
-    pdfOpenMethod: 'browser' | 'acrobat';
-    rtConsentFolder: string;
-    prepopulateWithFakeData: boolean;
-    showWelshForms: boolean;
-    komsApiDebugMode: boolean;
-}
-
-// Function to read the current config
-async function readConfig(): Promise<AppConfig> {
-    const jsonData = await fs.readFile(configPath, 'utf-8');
-    return JSON.parse(jsonData);
-}
+import { AppConfig, readAppConfig, updateAppConfig } from '@/lib/app-config';
 
 // GET handler to fetch the current configuration
 export async function GET() {
   try {
-    const config = await readConfig();
+    const config = await readAppConfig();
     return NextResponse.json(config);
   } catch (error) {
     console.error("Failed to read app config file:", error);
@@ -45,17 +23,7 @@ export async function POST(request: Request) {
         }
 
         // Read the full config to avoid overwriting other values
-        const currentConfig = await readConfig();
-        
-        // Merge the updates with the current config
-        const updatedConfig: AppConfig = {
-            ...currentConfig,
-            ...updates
-        };
-
-        const jsonData = JSON.stringify(updatedConfig, null, 2);
-        
-        await fs.writeFile(configPath, jsonData, 'utf-8');
+        const updatedConfig = await updateAppConfig(updates);
         
         return NextResponse.json({ message: "Configuration updated successfully.", newConfig: updatedConfig });
 

@@ -241,36 +241,45 @@ export function PatientForm({
 
   return (
     <div className="p-2 md:p-4 border-b">
-       <div className="px-2 mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <h2 className="text-lg font-semibold tracking-tight">
-            Patient Details
-        </h2>
-        <div className="w-full max-w-sm space-y-1.5">
+       <div className="px-2 mb-4">
+        <div className="w-full space-y-1.5">
             <Label htmlFor="fetch-r-number" className="sr-only">KOMS patient number</Label>
             <div className="flex flex-col gap-2 sm:flex-row">
-                <Input
-                    id="fetch-r-number"
-                    type="text"
-                    name="rNumber"
-                    value={patientData.rNumber}
-                    onChange={handleChange}
-                    onKeyDown={handleRNumberKeyDown}
-                    placeholder="KOMS patient number"
-                    disabled={isFetchingDemographics || isConfigLoading}
-                    className={cn(
-                        "sm:flex-1",
-                        isInitialValue('rNumber') && "bg-red-100 dark:bg-red-900/30",
-                        patientData.rNumber && !isRNumberValid && "border-red-500 focus-visible:ring-red-500"
-                    )}
-                />
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <div>
+                            <div className="sm:flex-1">
+                                <Input
+                                    id="fetch-r-number"
+                                    type="text"
+                                    name="rNumber"
+                                    value={patientData.rNumber}
+                                    onChange={handleChange}
+                                    onKeyDown={handleRNumberKeyDown}
+                                    placeholder="R Number"
+                                    disabled={isFetchingDemographics || isConfigLoading}
+                                    className={cn(
+                                        "w-full min-w-0",
+                                        isInitialValue('rNumber') && "bg-red-100 dark:bg-red-900/30",
+                                        patientData.rNumber && !isRNumberValid && "border-red-500 focus-visible:ring-red-500"
+                                    )}
+                                />
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{patientData.rNumber || 'No R number entered.'}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div className="shrink-0">
                                 <Button
+                                    size="sm"
                                     onClick={handleFetchDemographics}
                                     disabled={!patientData.rNumber || isFetchingDemographics || !isRNumberValid || isConfigLoading}
-                                    className="w-full sm:w-auto"
+                                    className="w-full whitespace-nowrap sm:w-auto sm:px-2.5"
                                 >
                                     {isFetchingDemographics ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                     Get Demographics

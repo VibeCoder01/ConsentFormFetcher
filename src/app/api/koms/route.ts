@@ -1,17 +1,9 @@
 
 import type { NextRequest } from 'next/server';
-import path from 'path';
-import fs from 'fs/promises';
+import { readAppConfig } from '@/lib/app-config';
 
 // Per Next.js docs, this is the proper way to access env vars in a route handler
 const KOMS_URL = process.env.KOMS_URL;
-
-// Helper function to read the config to avoid direct imports in server-side code
-async function getConfig() {
-    const configPath = path.join(process.cwd(), 'src', 'config', 'app.json');
-    const jsonData = await fs.readFile(configPath, 'utf-8');
-    return JSON.parse(jsonData);
-}
 
 function getErrorCauseCode(error: Error): string | undefined {
   const cause = (error as Error & { cause?: unknown }).cause;
@@ -25,7 +17,7 @@ function getErrorCauseCode(error: Error): string | undefined {
 
 export async function GET(req: NextRequest) {
   const rNumber = new URL(req.url).searchParams.get('RNumber');
-  const config = await getConfig();
+  const config = await readAppConfig();
 
   if (!KOMS_URL) {
       return Response.json({ error: 'KOMS service URL not configured' }, { status: 500 });

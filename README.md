@@ -20,6 +20,7 @@ You need to have Node.js and npm (Node Package Manager) installed on your system
 3.  Create local-only configuration files from the safe templates:
     ```powershell
     Copy-Item .env.example .env
+    Copy-Item src/config/app.example.json src/config/app.json
     Copy-Item src/config/ad.example.json src/config/ad.json
     Copy-Item src/config/email.example.json src/config/email.json
     Copy-Item src/config/staff.example.json src/config/staff.json
@@ -42,6 +43,7 @@ If you access `npm run dev` from another hostname, set `NEXT_ALLOWED_DEV_ORIGINS
 The following files are intentionally local-only and are ignored by git:
 
 - `.env`
+- `src/config/app.json`
 - `src/config/ad.json`
 - `src/config/email.json`
 - `src/config/staff.json`
@@ -110,7 +112,7 @@ The application's behavior after you select a form is controlled by settings on 
 -   **If "Preview PDF fields before generating" is OFF**:
     -   When you click a form, the application will immediately generate the filled PDF and save it to the server, skipping the preview step.
 
-In both cases, after the PDF is generated, it will be saved with the filename `[patient_identifier] CONSENT.pdf` inside a `TEMP` subfolder within the clinician's folder (e.g., `C:\Consent\Dr_John_Doe\TEMP\`). A success notification will appear in the middle of the screen containing the full UNC path to the file. You can use the "Copy Path" button and paste it into Windows Search or File Explorer to quickly access the file. The `TEMP` folder is automatically emptied before each new PDF is saved, ensuring it only ever contains the latest document.
+In both cases, after the PDF is generated, it will be saved with the filename `[patient_identifier] RT-CONSENT-[YYYYMMDD-HHMMSS].PDF` inside a `TEMP` subfolder within the clinician's folder (e.g., `C:\Consent\Dr_John_Doe\TEMP\`). A success notification will appear in the middle of the screen containing the full UNC path to the file. You can use the "Copy Path" button and paste it into Windows Search or File Explorer to quickly access the file. The `TEMP` folder is automatically emptied before each new PDF is saved, ensuring it only ever contains the latest document.
 
 ### 6. Sending the Signed Form
 

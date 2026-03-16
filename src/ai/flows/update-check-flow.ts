@@ -8,16 +8,10 @@
  */
 
 import { scrapeRcrForms } from '@/ai/flows/scrape-forms-flow';
+import { readAppConfig } from '@/lib/app-config';
 import type { ConsentFormCategory } from '@/lib/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-
-// Helper function to read the config to avoid direct imports in server-side code
-async function getConfig() {
-    const configPath = path.join(process.cwd(), 'src', 'config', 'app.json');
-    const jsonData = await fs.readFile(configPath, 'utf-8');
-    return JSON.parse(jsonData);
-}
 
 export interface UpdateCheckResult {
   hasUpdates: boolean;
@@ -28,7 +22,7 @@ export async function checkForFormUpdates(): Promise<UpdateCheckResult> {
   const jsonFilePath = path.join(process.cwd(), 'public', 'consent-forms.json');
 
   try {
-    const config = await getConfig();
+    const config = await readAppConfig();
     // 1. Scrape the website for the latest forms
     const scrapeResult = await scrapeRcrForms(config.rcrConsentFormsUrl);
     if (!scrapeResult.success || !scrapeResult.newData) {

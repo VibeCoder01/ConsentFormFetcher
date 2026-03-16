@@ -4,13 +4,7 @@
 import { PDFDocument, PDFTextField, PDFDropdown, PDFRadioGroup, PDFCheckBox, StandardFonts } from 'pdf-lib';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-
-// Helper function to read the config to avoid direct imports in server-side code
-async function getConfig() {
-    const configPath = path.join(process.cwd(), 'src', 'config', 'app.json');
-    const jsonData = await fs.readFile(configPath, 'utf-8');
-    return JSON.parse(jsonData);
-}
+import { readAppConfig } from '@/lib/app-config';
 
 interface FillPdfInput {
   formUrl: string;
@@ -29,7 +23,7 @@ export interface FillPdfOutput {
 export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
   try {
     const { formUrl, fields: fieldsToFill, patientIdentifier, clinicianName } = input;
-    const config = await getConfig();
+    const config = await readAppConfig();
 
     if (!config.rtConsentFolder) {
         throw new Error("RT Consent Folder path is not configured in settings.");
@@ -103,9 +97,19 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
     await fs.rm(tempDir, { recursive: true, force: true });
     await fs.mkdir(tempDir, { recursive: true });
 
-    // Create a unique filename based on the new format
+    // Create a unique, filesystem-safe filename for the generated consent PDF
     const safePatientId = patientIdentifier.replace(/[^a-zA-Z0-9]/g, '');
-    const fileName = `${safePatientId} CONSENT.pdf`;
+    const now = new Date();
+    const dateTimeStamp = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      String(now.getDate()).padStart(2, '0'),
+    ].join('') + '-' + [
+      String(now.getHours()).padStart(2, '0'),
+      String(now.getMinutes()).padStart(2, '0'),
+      String(now.getSeconds()).padStart(2, '0'),
+    ].join('');
+    const fileName = `${safePatientId} RT-CONSENT-${dateTimeStamp}.PDF`;
     
     // Construct the final path for writing the file using the server's OS separator
     const filePathForWriting = path.join(tempDir, fileName);

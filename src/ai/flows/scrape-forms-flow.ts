@@ -8,17 +8,9 @@
  */
 
 import * as cheerio from 'cheerio';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import { readAppConfig } from '@/lib/app-config';
 import { ConsentForm, ConsentFormCategory } from '@/lib/types';
 import { updateCache } from '@/ai/util/cache';
-
-// Helper function to read the config to avoid direct imports in server-side code
-async function getConfig() {
-    const configPath = path.join(process.cwd(), 'src', 'config', 'app.json');
-    const jsonData = await fs.readFile(configPath, 'utf-8');
-    return JSON.parse(jsonData);
-}
 
 export interface ScrapeRcrFormsOutput {
   success: boolean;
@@ -30,7 +22,7 @@ export interface ScrapeRcrFormsOutput {
 
 export async function scrapeRcrForms(url: string): Promise<ScrapeRcrFormsOutput> {
   try {
-    const config = await getConfig();
+    const config = await readAppConfig();
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch the page. Status: ${response.status}`);

@@ -24,6 +24,7 @@ import { PdfForm, PdfFormSkeleton, PdfField } from "@/components/pdf-form";
 import { format } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { copyToClipboard } from "@/lib/utils";
 
 const fakePatientData: PatientData = {
@@ -38,12 +39,12 @@ const fakePatientData: PatientData = {
   homePhone: "01234567890",
   gpName: "Dr. Smith",
   hospitalName: "Kent Oncology Centre",
-  rNumber: "R1234567",
+  rNumber: "",
   nhsNumber: "123 456 7890",
   hospitalNumber: "1234567",
   hospitalNumberMTW: "MTW123456",
   selectedIdentifier: 'rNumber',
-  uniqueIdentifierValue: 'R1234567',
+  uniqueIdentifierValue: '',
   macmillanContactId: null,
 };
 
@@ -70,12 +71,26 @@ const emptyPatientData: PatientData = {
 
 
 const UncPathToast = ({ uncPath }: { uncPath: string }) => {
-    const [copied, setCopied] = useState(false);
+    const [copyMessageOpen, setCopyMessageOpen] = useState(false);
+    const [copyMessageSequence, setCopyMessageSequence] = useState(0);
+
+    useEffect(() => {
+        if (!copyMessageOpen) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            setCopyMessageOpen(false);
+        }, 5000);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [copyMessageOpen, copyMessageSequence]);
 
     const handleCopy = async () => {
         const success = await copyToClipboard(uncPath);
         if (success) {
-            setCopied(true);
+            setCopyMessageSequence((current) => current + 1);
+            setCopyMessageOpen(true);
         }
     };
 
@@ -90,9 +105,16 @@ const UncPathToast = ({ uncPath }: { uncPath: string }) => {
             >
                 Copy Path
             </Button>
-            {copied ? (
-                <p className="text-sm font-medium text-destructive">Copied. Now paste into the Windows Search bar.</p>
-            ) : null}
+            <Dialog open={copyMessageOpen} onOpenChange={setCopyMessageOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader className="text-center sm:text-center">
+                        <DialogTitle>Path copied</DialogTitle>
+                        <DialogDescription className="text-base text-foreground">
+                            Copied. Now paste into the Windows Search bar, and press ENTER.
+                        </DialogDescription>
+                    </DialogHeader>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
