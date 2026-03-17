@@ -85,8 +85,8 @@ On the left sidebar, you will find a "Patient Details" form. The initial state o
 
 Below the patient details, you will find a two-step process for selecting the responsible clinician:
 
-1.  **Filter by Tumour Site**: First, use this dropdown to filter the list of clinicians by their speciality. This makes it easier to find the right person for the procedure. You can also select "Show All Clinicians" to see the complete staff list.
-2.  **Select Clinician**: Once a tumour site is selected (or "Show All" is chosen), this dropdown will be populated with the relevant staff members. If you select a staff member whose title does not contain "Consultant" or "Doctor," the field will turn orange as a warning.
+1.  **Filter by Tumour Site**: First, use this dropdown to filter the list of clinicians by their speciality. This makes it easier to narrow the search, and you can still select "Show All Clinicians" to search the full staff list.
+2.  **Search and Select Clinician**: Start typing the consultant's name in the clinician search box and a popup list of matching staff will appear immediately. You can click a match, or press `Enter` to select the first result. The clinician dropdown stays in sync with the search results, and if you select a staff member whose title does not contain "Consultant" or "Doctor," the field will turn orange as a warning.
 
 Below the clinician selection, there is a separate process for the **Macmillan Contact**:
 

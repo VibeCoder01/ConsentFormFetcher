@@ -6,6 +6,7 @@ import { StaffMember, TumourSite } from '@/lib/types';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Skeleton } from './ui/skeleton';
+import { Input } from './ui/input';
 import { cn } from '@/lib/utils';
 
 interface ClinicianFormProps {
@@ -17,25 +18,42 @@ interface ClinicianFormProps {
 
 export function ClinicianForm({ staffMembers, tumourSites, selectedStaffId, onStaffMemberChange }: ClinicianFormProps) {
     const [selectedTumourSiteId, setSelectedTumourSiteId] = useState<string | null>(null);
+    const [consultantSearch, setConsultantSearch] = useState('');
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const normalizedSearch = consultantSearch.trim().toLowerCase();
+
+    const selectedStaff = useMemo(() => {
+        if (!selectedStaffId) return null;
+        return staffMembers.find(staff => staff.id === selectedStaffId) ?? null;
+    }, [selectedStaffId, staffMembers]);
 
     const showConsultantWarning = useMemo(() => {
-        if (!selectedStaffId) return false;
-        const selectedStaff = staffMembers.find(s => s.id === selectedStaffId);
         if (!selectedStaff) return false;
         const lowerCaseTitle = selectedStaff.title.toLowerCase();
         return !lowerCaseTitle.includes('consultant') && !lowerCaseTitle.includes('doctor');
-    }, [selectedStaffId, staffMembers]);
+    }, [selectedStaff]);
 
     const filteredStaffMembers = useMemo(() => {
-        if (!selectedTumourSiteId) {
-            return staffMembers;
-        }
-        return staffMembers.filter(staff => 
-            staff.speciality1 === selectedTumourSiteId ||
-            staff.speciality2 === selectedTumourSiteId ||
-            staff.speciality3 === selectedTumourSiteId
-        );
-    }, [selectedTumourSiteId, staffMembers]);
+        return staffMembers.filter(staff => {
+            const matchesTumourSite = !selectedTumourSiteId ||
+                staff.speciality1 === selectedTumourSiteId ||
+                staff.speciality2 === selectedTumourSiteId ||
+                staff.speciality3 === selectedTumourSiteId;
+
+            if (!matchesTumourSite) {
+                return false;
+            }
+
+            if (!normalizedSearch) {
+                return true;
+            }
+
+            const searchableText = `${staff.name} ${staff.title}`.toLowerCase();
+            return searchableText.includes(normalizedSearch);
+        });
+    }, [normalizedSearch, selectedTumourSiteId, staffMembers]);
+
+    const showSearchResults = isSearchFocused && normalizedSearch.length > 0;
 
     const handleTumourSiteChange = (siteId: string) => {
         // "all" is a special value to clear the filter
@@ -45,6 +63,20 @@ export function ClinicianForm({ staffMembers, tumourSites, selectedStaffId, onSt
             setSelectedTumourSiteId(siteId);
         }
         onStaffMemberChange(null); // Reset clinician selection when site changes
+    };
+
+    const handleConsultantSearchChange = (value: string) => {
+        setConsultantSearch(value);
+
+        if (selectedStaffId) {
+            onStaffMemberChange(null);
+        }
+    };
+
+    const handleStaffSuggestionSelect = (staff: StaffMember) => {
+        setConsultantSearch(staff.name);
+        onStaffMemberChange(staff.id);
+        setIsSearchFocused(false);
     };
 
     if (!staffMembers || staffMembers.length === 0) {
@@ -85,7 +117,51 @@ export function ClinicianForm({ staffMembers, tumourSites, selectedStaffId, onSt
                 </div>
 
                 <div className="grid w-full max-w-sm items-center gap-1.5">
-                    <Label htmlFor="clinicianName">Select Clinician</Label>
+                    <Label htmlFor="clinicianSearch">Select Clinician</Label>
+                    <div className="relative">
+                        <Input
+                            id="clinicianSearch"
+                            type="text"
+                            value={consultantSearch}
+                            onChange={(event) => handleConsultantSearchChange(event.target.value)}
+                            onFocus={() => setIsSearchFocused(true)}
+                            onBlur={() => setIsSearchFocused(false)}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Escape') {
+                                    setIsSearchFocused(false);
+                                }
+
+                                if (event.key === 'Enter' && filteredStaffMembers.length > 0) {
+                                    event.preventDefault();
+                                    handleStaffSuggestionSelect(filteredStaffMembers[0]);
+                                }
+                            }}
+                            placeholder="Type a consultant name to search..."
+                            autoComplete="off"
+                        />
+                        {showSearchResults && (
+                            <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded-md border bg-popover shadow-md">
+                                {filteredStaffMembers.length > 0 ? (
+                                    filteredStaffMembers.map(staff => (
+                                        <button
+                                            key={staff.id}
+                                            type="button"
+                                            className="flex w-full flex-col items-start px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                                            onMouseDown={(event) => event.preventDefault()}
+                                            onClick={() => handleStaffSuggestionSelect(staff)}
+                                        >
+                                            <span className="font-medium">{staff.name}</span>
+                                            <span className="text-muted-foreground">{staff.title}</span>
+                                        </button>
+                                    ))
+                                ) : (
+                                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                                        No clinicians match the current search.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                     <Select
                         value={selectedStaffId || ''}
                         onValueChange={onStaffMemberChange}
@@ -100,9 +176,13 @@ export function ClinicianForm({ staffMembers, tumourSites, selectedStaffId, onSt
                             <SelectValue placeholder={selectedTumourSiteId ? "Select a matching clinician" : "Select a clinician"} />
                         </SelectTrigger>
                         <SelectContent>
-                            {filteredStaffMembers.map(staff => (
-                                <SelectItem key={staff.id} value={staff.id}>{staff.name} - {staff.title}</SelectItem>
-                            ))}
+                            {filteredStaffMembers.length > 0 ? (
+                                filteredStaffMembers.map(staff => (
+                                    <SelectItem key={staff.id} value={staff.id}>{staff.name} - {staff.title}</SelectItem>
+                                ))
+                            ) : (
+                                <SelectItem value="no-matching-clinicians" disabled>No clinicians match the current search.</SelectItem>
+                            )}
                         </SelectContent>
                     </Select>
                 </div>
