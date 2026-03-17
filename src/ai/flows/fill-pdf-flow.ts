@@ -91,11 +91,18 @@ export async function fillPdf(input: FillPdfInput): Promise<FillPdfOutput> {
 
     // 5. Create directory structure and save the file
     const safeClinicianName = clinicianName.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
-    const tempDir = path.join(config.rtConsentFolder, safeClinicianName, 'TEMP');
+    const clinicianDir = path.join(config.rtConsentFolder, safeClinicianName);
+    const tempDir = path.join(clinicianDir, 'TEMP');
+    const requiresPatientSignatureDir = path.join(clinicianDir, 'RequiresPatientSignature');
+    const fullySignedDir = path.join(clinicianDir, 'FullySigned');
     
     // Ensure the TEMP directory is clean by removing and recreating it
     await fs.rm(tempDir, { recursive: true, force: true });
-    await fs.mkdir(tempDir, { recursive: true });
+    await Promise.all([
+      fs.mkdir(tempDir, { recursive: true }),
+      fs.mkdir(requiresPatientSignatureDir, { recursive: true }),
+      fs.mkdir(fullySignedDir, { recursive: true }),
+    ]);
 
     // Create a unique, filesystem-safe filename for the generated consent PDF
     const safePatientId = patientIdentifier.replace(/[^a-zA-Z0-9]/g, '');
