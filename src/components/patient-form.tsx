@@ -10,6 +10,15 @@ import { cn } from '@/lib/utils';
 import { useMemo, useState, useEffect } from 'react';
 import { AgeWarningDialog } from './age-warning-dialog';
 import { Button } from './ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -31,6 +40,10 @@ const identifierOptions: { value: IdentifierType; label: string }[] = [
     { value: 'hospitalNumber', label: 'Hospital Number' },
     { value: 'hospitalNumberMTW', label: 'Hospital Number (MTW)' },
 ];
+
+function trimToEmpty(value: string | null | undefined): string {
+  return value?.trim() ?? '';
+}
 
 function getApiErrorMessage(responseData: unknown, status: number): string {
   if (
@@ -55,6 +68,7 @@ export function PatientForm({
   isConfigLoading,
 }: PatientFormProps) {
   const [showAgeWarning, setShowAgeWarning] = useState(false);
+  const [missingIdentifierWarning, setMissingIdentifierWarning] = useState<string | null>(null);
   const [isFetchingDemographics, setIsFetchingDemographics] = useState(false);
   const [demographicsLoaded, setDemographicsLoaded] = useState(false);
   const [macmillanFilter, setMacmillanFilter] = useState<'macmillan' | 'other' | null>('macmillan');
@@ -69,10 +83,18 @@ export function PatientForm({
   };
 
   const handleIdentifierChange = (value: string) => {
+    const selectedIdentifier = value as IdentifierType;
+    const selectedIdentifierValue = trimToEmpty(patientData[selectedIdentifier]);
+
     setPatientData({
         ...patientData,
-        selectedIdentifier: value as IdentifierType,
+        selectedIdentifier,
     });
+
+    if (!selectedIdentifierValue) {
+        const selectedOption = identifierOptions.find(option => option.value === selectedIdentifier);
+        setMissingIdentifierWarning(selectedOption?.label || 'The selected identifier');
+    }
   };
   
   const handleMacmillanChange = (value: string) => {
@@ -147,19 +169,19 @@ export function PatientForm({
         // We have good data, update the form
         setPatientData({
             ...patientData,
-            forename: data.forename || '',
-            surname: data.surname || '',
-            dob: data.dob || '',
-            rNumber: data.rNumber || normalizedRNumber,
-            addr1: data.addr1 || '',
-            addr2: data.addr2 || '',
-            addr3: data.addr3 || '',
-            postcode: data.postcode || '',
-            homePhone: data.homePhone || '',
-            gpName: data.gpName || '',
-            nhsNumber: data.nhsNumber || '',
-            hospitalNumber: data.hospitalNumber || '',
-            hospitalNumberMTW: data.hospitalNumberMTW || '',
+            forename: trimToEmpty(data.forename),
+            surname: trimToEmpty(data.surname),
+            dob: trimToEmpty(data.dob),
+            rNumber: trimToEmpty(data.rNumber) || normalizedRNumber,
+            addr1: trimToEmpty(data.addr1),
+            addr2: trimToEmpty(data.addr2),
+            addr3: trimToEmpty(data.addr3),
+            postcode: trimToEmpty(data.postcode),
+            homePhone: trimToEmpty(data.homePhone),
+            gpName: trimToEmpty(data.gpName),
+            nhsNumber: trimToEmpty(data.nhsNumber),
+            hospitalNumber: trimToEmpty(data.hospitalNumber),
+            hospitalNumberMTW: trimToEmpty(data.hospitalNumberMTW),
             hospitalName: patientData.hospitalName, // Keep existing hospital name
             macmillanContactId: null, // Reset macmillan dropdown
         }, true); // Pass true to indicate it's from demographics fetch
@@ -204,14 +226,24 @@ export function PatientForm({
   }, [isUnder16]);
   
   const isInitialValue = (fieldName: keyof PatientData) => {
-    // If live data has been loaded, nothing is an "initial value" anymore.
-    if (demographicsLoaded) return false;
-    // If the initial data was empty (i.e., no fake data), any empty field is considered "initial".
-    if (initialData[fieldName] === '') {
-        return patientData[fieldName] === '';
+    const currentValue = patientData[fieldName];
+
+    if (typeof currentValue !== 'string') {
+        return false;
     }
+
+    // If live data has been loaded, nothing is an "initial value" anymore.
+    if (demographicsLoaded) {
+        return currentValue.trim() === '';
+    }
+
+    // If the initial data was empty (i.e., no fake data), any empty field is considered "initial".
+    if (typeof initialData[fieldName] === 'string' && initialData[fieldName] === '') {
+        return currentValue.trim() === '';
+    }
+
     // Otherwise, check if the current value matches the non-empty fake data.
-    return patientData[fieldName] === initialData[fieldName];
+    return currentValue === initialData[fieldName];
   };
 
   const showMacmillanWarning = useMemo(() => {
@@ -426,6 +458,25 @@ export function PatientForm({
         </div>
       </div>
       <AgeWarningDialog open={showAgeWarning} onOpenChange={setShowAgeWarning} />
+      <AlertDialog open={missingIdentifierWarning !== null} onOpenChange={(open) => {
+        if (!open) {
+          setMissingIdentifierWarning(null);
+        }
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unique Patient Identifier Missing</AlertDialogTitle>
+            <AlertDialogDescription>
+              {missingIdentifierWarning} is blank. Please populate it before continuing.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction asChild>
+              <Button onClick={() => setMissingIdentifierWarning(null)}>OK</Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

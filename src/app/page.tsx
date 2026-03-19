@@ -264,6 +264,10 @@ export default function Home() {
     const formattedDob = patientData.dob ? format(new Date(patientData.dob), 'dd/MM/yyyy') : '';
     const fullName = `${patientData.forename} ${patientData.surname}`;
     const todaysDate = format(new Date(), 'dd/MM/yyyy');
+    const formatStaffContact = (name: string, title: string, phone: string) => {
+      const trimmedPhone = phone.trim();
+      return trimmedPhone ? `${name}, ${title} - ${trimmedPhone}` : `${name}, ${title}`;
+    };
     
     type Mapping = { value: string; description: string };
     const mappings: Record<string, Mapping> = {
@@ -320,7 +324,7 @@ export default function Home() {
     };
 
     if (selectedStaffMember) {
-        const clinicianInfo = `${selectedStaffMember.name}, ${selectedStaffMember.title} - ${selectedStaffMember.phone}`;
+        const clinicianInfo = formatStaffContact(selectedStaffMember.name, selectedStaffMember.title, selectedStaffMember.phone);
         mappings['clinician name'] = { value: clinicianInfo, description: 'Clinician Name + Title + Phone' };
         mappings['name of person'] = { value: clinicianInfo, description: 'Clinician Name + Title + Phone' };
         mappings['responsible consultant'] = { value: clinicianInfo, description: 'Clinician Name + Title + Phone' };
@@ -330,7 +334,7 @@ export default function Home() {
 
     const selectedMacmillan = staffMembers.find(s => s.id === patientData.macmillanContactId);
     if(selectedMacmillan) {
-        const macmillanContactInfo = `${selectedMacmillan.name}, ${selectedMacmillan.title} - ${selectedMacmillan.phone}`;
+        const macmillanContactInfo = formatStaffContact(selectedMacmillan.name, selectedMacmillan.title, selectedMacmillan.phone);
         mappings['contact details'] = { value: macmillanContactInfo, description: 'Macmillan Contact Name + Title + Phone' };
         mappings['contact number'] = { value: macmillanContactInfo, description: 'Macmillan Contact Name + Title + Phone' };
     }

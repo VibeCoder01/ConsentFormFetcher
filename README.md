@@ -74,11 +74,12 @@ In the top-right corner, you will find several controls, each with a helpful too
 
 On the left sidebar, you will find a "Patient Details" form. The initial state of this form depends on the **"Pre-populate form with dummy data"** setting on the Configuration page.
 
--   **Initial Data**: If pre-population is enabled, the form starts with dummy data ("John Smith"). If it is disabled, the form will be empty. In both cases, fields that require your attention will have a red background. This red highlight disappears as soon as you edit a field or import live data.
+-   **Initial Data**: If pre-population is enabled, the form starts with dummy data ("John Smith"). If it is disabled, the form will be empty. In both cases, fields that require your attention will have a red background. This red highlight disappears as soon as you edit a field, but after importing live data any field that is still blank (including whitespace-only values returned by KOMS) will remain highlighted.
 -   **Manual Entry**: You can manually type the patient's information into each field. The "Name of Hospital" field is pre-filled with "Kent Oncology Centre" but can be edited.
--   **Fetch Live Data**: To import data automatically, click the **"Get Live Patient Demographics"** button. A pop-up will appear where you can enter a patient's **KOMS patient number**. Pressing Enter or clicking the button will fetch the patient's details and populate the form.
+-   **Fetch Live Data**: To import data automatically, enter a patient's **KOMS patient number** in the field at the top of the patient details panel. Pressing Enter or clicking **"Get Demographics"** will fetch the patient's details and populate the form.
     -   A tooltip on this button reminds you that you must be logged into KOMS for this feature to work. If the connection times out, it is highly likely that you need to log into the KOMS service.
     -   When live data is loaded, dropdown menus like the Macmillan Contact are reset, requiring a manual selection. The "Name of Hospital" text field will retain its current value.
+-   **Unique Patient Identifier Warning**: When you change the selected unique patient identifier to a field whose value is blank, the application will show a centred warning dialog so you can correct it before continuing.
 -   **Age Warning**: If you enter a Date of Birth for a patient who is under 16, the field will turn red, and a warning dialog will appear. This is to ensure correct consent procedures are followed for minors.
 
 ### 3. Selecting Staff Members
@@ -112,7 +113,7 @@ The application's behavior after you select a form is controlled by settings on 
 -   **If "Preview PDF fields before generating" is OFF**:
     -   When you click a form, the application will immediately generate the filled PDF and save it to the server, skipping the preview step.
 
-In both cases, after the PDF is generated, it will be saved with the filename `[patient_identifier] RT-CONSENT-[YYYYMMDD-HHMMSS].PDF` inside a `TEMP` subfolder within the clinician's folder (e.g., `C:\Consent\Dr_John_Doe\TEMP\`). A success notification will appear in the middle of the screen containing the full UNC path to the file. You can use the "Copy Path" button and paste it into Windows Search or File Explorer to quickly access the file. The `TEMP` folder is automatically emptied before each new PDF is saved, ensuring it only ever contains the latest document.
+In both cases, after the PDF is generated, it will be saved with the filename `[patient_identifier] RT-CONSENT-[YYYYMMDD-HHMMSS].PDF` inside the `TEMP` subfolder within the clinician's folder (e.g., `C:\Consent\Dr_John_Doe\TEMP\`). Each clinician folder also contains `RequiresPatientSignature` and `FullySigned` subfolders for downstream filing. A success notification will appear in the middle of the screen containing the full UNC path to the file. You can use the "Copy Path" button and paste it into Windows Search or File Explorer to quickly access the file. The `TEMP` folder is automatically emptied before each new PDF is saved, ensuring it only ever contains the latest document.
 
 ### 6. Sending the Signed Form
 
