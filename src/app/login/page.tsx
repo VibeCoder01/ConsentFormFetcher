@@ -22,13 +22,21 @@ function LoginForm() {
   const [isMachineAuthorised, setIsMachineAuthorised] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const from = searchParams.get('from') || '/';
+  const requestedFrom = searchParams.get('from') || '/';
+  const from = requestedFrom.startsWith('/') && !requestedFrom.startsWith('//') && !requestedFrom.includes('\\') ? requestedFrom : '/';
+  const [setupAvailable, setSetupAvailable] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     async function checkMachineAccess() {
       try {
+        const setup = await fetch('/api/auth/setup-status');
+        const setupStatus = await setup.json();
+        if (setup.ok && setupStatus.setupAvailable) {
+          if (!cancelled) { setSetupAvailable(true); setIsMachineAuthorised(true); }
+          return;
+        }
         const response = await fetch('/api/auth/machine-access');
         const data = await response.json();
 
@@ -87,7 +95,7 @@ function LoginForm() {
       });
 
       // Redirect to the original destination or the main page
-      router.push(from);
+      router.push(data.destination === '/config' ? '/config' : from);
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
@@ -102,7 +110,7 @@ function LoginForm() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>Enter your Windows login credentials.</CardDescription>
+          <CardDescription>{setupAvailable ? 'Initial setup: enter username “setup” and the setup token supplied by your administrator as the password.' : 'Enter your Windows login credentials.'}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

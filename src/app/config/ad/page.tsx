@@ -203,9 +203,9 @@ export default function ADConfigPage() {
              {!isLoading && !config.caFile && (
                 <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle>Insecure Connection</AlertTitle>
+                    <AlertTitle>System Certificate Trust</AlertTitle>
                     <AlertDescription>
-                        No CA certificate file is provided. The connection to Active Directory will not be secure. This is not recommended for production environments.
+                        No custom CA file is configured. LDAPS will validate the directory certificate using the Node.js trust store. Configure a CA file if your directory uses an internal certificate authority.
                     </AlertDescription>
                 </Alert>
             )}
@@ -273,9 +273,9 @@ export default function ADConfigPage() {
             {hasFullAccess && (
                  <Card>
                     <CardHeader>
-                        <CardTitle>Machine-Based MFA</CardTitle>
+                        <CardTitle>Machine Access Restriction</CardTitle>
                         <CardDescription>
-                            (Optional) Restrict access to devices that are members of a specific Active Directory security group. This requires a reliable reverse DNS setup on your network.
+                            (Optional) Restrict access to devices that are members of a specific Active Directory security group. This requires an administrator-configured trusted proxy and reliable DNS. It is a network access restriction, not an independent authentication factor.
                         </CardDescription>
                     </CardHeader>
                     {isLoading ? <div className="p-6"><Skeleton className="h-16 w-full" /></div> : (

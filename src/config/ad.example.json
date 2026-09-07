@@ -4,10 +4,10 @@
   "bindDN": "CN=ServiceAccount,OU=Users,DC=example,DC=local",
   "caFile": "",
   "groupDNs": {
-    "user": "CN=AppUsers,OU=Groups,DC=example,DC=local",
-    "change": "CN=AppAdmins-Change,OU=Groups,DC=example,DC=local",
-    "full": "CN=AppAdmins-Full,OU=Groups,DC=example,DC=local"
+    "user": "",
+    "change": "",
+    "full": ""
   },
-  "mfaMachineGroup": "CN=AppMfaDevices,OU=Groups,DC=example,DC=local",
+  "mfaMachineGroup": "",
   "encryptedBindPassword": ""
 }

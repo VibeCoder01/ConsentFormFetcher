@@ -7,7 +7,7 @@ import { Input } from './ui/input';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { cn } from '@/lib/utils';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { AgeWarningDialog } from './age-warning-dialog';
 import { Button } from './ui/button';
 import {
@@ -119,7 +119,11 @@ export function PatientForm({
     return staffMembers.filter(s => !s.title.toLowerCase().includes('macmillan'));
   }, [macmillanFilter, staffMembers]);
 
+  const currentPatient = useRef(patientData);
+  currentPatient.current = patientData;
+
   const handleRNumberSubmit = async (rNumber: string) => {
+    const requestedPatient = patientData;
     const normalizedRNumber = rNumber.trim().toUpperCase();
 
     setIsFetchingDemographics(true);
@@ -150,6 +154,10 @@ export function PatientForm({
             throw new Error(errorMsg);
         }
         
+        if (currentPatient.current !== requestedPatient) {
+          toast({ title: 'Details changed', description: 'Patient details changed during lookup. Fetch demographics again.' });
+          return;
+        }
         const data = rawResponseData as KomsResponse;
         
         // Check for placeholder response which indicates user is not logged into KOMS

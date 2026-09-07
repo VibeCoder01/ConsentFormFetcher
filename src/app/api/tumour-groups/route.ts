@@ -1,12 +1,16 @@
+import { namedItemsSchema } from '@/lib/config-schemas';
+import { configDirectory } from '@/lib/config-path';
+import { feedback } from '@/lib/diagnostics';
+import { api } from '@/lib/authorization';
 
 import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 import { TumourGroup } from '@/lib/types';
 
-const configPath = path.join(process.cwd(), 'src', 'config', 'tumour-groups.json');
+const configPath = path.join(configDirectory, 'tumour-groups.json');
 
-export async function GET() {
+async function handleGET() {
   try {
     const jsonData = await fs.readFile(configPath, 'utf-8');
     const data: TumourGroup[] = JSON.parse(jsonData);
@@ -16,14 +20,16 @@ export async function GET() {
         // File doesn't exist, return empty array
         return NextResponse.json([]);
     }
-    console.error("Failed to read tumour group config file:", error);
+    await feedback('failed', { error });
     return NextResponse.json({ message: "Could not load tumour group configuration." }, { status: 500 });
   }
 }
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
     try {
-        const updatedGroups: TumourGroup[] = await request.json();
+        const parsed = namedItemsSchema.safeParse(await request.json());
+        if (!parsed.success) return NextResponse.json({ message: "Invalid configuration values." }, { status: 400 });
+        const updatedGroups = parsed.data;
         
         if (!Array.isArray(updatedGroups)) {
             return NextResponse.json({ message: "Invalid data format. Expected an array of tumour groups." }, { status: 400 });
@@ -36,8 +42,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: "Tumour group configuration updated successfully." });
 
     } catch (error) {
-        console.error("Failed to write tumour group config file:", error);
-        const message = error instanceof Error ? error.message : "An unknown error occurred.";
+        await feedback('failed', { error });
+        const message = 'Operation failed. See the feedback log for diagnostic details.';
         return NextResponse.json({ message: "Could not update tumour group configuration.", error: message }, { status: 500 });
     }
 }
+
+export const GET = api('tumour-groups', 'read', handleGET, true);
+
+export const POST = api('tumour-groups', 'change', handlePOST, true);

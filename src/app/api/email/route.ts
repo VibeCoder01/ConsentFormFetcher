@@ -1,15 +1,19 @@
+import { emailsSchema } from '@/lib/config-schemas';
+import { configDirectory } from '@/lib/config-path';
+import { feedback } from '@/lib/diagnostics';
+import { api } from '@/lib/authorization';
 
 import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 import { EmailContact } from '@/lib/types';
 
-const emailConfigPath = path.join(process.cwd(), 'src', 'config', 'email.json');
+const emailConfigPath = path.join(configDirectory, 'email.json');
 
 // Basic email validation regex
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export async function GET() {
+async function handleGET() {
   try {
     const jsonData = await fs.readFile(emailConfigPath, 'utf-8');
     const data: EmailContact[] = JSON.parse(jsonData);
@@ -19,14 +23,16 @@ export async function GET() {
         // File doesn't exist, return empty array
         return NextResponse.json([]);
     }
-    console.error("Failed to read email config file:", error);
+    await feedback('failed', { error });
     return NextResponse.json({ message: "Could not load email configuration." }, { status: 500 });
   }
 }
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
     try {
-        const updatedEmails: EmailContact[] = await request.json();
+        const parsed = emailsSchema.safeParse(await request.json());
+        if (!parsed.success) return NextResponse.json({ message: "Invalid configuration values." }, { status: 400 });
+        const updatedEmails = parsed.data;
         
         if (!Array.isArray(updatedEmails)) {
             return NextResponse.json({ message: "Invalid data format. Expected an array of email contacts." }, { status: 400 });
@@ -50,8 +56,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: "Email configuration updated successfully." });
 
     } catch (error) {
-        console.error("Failed to write email config file:", error);
-        const message = error instanceof Error ? error.message : "An unknown error occurred.";
+        await feedback('failed', { error });
+        const message = 'Operation failed. See the feedback log for diagnostic details.';
         return NextResponse.json({ message: "Could not update email configuration.", error: message }, { status: 500 });
     }
 }
+
+export const GET = api('email', 'read', handleGET, true);
+
+export const POST = api('email', 'change', handlePOST, true);

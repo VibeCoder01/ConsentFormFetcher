@@ -81,6 +81,8 @@ export interface TumourGroup {
 export type AccessLevel = 'read' | 'change' | 'full';
 
 export interface SessionData {
+  isSetup?: boolean;
+  setupExpires?: number;
   username: string;
   roles: AccessLevel[];
   isLoggedIn: true;

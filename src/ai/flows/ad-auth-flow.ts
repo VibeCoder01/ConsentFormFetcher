@@ -1,5 +1,6 @@
+import { feedback } from '@/lib/diagnostics';
 
-'use server';
+// Internal directory service; never expose credential helpers as Server Actions.
 
 import { Client } from 'ldapts';
 import type { ADConfig, AccessLevel } from '@/lib/types';
@@ -54,18 +55,6 @@ function normaliseHostname(value: string) {
   return value.trim().toLowerCase().replace(/\.$/, '');
 }
 
-function buildComputerSearchFilters(hostname: string) {
-  const trimmed = normaliseHostname(hostname);
-  const shortName = trimmed.split('.')[0] ?? trimmed;
-  const variants = Array.from(new Set([
-    trimmed,
-    shortName,
-    `${shortName}$`,
-  ])).filter(Boolean);
-
-  return variants.map(escapeLDAPfilter);
-}
-
 function buildComputerSearchFilter(hostname: string) {
   const trimmed = normaliseHostname(hostname);
   const shortName = trimmed.split('.')[0] ?? trimmed;
@@ -99,13 +88,13 @@ export type AuthResult =
 const machineAccessDeniedMessage = 'This machine is not authorised to use this application.';
 
 async function getTlsOptions(config: ADConfig): Promise<ConnectionOptions | undefined> {
+    if (!config.url.startsWith('ldaps://')) throw new Error('Configure an ldaps:// directory URL.');
     const caFile = normaliseCaFile(config.caFile);
 
     if (!caFile) {
-        // If no CA file is specified, or the path is empty, proceed with caution.
-        // This is not recommended for production environments.
+        // Use the system trust store when no custom CA is configured.
         return {
-             rejectUnauthorized: false
+             rejectUnauthorized: true
         };
     }
     try {
@@ -115,7 +104,7 @@ async function getTlsOptions(config: ADConfig): Promise<ConnectionOptions | unde
             rejectUnauthorized: true, // This is critical for security
         };
     } catch (error) {
-        console.error(`Failed to read CA file at ${caFile}`, error);
+        await feedback('failed', { error });
         throw new Error(`Could not read the specified CA file. Please check the path in your ad.json configuration.`);
     }
 }
@@ -161,7 +150,6 @@ async function validateMachineAuthorisation(client: Client, config: ADConfig, ho
     return { ok: false as const, reason: machineAccessDeniedMessage };
   }
 
-  const hostnameVariants = buildComputerSearchFilters(hostname);
   const hostnameFilter = buildComputerSearchFilter(hostname);
 
   const { searchEntries } = await client.search(config.baseDN, {
@@ -188,15 +176,7 @@ async function validateMachineAuthorisation(client: Client, config: ADConfig, ho
   );
 
   if (computerDns.length === 0) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('AD machine authorisation check', {
-        hostname,
-        hostnameVariants,
-        mfaMachineGroup: requiredMachineGroup,
-        computers: [],
-        membershipChecks: [],
-      });
-    }
+
     return { ok: false as const, reason: machineAccessDeniedMessage };
   }
 
@@ -208,15 +188,7 @@ async function validateMachineAuthorisation(client: Client, config: ADConfig, ho
   );
   const isAuthorised = membershipChecks.some((result) => result.matched);
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('AD machine authorisation check', {
-      hostname,
-      hostnameVariants,
-      mfaMachineGroup: requiredMachineGroup,
-      computers,
-      membershipChecks,
-    });
-  }
+
 
   return isAuthorised
     ? { ok: true as const }
@@ -240,7 +212,7 @@ export async function checkMachineAuthorisation(hostname?: string): Promise<{ ok
     await client.bind(config.bindDN, config.bindPassword);
     return await validateMachineAuthorisation(client, config, hostname);
   } catch (error) {
-    console.error('Machine authorisation error:', error);
+    await feedback('failed', { error });
     return { ok: false, reason: machineAccessDeniedMessage };
   } finally {
     try { await client.unbind(); } catch {}
@@ -299,7 +271,7 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
 
     // Check for initial setup: if no groups are defined, grant full access
     if (!user && !change && !full) {
-      return { ok: true, userDN, username, roles: ['full', 'change', 'read'] };
+      return { ok: false, reason: 'Application access groups are not configured.' };
     }
 
     const [isFull, isChange, isUser] = await Promise.all([
@@ -308,14 +280,7 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
       user ? isMemberOf(client, userDN, user) : Promise.resolve(false),
     ]);
 
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('AD authorisation check', {
-        username,
-        userDN,
-        groups: { user, change, full },
-        matches: { isUser, isChange, isFull },
-      });
-    }
+
 
     // The base User group is mandatory for all access. Admin groups should be
     // nested under it in AD so elevated users inherit baseline access.
@@ -346,13 +311,13 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
 
     if(finalRoles.size === 0) {
         // Authenticated user but not a member of any required groups.
-        return { ok: true, userDN, username, roles: [] };
+        return { ok: false, reason: 'Access denied. No application access group matched.' };
     }
 
     return { ok: true, userDN, username, roles: Array.from(finalRoles) };
   } catch (error) {
-      console.error("LDAP Authentication Error:", error);
-      const message = error instanceof Error ? error.message : "An unknown LDAP error occurred.";
+      await feedback('failed', { error });
+      const message = 'Operation failed. See the feedback log for diagnostic details.';
       return { ok: false, reason: message };
   }
   finally {
@@ -361,10 +326,11 @@ export async function authenticateAndAuthorise(input: AdAuthInput): Promise<Auth
 }
 
 export async function testAdConnection(): Promise<{ success: boolean; message: string; }> {
+    let client: Client | undefined;
     try {
         const config = await readAdConfig();
         const tlsOptions = await getTlsOptions(config);
-        const client = new Client({ url: config.url, timeout: 5000, tlsOptions });
+        client = new Client({ url: config.url, timeout: 5000, tlsOptions });
 
         await client.bind(config.bindDN, config.bindPassword);
         await client.search(config.baseDN, {
@@ -372,17 +338,12 @@ export async function testAdConnection(): Promise<{ success: boolean; message: s
             filter: '(objectClass=*)',
             attributes: ['dn'],
         });
-        await client.unbind();
-
-        let message = 'Active Directory connection successful.';
-        if(tlsOptions?.rejectUnauthorized === false) {
-            message += ' Warning: Connection is insecure as certificate validation is disabled.';
-        }
+        const message = 'Active Directory connection successful with certificate validation.';
 
         return { success: true, message: message };
 
     } catch (error) {
-        console.error('AD Connection Test Error:', error);
+        await feedback('failed', { error });
         let message = 'An unknown error occurred.';
         if (error instanceof Error) {
             // Provide more specific feedback for common issues
@@ -396,9 +357,11 @@ export async function testAdConnection(): Promise<{ success: boolean; message: s
                  message = 'Connection failed: The server is using a self-signed certificate. Please provide a path to a trusted CA file in ad.json.';
             }
              else {
-                message = `Connection failed: ${error.message}`;
+                message = 'Directory connection failed. See the feedback log.';
             }
         }
         return { success: false, message: message };
+    } finally {
+      try { await client?.unbind(); } catch {}
     }
 }

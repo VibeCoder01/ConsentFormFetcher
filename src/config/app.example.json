@@ -5,7 +5,7 @@
   "previewPdfFields": false,
   "pdfOpenMethod": "browser",
   "rtConsentFolder": "",
-  "prepopulateWithFakeData": true,
+  "prepopulateWithFakeData": false,
   "showWelshForms": false,
   "komsApiDebugMode": false
 }

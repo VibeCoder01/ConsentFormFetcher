@@ -1,3 +1,4 @@
+import { configDirectory } from '@/lib/config-path';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -20,12 +21,12 @@ export const defaultAppConfig: AppConfig = {
   previewPdfFields: false,
   pdfOpenMethod: 'browser',
   rtConsentFolder: '',
-  prepopulateWithFakeData: true,
+  prepopulateWithFakeData: false,
   showWelshForms: false,
   komsApiDebugMode: false,
 };
 
-export const appConfigPath = path.join(process.cwd(), 'src', 'config', 'app.json');
+export const appConfigPath = path.join(configDirectory, 'app.json');
 export const appConfigExamplePath = path.join(process.cwd(), 'src', 'config', 'app.example.json');
 
 async function readConfigFile(filePath: string): Promise<Partial<AppConfig>> {

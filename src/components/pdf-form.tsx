@@ -74,7 +74,7 @@ export function PdfForm({ formTitle, fields, initialData, isSubmitting, onSubmit
             <CardFooter className="flex-shrink-0 border-t pt-6">
                 <Button type="submit" form="pdf-data-form" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Submit & Open PDF
+                    Submit & Save PDF
                 </Button>
             </CardFooter>
         </div>

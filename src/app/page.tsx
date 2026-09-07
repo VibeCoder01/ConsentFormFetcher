@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import type { ConsentForm, ConsentFormCategory, PatientData, IdentifierType, StaffMember, TumourSite } from "@/lib/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSession } from "@/hooks/use-session";
@@ -154,7 +154,17 @@ export default function Home() {
   const router = useRouter();
 
 
+  const selectionVersion = useRef(0);
+  const invalidatePreview = () => {
+    selectionVersion.current++;
+    setSelectedForm(null);
+    setPdfFields([]);
+    setPdfFormData({});
+    setIsFetchingFields(false);
+  };
+
   const handlePatientDataChange = (newData: PatientData, fromDemographics = false) => {
+    invalidatePreview();
     // Also update fullAddress if one of the address fields changes
     if (['addr1', 'addr2', 'addr3', 'postcode'].some(field => newData[field as keyof PatientData] !== patientData[field as keyof PatientData])) {
         newData.fullAddress = [newData.addr1, newData.addr2, newData.addr3, newData.postcode].filter(Boolean).join(', ');
@@ -176,6 +186,7 @@ export default function Home() {
   };
 
   const handleStaffMemberChange = (staffId: string | null) => {
+    invalidatePreview();
     const selected = staffMembers.find(s => s.id === staffId) || null;
     setSelectedStaffMember(selected);
   };
@@ -191,6 +202,7 @@ export default function Home() {
         fetch("/api/tumour-sites"),
       ]);
 
+      if ([formsRes, staffRes, configRes, sitesRes].some(response => !response.ok)) throw new Error('Initial data unavailable.');
       const formsData: ConsentFormCategory[] = await formsRes.json();
       const staffData: StaffMember[] = await staffRes.json();
       const configData = await configRes.json();
@@ -251,14 +263,14 @@ export default function Home() {
 
     checkForFormUpdates()
       .then((result) => {
-        if (result?.hasUpdates && result.newData) {
+        if (result?.hasUpdates && result.newData && session.roles.some(role => role === 'change' || role === 'full')) {
           setUpdateAvailable(result.newData);
           setShowAlert(true);
         }
       })
       .catch(console.error)
       .finally(() => setIsCheckingForUpdates(false));
-  }, [fetchInitialData, isSessionLoading, session.isLoggedIn]);
+  }, [fetchInitialData, isSessionLoading, session]);
 
   const patientMappings = useMemo(() => {
     const formattedDob = patientData.dob ? format(new Date(patientData.dob), 'dd/MM/yyyy') : '';
@@ -481,6 +493,7 @@ export default function Home() {
 
 
   const handleSelectForm = async (form: ConsentForm) => {
+    const version = ++selectionVersion.current;
     setSelectedForm(form);
     if (isMobile) setSheetOpen(false);
 
@@ -493,6 +506,7 @@ export default function Home() {
     
     try {
       const result = await getPdfFields(form.url);
+      if (version !== selectionVersion.current) return;
       if (result.success && result.fields) {
         const { finalFields, finalFormData } = prePopulateData(result.fields);
         
@@ -520,7 +534,7 @@ export default function Home() {
         description: `An error occurred while getting PDF fields: ${errorMessage}`,
       });
     } finally {
-      if (previewPdfFieldsConfig) {
+      if (previewPdfFieldsConfig && version === selectionVersion.current) {
         setIsFetchingFields(false);
       }
     }
@@ -534,6 +548,10 @@ export default function Home() {
     const targetForm = formForSubmission || selectedForm;
     if (!targetForm) return;
 
+    if (!patientData.uniqueIdentifierValue.trim()) {
+      toast({ variant: 'destructive', title: 'Patient Identifier Missing', description: 'Enter a unique patient identifier before generating a PDF.' });
+      return;
+    }
     if (!selectedStaffMember?.name) {
         toast({
             variant: "destructive",
@@ -617,8 +635,11 @@ export default function Home() {
     setShowAlert(false);
 
     try {
-      await updateForms(updateAvailable);
-      fetchInitialData(); // Re-fetch all data to update the list
+      const result = await updateForms(updateAvailable);
+      if (!result.success) throw new Error('Form update failed');
+      const response = await fetch('/api/consent-forms');
+      if (!response.ok) throw new Error('Form list unavailable');
+      setFormCategories(await response.json());
     } catch (error) {
       console.error("Failed to update forms:", error);
     } finally {

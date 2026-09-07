@@ -1,5 +1,8 @@
+import { sandboxEnabled } from '@/lib/sandbox';
+import { feedback } from '@/lib/diagnostics';
+import { api } from '@/lib/authorization';
 
-import type { NextRequest } from 'next/server';
+
 import { readAppConfig } from '@/lib/app-config';
 
 // Per Next.js docs, this is the proper way to access env vars in a route handler
@@ -15,9 +18,12 @@ function getErrorCauseCode(error: Error): string | undefined {
   return typeof code === 'string' ? code : undefined;
 }
 
-export async function GET(req: NextRequest) {
+async function handleGET(req: Request) {
   const rNumber = new URL(req.url).searchParams.get('RNumber');
   const config = await readAppConfig();
+  if (!rNumber?.trim() || rNumber.length > 100) return Response.json({ error: 'Patient number is required.' }, { status: 400 });
+
+  if (sandboxEnabled()) return Response.json({ forename: 'Alice', surname: 'Synthetic', fullName: 'Alice Synthetic', rNumber, dob: '1980-01-01', addr1: '1 Test Street', addr2: '', addr3: '', postcode: 'TEST', homePhone: '', gpName: 'Test GP', nhsNumber: '', hospitalNumber: 'TEST123', hospitalNumberMTW: '' });
 
   if (!KOMS_URL) {
       return Response.json({ error: 'KOMS service URL not configured' }, { status: 500 });
@@ -30,6 +36,8 @@ export async function GET(req: NextRequest) {
   try {
     const koms = await fetch(KOMS_URL, {
         method: 'POST',
+        signal: AbortSignal.timeout(15000),
+        redirect: 'error',
         headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'User-Agent': 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)'
@@ -39,11 +47,14 @@ export async function GET(req: NextRequest) {
 
     if (!koms.ok)
         return Response.json(
-        { error: `KOMS responded ${koms.status} ${koms.statusText}` },
+        { error: `KOMS responded with status ${koms.status}` },
         { status: 502 }
         );
 
+    await feedback('upstream', { status: koms.status });
     const h = koms.headers;
+    if (!h.get('Forename') || !h.get('Surname') || h.get('Forename') === '${forename}') return Response.json({ error: 'KOMS did not return valid demographics. Check the KOMS session.' }, { status: 502 });
+    if (h.get('RNumber')?.trim().toUpperCase() !== rNumber.trim().toUpperCase()) return Response.json({ error: 'KOMS returned a different or missing patient number.' }, { status: 502 });
     
     // The DoB header from KOMS might be in a different format. 
     // We will attempt to parse it and reformat to YYYY-MM-DD for the input[type=date].
@@ -98,9 +109,9 @@ export async function GET(req: NextRequest) {
 
   } catch (error) {
     // Log the full error object and any nested cause for detailed debugging.
-    console.error('[KOMS_API_ERROR]', error);
+    await feedback('failed', { error });
     if (error instanceof Error && error.cause) {
-      console.error('[KOMS_API_ERROR_CAUSE]', error.cause);
+      await feedback('failed', { error });
     }
 
     let message = 'An unknown network error occurred';
@@ -110,11 +121,13 @@ export async function GET(req: NextRequest) {
         if (causeCode === 'UND_ERR_CONNECT_TIMEOUT') {
              message = 'Connection to KOMS timed out. Please ensure you are logged into KOMS and try again.';
         } else if (causeCode) {
-            message = `Failed to connect to KOMS service: ${causeCode}`;
+            message = 'Failed to connect to KOMS. See the feedback log.';
         } else {
-            message = error.message;
+            message = 'Upstream connection failed. See the feedback log.';
         }
     }
     return Response.json({ error: message }, { status: 504 }); // Gateway Timeout
   }
 }
+
+export const GET = api('koms', 'read', handleGET, false);

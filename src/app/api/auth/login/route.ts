@@ -1,5 +1,8 @@
+import { sandboxEnabled } from '@/lib/sandbox';
+import { feedback } from '@/lib/diagnostics';
+import { api, validSetupToken } from '@/lib/authorization';
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { authenticateAndAuthorise, checkMachineAuthorisation } from '@/ai/flows/ad-auth-flow';
 import { getIronSession } from 'iron-session';
@@ -12,7 +15,7 @@ const LoginSchema = z.object({
   password: z.string().min(1, 'Password is required.'),
 });
 
-export async function POST(req: NextRequest) {
+async function login(req: Request) {
   try {
     const body = await req.json();
     const parsed = LoginSchema.safeParse(body);
@@ -23,6 +26,17 @@ export async function POST(req: NextRequest) {
 
     const { username, password } = parsed.data;
 
+    if (username === 'setup' || (sandboxEnabled() && username === 'demo')) {
+      if (!await validSetupToken(password)) return NextResponse.json({ message: 'Invalid setup credentials.' }, { status: 401 });
+      const session = await getIronSession<SessionData>(await cookies(), sessionOptions);
+      session.username = 'setup';
+      session.roles = ['full', 'change', 'read'];
+      session.isLoggedIn = true;
+      session.isSetup = !sandboxEnabled();
+      session.setupExpires = Date.now() + 15 * 60 * 1000;
+      await session.save();
+      return NextResponse.json({ message: 'Setup access granted.', destination: sandboxEnabled() ? '/' : '/config' });
+    }
     const hostname = await resolveClientHostname(req);
     const machineCheck = await checkMachineAuthorisation(hostname);
 
@@ -39,6 +53,8 @@ export async function POST(req: NextRequest) {
     // Get session and save data
     const cookieStore = await cookies();
     const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
+    session.isSetup = false;
+    delete session.setupExpires;
     session.username = authResult.username;
     session.roles = authResult.roles;
     session.isLoggedIn = true;
@@ -46,7 +62,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ message: 'Authentication successful' });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
+    await feedback('failed', { error });
+    const message = 'Operation failed. See the feedback log for diagnostic details.';
     return NextResponse.json({ message }, { status: 500 });
   }
 }
+
+export const POST = api('login', null, login);

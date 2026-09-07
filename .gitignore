@@ -60,3 +60,7 @@ next-env.d.ts
 
 # Temporary files
 /tmp
+
+# Privacy-filtered runtime feedback logs (collect deliberately, never commit)
+/logs/
+feedback-*.jsonl*

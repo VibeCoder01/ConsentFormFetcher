@@ -1,9 +1,10 @@
+import { configDirectory } from '@/lib/config-path';
 import path from 'path';
 import fs from 'fs/promises';
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
 import type { ADConfig } from '@/lib/types';
 
-const configPath = path.join(process.cwd(), 'src', 'config', 'ad.json');
+const configPath = path.join(configDirectory, 'ad.json');
 const placeholderCaFilePaths = new Set([
   '/path/to/your/ca.pem',
   'C:\\path\\to\\your\\ca.pem',
@@ -44,7 +45,6 @@ export function normaliseCaFile(caFile?: string): string {
 export function normaliseAdConfig(config: ADConfig): ADConfig {
   return {
     ...defaultAdConfig,
-    ...config,
     url: config.url?.trim() ?? '',
     baseDN: normaliseDn(config.baseDN),
     bindDN: normaliseDn(config.bindDN),

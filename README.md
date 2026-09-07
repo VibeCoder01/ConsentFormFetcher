@@ -1,212 +1,84 @@
-
 # ConsentForm Fetcher
 
-This is a Next.js application designed to fetch, display, and intelligently pre-populate medical consent forms from The Royal College of Radiologists (RCR) website.
+A Next.js application for finding RCR consent templates, importing patient demographics from KOMS, and saving pre-populated PDFs to a clinician folder.
 
----
+## Local verification
 
-## Getting Started
+Requires Node.js 22.12 or later (Node 22 recommended) and npm.
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+```bash
+npm ci
+npm run check
+npm run build
+```
 
-### Prerequisites
+`check` runs ESLint, TypeScript and regression tests. `npm run test:smoke` launches the isolated sandbox and verifies authentication, API behavior, page rendering and feedback privacy over HTTP (port 9002 must be free). CI also builds the application and checks production dependencies for high-severity advisories. TypeScript and lint errors are no longer ignored during builds.
 
-You need to have Node.js and npm (Node Package Manager) installed on your system. You can download them from [https://nodejs.org/](https://nodejs.org/).
+To exercise the workflow without AD, KOMS, or a real file share:
 
-### Installation
+```bash
+npm run dev:sandbox
+```
 
-1.  Clone the repository to your local machine.
-2.  Navigate to the project directory in your terminal.
-3.  Create local-only configuration files from the safe templates:
-    ```powershell
-    Copy-Item .env.example .env
-    Copy-Item src/config/app.example.json src/config/app.json
-    Copy-Item src/config/ad.example.json src/config/ad.json
-    Copy-Item src/config/email.example.json src/config/email.json
-    Copy-Item src/config/staff.example.json src/config/staff.json
-    ```
-4.  Update the local copies with your own environment values, passwords, AD group DNs, staff list, and email recipients. These local files are git-ignored and are not intended to be committed.
-5.  Install the required dependencies by running:
-    ```bash
-    npm install
-    ```
-6.  Once the installation is complete, you can start the development server:
-    ```bash
-    npm run dev
-    ```
-7.  Open [http://localhost:9002](http://localhost:9002) with your browser to see the application. If the app is in initial setup mode, the root URL will redirect you to the Configuration page.
+Open the localhost URL printed by the launcher and sign in as `demo` using its temporary password. Enter a synthetic patient number, select **Get Demographics**, select **Synthetic Doctor**, and choose the synthetic template. Review the fields and select **Submit & Save PDF**. Inspect the output and logs in the temporary directory printed by the launcher. Do not enter real patient information in this mode.
 
-If you access `npm run dev` from another hostname, set `NEXT_ALLOWED_DEV_ORIGINS` in `.env` to a comma-separated list of permitted hostnames, for example `NEXT_ALLOWED_DEV_ORIGINS=workstation.example.local`. This only affects the Next.js development server.
+The sandbox binds to loopback, isolates configuration and document storage, serves a synthetic PDF, and stubs KOMS. It does not contact AD or KOMS. The sandbox flag has no effect in production. Temporary files remain after exit so they can be inspected; remove that specific directory when finished.
 
-### GitHub-safe local files
+## Deployment configuration
 
-The following files are intentionally local-only and are ignored by git:
+For selecting this release on production and preserving a rollback checkpoint, follow [Selecting production branches](docs/production-branches.md).
 
-- `.env`
-- `src/config/app.json`
-- `src/config/ad.json`
-- `src/config/email.json`
-- `src/config/staff.json`
+See [Deployment and feedback logs](docs/deployment-and-feedback.md) before updating an existing installation. Version 0.2 introduces authentication, TLS, session, filename and retention changes.
 
-They may contain secrets, internal hostnames, AD distinguished names, staff contact details, or recipient lists. Use the `*.example` versions in the repo as templates and keep the real files on the deployment machine only.
+Copy `.env.example` to `.env` and the `src/config/*.example.json` files to corresponding local `*.json` files. On PowerShell:
 
----
+```powershell
+Copy-Item .env.example .env
+'app', 'ad', 'email', 'staff' | ForEach-Object {
+    Copy-Item "src/config/$_.example.json" "src/config/$_.json"
+}
+```
 
-## User Guide
+Set a random `SECRET_COOKIE_PASSWORD` of at least 32 characters. Do not use the example placeholder. Configure AD over LDAPS, KOMS, and an absolute server-side consent folder. Real configuration and environment files must remain outside version control.
 
-This guide explains how to use the application to prepare and submit a consent form.
+For first-run setup, temporarily set a random `SETUP_TOKEN` of at least 32 characters. On the login page, use username `setup` and that token as the password. Setup sessions last at most 15 minutes and can access configuration only. Save and test the directory connection before setting the Full Access Group DN. Setting that group closes setup access; sign in using AD thereafter and remove `SETUP_TOKEN`.
 
-### 1. The Main Screen
+```bash
+npm run build
+npm start
+```
 
-The application is divided into two main sections:
--   **Left Sidebar**: Contains the patient and clinician details forms, and the list of available consent forms.
--   **Main Area**: Displays the fields of the selected PDF form for review and editing.
+Production requires HTTPS because session cookies are secure. Configure `APP_ORIGIN` with the externally visible origin when using a reverse proxy.
 
-You can hover over the main title, "ConsentForm Fetcher," to see the application's current version number.
+## Main workflow
 
-In the top-right corner, you will find several controls, each with a helpful tooltip that appears when you hover over it:
--   **SEND EMAILS**: Clicking this button will display a notification, as the email functionality is not yet implemented.
--   **Sign Out**: Logs the current user out of the application. The session also ends automatically when the browser tab is closed.
--   **Theme Toggle (Sun/Moon icon)**: For changing between light and dark mode.
--   **Settings (Gear icon)**: For accessing the configuration page.
+1. Enter or retrieve patient demographics, then check them for accuracy.
+2. Choose a clinician and, optionally, a Macmillan contact.
+3. Select a populated unique patient identifier.
+4. Select a consent template. If preview is enabled, review and edit its fields before saving. Otherwise generation begins immediately.
+5. Use the displayed path to locate the saved PDF, complete the remaining fields, and sign/file it using the deployment's established process.
 
-### 2. Entering Patient Details
+Changing patient or clinician details clears any existing preview. Select the template again to rebuild it. An inspection that finishes after changing patients or selecting another template is ignored.
 
-On the left sidebar, you will find a "Patient Details" form. The initial state of this form depends on the **"Pre-populate form with dummy data"** setting on the Configuration page.
+PDFs are saved under `<consent folder>/<clinician>/TEMP/` with a timestamp and random suffix. `RequiresPatientSignature` and `FullySigned` folders are also created. **Existing PDFs are not automatically deleted.** Agree a document-retention and filing procedure with the deployment owner. The generated path is the actual server path; Linux paths are not automatically converted into Windows share paths.
 
--   **Initial Data**: If pre-population is enabled, the form starts with dummy data ("John Smith"). If it is disabled, the form will be empty. In both cases, fields that require your attention will have a red background. This red highlight disappears as soon as you edit a field, but after importing live data any field that is still blank (including whitespace-only values returned by KOMS) will remain highlighted.
--   **Manual Entry**: You can manually type the patient's information into each field. The "Name of Hospital" field is pre-filled with "Kent Oncology Centre" but can be edited.
--   **Fetch Live Data**: To import data automatically, enter a patient's **KOMS patient number** in the field at the top of the patient details panel. Pressing Enter or clicking **"Get Demographics"** will fetch the patient's details and populate the form.
-    -   A tooltip on this button reminds you that you must be logged into KOMS for this feature to work. If the connection times out, it is highly likely that you need to log into the KOMS service.
-    -   When live data is loaded, dropdown menus like the Macmillan Contact are reset, requiring a manual selection. The "Name of Hospital" text field will retain its current value.
--   **Unique Patient Identifier Warning**: When you change the selected unique patient identifier to a field whose value is blank, the application will show a centred warning dialog so you can correct it before continuing.
--   **Age Warning**: If you enter a Date of Birth for a patient who is under 16, the field will turn red, and a warning dialog will appear. This is to ensure correct consent procedures are followed for minors.
+The current workflow saves PDFs on the server. The legacy browser/Acrobat preference is retained in configuration for compatibility but does not open or download the generated file. The SEND EMAILS control remains a placeholder.
 
-### 3. Selecting Staff Members
+## Access and sessions
 
-Below the patient details, you will find a two-step process for selecting the responsible clinician:
+- **Read:** use patient/PDF workflows and view configuration.
+- **Change:** also update ordinary configuration and form catalogues.
+- **Full:** also change AD configuration and export/import the full configuration backup.
+- **Setup:** temporary configuration-only access using an explicit setup token, available only before the Full Access Group is configured.
 
-1.  **Filter by Tumour Site**: First, use this dropdown to filter the list of clinicians by their speciality. This makes it easier to narrow the search, and you can still select "Show All Clinicians" to search the full staff list.
-2.  **Search and Select Clinician**: Start typing the consultant's name in the clinician search box and a popup list of matching staff will appear immediately. You can click a match, or press `Enter` to select the first result. The clinician dropdown stays in sync with the search results, and if you select a staff member whose title does not contain "Consultant" or "Doctor," the field will turn orange as a warning.
+Server handlers and PDF actions enforce permissions independently of page controls. AD login requires membership in the configured User Access Group; elevated groups should inherit baseline membership. Users with no matching application role are denied.
 
-Below the clinician selection, there is a separate process for the **Macmillan Contact**:
+Sessions expire after eight hours. Explicit Sign Out clears the browser cookie. Refreshing or closing a tab no longer triggers logout; tabs in the same browser share the session. Close the session explicitly when leaving a shared workstation. Role changes in AD take effect on the next login; existing sessions are not revalidated against AD on each request.
 
-1.  **Filter by Contact Type**: A dropdown, defaulted to "Macmillan", allows you to filter contacts. You can choose "Macmillan" to see only Macmillan-affiliated staff or "Other" for all other contacts.
-2.  **Select Contact**: Based on your filter, select the appropriate contact from the list. If the selected person's title does not contain "Macmillan," the field will turn orange.
+Machine restrictions are optional network controls, not a separate authentication factor. They require a trusted proxy that replaces a dedicated client-IP header, blocks direct backend access, and a working DNS configuration. See the deployment guide.
 
-### 4. Selecting a Consent Form
+## Feedback and known limits
 
--   The **"Available Forms"** section on the left sidebar lists all consent forms scraped from the RCR website, organized by category.
--   Administrative documents, such as "Supporting Documents" and "Project acknowledgements," are automatically hidden from this list.
--   Click on a form title to select it. The application's next step depends on the **"Preview PDF fields before generating"** setting on the Configuration page.
+Enable the dedicated feedback log using the deployment guide. It records fixed operation stages, timings, status/error codes and correlation IDs, without patient values or credentials. Share these files with a description of the operation and its approximate time. Do not share filled PDFs, environment files, configuration backups, browser HAR files, or general server logs as feedback.
 
-### 5. Reviewing and Generating the PDF
-
-The application's behavior after you select a form is controlled by settings on the Configuration page.
-
--   **If "Preview PDF fields before generating" is ON**:
-    -   Once you select a form, its fillable fields will appear in the main content area.
-    -   The application will intelligently pre-populate these fields based on the patient and clinician data you entered. The source of the pre-filled data (e.g., "matched with - Patient Full Name") is shown above each field.
-    -   The font size for the "Contact details" field is automatically reduced to ensure long names and titles are not truncated.
-    -   Review all fields for accuracy. You can edit any pre-filled information directly on this screen.
-    -   When you are satisfied, click the **"Submit & Open PDF"** button. The application will then save the filled PDF to the server.
--   **If "Preview PDF fields before generating" is OFF**:
-    -   When you click a form, the application will immediately generate the filled PDF and save it to the server, skipping the preview step.
-
-In both cases, after the PDF is generated, it will be saved with the filename `[patient_identifier] RT-CONSENT-[YYYYMMDD-HHMMSS].PDF` inside the `TEMP` subfolder within the clinician's folder (e.g., `C:\Consent\Dr_John_Doe\TEMP\`). Each clinician folder also contains `RequiresPatientSignature` and `FullySigned` subfolders for downstream filing. A success notification will appear in the middle of the screen containing the full UNC path to the file. You can use the "Copy Path" button and paste it into Windows Search or File Explorer to quickly access the file. The `TEMP` folder is automatically emptied before each new PDF is saved, ensuring it only ever contains the latest document.
-
-### 6. Sending the Signed Form
-
-After the consent form has been generated, located using the UNC path, signed, and saved:
-
--   Click the **SEND EMAILS** button in the top-right corner of the application.
--   A notification will appear to inform you that the email functionality is not yet implemented.
-
-### 7. Configuration
-
--   Click the **Settings** icon (⚙️) in the top-right corner to go to the Configuration page. Access is restricted to authorized administrators who are logged into the network via Active Directory. If AD groups are not yet configured, the application enters an "initial setup" mode and the root URL redirects to the Configuration page so an admin can set up the AD connection.
--   From here, you can manage the application's data sources, settings, and staff list according to your access level.
-
--   **Data Source**: You can view and edit the URL from which the application scrapes consent forms.
--   **File Paths**:
-    -   **RT Consent Folder**: Set the full server-side path where successfully uploaded and signed consent forms should be stored (e.g., `C:\Consent`).
--   **Settings**:
-    -   **Enable R Number format validation**: When enabled, the application will check that the KOMS patient number entered in the demographics pop-up matches the required format ('R' followed by 7 digits).
-    -   **Preview PDF fields before generating**: This switch controls the workflow after selecting a form. If ON, you can review and edit fields before generating the PDF. If OFF, the PDF is generated and opened immediately. Defaults to OFF.
-    -   **Pre-populate form with dummy data**: Controls whether the patient form is initialized with "John Smith" data or starts empty.
-    -   **Display Welsh PDF forms**: If enabled, consent forms available in Welsh will be included in the "Available Forms" list.
-    -   **Enable KOMS API debug mode**: When enabled, fetching patient demographics will show a toast notification with the raw data returned from the KOMS API, which is useful for diagnostics.
--   **PDF Handling**: Choose how you want the final PDF to be opened.
-    -   **Automatically open in Browser**: Opens the PDF in a new browser tab.
-    -   **Download for Adobe Acrobat**: Downloads the PDF to your computer, allowing you to open it in a dedicated application like Adobe Acrobat.
--   **Update Forms**: Click **Check for Updated Forms** to manually trigger a scrape of the currently saved URL to refresh the list of available forms.
--   **Backup & Restore Settings**: You can export the application's entire configuration (including settings, emails, staff, tumour sites, and Active Directory config) to a single JSON file for backup. You can also import a settings file to restore a previous configuration. The AD bind password is encrypted at rest on the server and is not exported in backups.
--   **Machine-Based MFA**: If an MFA machine group is configured, the application checks that the client machine is authorised before displaying the login form. Unauthorised devices are blocked with the message `This machine is not authorised to use this application.`
--   **Staff Management**: Click **Edit Staff List** to navigate to a separate page to manage staff members.
-    - The page features a two-column layout. The left column contains a searchable list of all staff members.
-    - Clicking a member in the list will display their full, editable details in the right-hand column, where you can update their name, title, phone number, specialities, and email recipients.
-    - You can add new staff members, update existing ones, or remove them. The entire staff list can also be imported or exported as a JSON file.
--   **Tumour Site Management**: Click **Edit Tumour Sites** to manage the list of tumour sites that can be assigned as specialities to staff members.
--   **Email Management**: Click **Edit Email Config** to navigate to a page where you can manage a list of email recipients. Emails must be in a valid format and unique.
-
-### 8. Admin & Access Control
-
-Access to the application and its configuration page is managed by Active Directory security groups. If groups are configured, all users must be a member of the base **User Access Group** to log in. Additional permissions are granted by adding users to the `Change` and `Full` access groups. The recommended setup is to nest `Full` inside `Change`, and `Change` inside `User Access`, so elevated admins inherit baseline access cleanly.
-
-There are three levels of access:
-
--   **User Access (Read-Only)**: A member of the "User Access" AD group. They can view all application settings, but all controls (buttons, inputs, switches) are disabled. This is a read-only role for the entire configuration page and the minimum requirement to use the application.
-
--   **Change Admin**: A member of the "Change Access" AD group. In the recommended AD structure this group is nested inside the User Access group. They have full read/write access to all application settings, including data sources, file paths, staff lists, and behavior toggles. They **cannot**, however, change the core Active Directory authentication settings.
-
--   **Full Admin**: A member of the "Full Access" AD group. In the recommended AD structure this group is nested inside the Change Access group, and therefore inherits the lower access groups as well. This is the super-administrator. They have all the permissions of a `Change` admin, plus the exclusive ability to configure the Active Directory connection itself. This role is required for the initial setup and for managing the application's security.
-
----
-
-## In-built clinical-safety controls
-| Software feature | Why it matters | Rule / standard it satisfies |
-| --- | --- | --- |
-| DOB < 16 triggers a red flag and modal warning | Forces the user to check Gillick competence or obtain parental consent before proceeding. | Common-law consent rules for minors • DCB 0129/0160 hazard mitigation (“identify age-related risks”) |
-| Clinician role check (flag if not a Consultant/Doctor) | Consent forms for IR/oncology procedures normally need a consultant or equivalent as the performer; the orange warning nudges users to the right signatory. | DCB 0160 deployment duty to ensure “appropriate clinical responsibility” |
-| Automatic blanking of first witness fields immediately before PDF generation | Prevents patient data creeping into witness/sign-off boxes – a known safety hazard in radiology consent. | DCB 0129 risk control; DTAC C1 (“no erroneous clinical data”) |
-| Automatic blanking of final date fields | Prevents auto-population of witness signature dates, reducing the risk of a user overlooking a required manual entry. | DCB 0129 risk control; DTAC C1 (“no erroneous clinical data”) |
-| On-demand form updates from live source | Administrators can refresh the list from the RCR website, ensuring access to the latest forms. The app otherwise uses a stable local copy to guarantee availability. | DCB 0129 safety requirement to “maintain current clinical content”; NICE ESF B5 (currency of content) |
-| Local caching of consent forms | Ensures core functionality remains available even if the RCR website is offline. The app uses a local backup of forms, preventing downtime. | DCB 0129 business continuity; DTAC C2 (mitigates external system failures) |
-| Live KOMS session check for config access | Ensures only currently authenticated KOMS users with explicit admin rights can change application settings. | DSPT / local IG policy; NCSC CAF B2 (access control) |
-
-## Data-protection & information-governance niceties
-| Feature | Positive impact | IG artefact it aligns with |
-| --- | --- | --- |
-| KOMS “R-number” format validation (‘R’ + 7 digits) | Reduces the chance of pulling the wrong patient record – speaks to the GDPR accuracy principle. | Art 5(1)(d) UK GDPR accuracy • DSPT outcome A1 (“accurate data”) |
-| No form templates cached; filled PDFs stored only in /tmp with random IDs | Minimises long-term personal-data footprint and aids secure-deletion; supports storage-limitation and data-minimisation. | GDPR Art 5(1)(c)(e); DSPT outcome B2 (“only necessary data retained”) |
-| User decides whether the PDF opens in-browser or downloads | Lets trusts disable browser rendering if their IG policy forbids patient PDFs in cache. | DSPT / local IG policy flexibility |
-| Role-based access control for all settings | Granular permissions (`Read`, `Change`, `Full`) limit who can alter critical application configurations. | GDPR Art 32 (security of processing); DSPT outcome 5A (managing access) |
-| Automatic logout on tab close | Prevents unauthorised access from unattended workstations by automatically destroying the session when the page is closed. | DSPT outcome 5B (managing sessions); NCSC CAF B2 (secure logout) |
-
-## Technical-security posture
-| Feature | Positive impact | Cyber baseline it helps tick |
-| --- | --- | --- |
-| Next.js 15 + React on the client, with auth, LDAP, and file operations isolated to server-side handlers and flows | Separation of concerns simplifies threat modelling and keeps credential-handling logic off the client. | NCSC CAF-aligned DSPT section 3 |
-| Session state is stored in an `httpOnly` cookie, marked `secure` in production | The browser cannot read the session cookie via client-side JavaScript, reducing exposure to trivial token theft. | DSPT outcome 5B; NCSC CAF B2 |
-| AD bind password is encrypted at rest with AES-256-GCM and omitted from exported backups | Reduces the chance of plaintext credential disclosure from config files or routine backup exports. | GDPR Art 32; DSPT outcome 9-C |
-| Machine-based access is checked before the login form is shown and re-checked on the login API | Prevents unauthorised workstations from reaching an authenticated session through client-side bypass or stale UI state. | NCSC CAF B2 (access control) |
-| LDAP over TLS is supported, with certificate validation enforced when a CA file is configured | Allows a trust to validate the AD server certificate properly. If no CA file is configured, the app currently permits an insecure fallback and this should be treated as a reduced-security deployment mode. | CAF B3 / secure communications |
-| Ignores PDF encryption instead of trying to break it | Means the app never attempts to bypass password-protected documents or manage decryption keys. | DSPT outcome C4 (“don’t weaken third-party crypto”) |
-| The RCR source is fetched over HTTPS, while KOMS and AD endpoints are deployment-configurable | Public content uses TLS by default; internal integrations can be routed through trusted internal networks or secured with local TLS policy. | CAF SR.A – secure external services |
-
-## Interoperability & usability
-| Feature | Why it scores | Corresponding DTAC criterion |
-| --- | --- | --- |
-| Patient-demographic lookup by KOMS number via internal API | A deterministic, one-step link to the master EPR avoids free-text errors. | DTAC C4.1 (uses an API for data exchange) |
-| Outputs a standards-compliant, fillable PDF that can be archived without conversion | Plays nicely with most EDRMS and PACS; no proprietary viewer needed. | DTAC C4.3 (vendor-neutral outputs) |
-| UI built with ShadCN + Tailwind; colour-blind-safe palette and keyboard focus traps (visible in the repo) | Meets WCAG 2.1 AA and DTAC E-Accessibility checklist by default. | DTAC E-1 (accessibility) |
-
-## Where it maps onto each “big-ticket” framework
-| Framework / rule | Relevant built-in evidence |
-| --- | --- | --- |
-| DCB 0129 (manufacturer) | Age-check, clinician-role guard, witness-field blanking, live-form fetch & hazard controls all contribute to a future Clinical Safety Case (sections 3–7) |
-| DCB 0160 (deploying org) | The same controls make it easier for the trust’s CSO to show “risk is ALARP” when integrating the tool. |
-| DTAC | C1 ✔ (see clinical-safety controls), C2 partly ✔ (no cached data, short-lived PDFs), C3 partly ✔ (HTTPS + isolation), C4 partly ✔ (API for demographics, standards PDF), C5 ✔ (accessible UI). |
-| DSPT / CAF | Low data-at-rest, no unmanaged third-party services, optional download flow – all count as good-practice evidence for DSPT questions 8-A and 9-C. |
-| UK GDPR & common-law confidentiality | Validation of patient identifiers, no long-term storage, and explicit under-16 warnings support accuracy, data-minimisation and lawful-consent duties. |
-| Consent law for minors | Under-16 alert directly operationalises Gillick-competence checks |
+Local tests use synthetic data and mocked integrations. They cannot validate your real AD certificate chain, group nesting, KOMS session behavior, proxy rules, Windows share permissions, or operational retention policy. Those require a controlled deployment walkthrough. Form field matching remains heuristic and generated clinical documents require human review. This repository does not establish compliance with clinical, accessibility or information-governance standards.

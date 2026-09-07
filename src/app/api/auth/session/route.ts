@@ -1,22 +1,7 @@
-
-import { getIronSession } from 'iron-session';
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
-import { sessionOptions, SessionData } from '@/lib/auth';
-
-export async function GET() {
-  const cookieStore = await cookies();
-  const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
-
-  if (session.isLoggedIn !== true) {
-    return NextResponse.json({
-      isLoggedIn: false,
-    });
-  }
-
-  return NextResponse.json({
-    isLoggedIn: true,
-    username: session.username,
-    roles: session.roles,
-  });
-}
+import { api, requireAccess } from '@/lib/authorization';
+export const GET = api('session', null, async () => {
+  try {
+    const session = await requireAccess('read', true);
+    return Response.json({ isLoggedIn: true, username: session.username, roles: session.roles, isSetup: session.isSetup });
+  } catch { return Response.json({ isLoggedIn: false }); }
+});

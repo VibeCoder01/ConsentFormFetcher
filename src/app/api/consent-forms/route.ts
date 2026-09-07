@@ -1,10 +1,12 @@
+import { feedback } from '@/lib/diagnostics';
+import { api } from '@/lib/authorization';
 import { NextResponse } from 'next/server';
 import { getCachedForms } from '@/ai/util/cache';
-import path from 'path';
+import { formsFile } from '@/lib/config-path';
 import fs from 'fs/promises';
 import { ConsentFormCategory } from '@/lib/types';
 
-export async function GET() {
+async function handleGET() {
   // Try to get data from cache first
   const cachedData = getCachedForms();
   if (cachedData) {
@@ -13,12 +15,14 @@ export async function GET() {
 
   // If cache is empty, fall back to the static JSON file
   try {
-    const jsonFilePath = path.join(process.cwd(), 'public', 'consent-forms.json');
+    const jsonFilePath = formsFile;
     const jsonData = await fs.readFile(jsonFilePath, 'utf-8');
     const data: ConsentFormCategory[] = JSON.parse(jsonData);
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Failed to read static consent forms file:", error);
+    await feedback('failed', { error });
     return NextResponse.json({ message: "Could not load consent forms." }, { status: 500 });
   }
 }
+
+export const GET = api('consent-forms', 'read', handleGET, false);

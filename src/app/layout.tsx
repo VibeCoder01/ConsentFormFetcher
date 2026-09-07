@@ -1,9 +1,9 @@
+import { sandboxEnabled } from '@/lib/sandbox';
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
-import { LogoutHandler } from '@/components/logout-handler';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -31,7 +31,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
         >
-          <LogoutHandler />
+          {sandboxEnabled() && <div role="status" className="bg-amber-200 p-2 text-center text-black">Synthetic sandbox — do not enter real patient data.</div>}
           {children}
           <Toaster />
         </ThemeProvider>

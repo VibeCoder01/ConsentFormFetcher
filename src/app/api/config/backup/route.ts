@@ -1,3 +1,7 @@
+import { appSchema, adSchema, staffSchema, namedItemsSchema, emailsSchema } from '@/lib/config-schemas';
+import { configDirectory } from '@/lib/config-path';
+import { feedback } from '@/lib/diagnostics';
+import { api } from '@/lib/authorization';
 
 import { NextResponse } from 'next/server';
 import path from 'path';
@@ -7,9 +11,9 @@ import { defaultAdConfig, normaliseAdConfig, readAdConfig, stripAdConfigSecrets,
 import { AppConfig, readAppConfig, writeAppConfig } from '@/lib/app-config';
 
 // Define paths
-const emailConfigPath = path.join(process.cwd(), 'src', 'config', 'email.json');
-const staffConfigPath = path.join(process.cwd(), 'src', 'config', 'staff.json');
-const tumourSitesConfigPath = path.join(process.cwd(), 'src', 'config', 'tumour-sites.json');
+const emailConfigPath = path.join(configDirectory, 'email.json');
+const staffConfigPath = path.join(configDirectory, 'staff.json');
+const tumourSitesConfigPath = path.join(configDirectory, 'tumour-sites.json');
 
 // Define a type for the combined data for type safety
 interface BackupData {
@@ -35,7 +39,7 @@ async function readJsonFile<T>(filePath: string, defaultValue: T): Promise<T> {
 
 
 // GET handler to export combined config
-export async function GET() {
+async function handleGET() {
   try {
     const [settings, emails, staff, tumourSites, adConfig] = await Promise.all([
         readAppConfig(),
@@ -55,14 +59,14 @@ export async function GET() {
 
     return NextResponse.json(backupData);
   } catch (error) {
-    console.error("Failed to read config files for export:", error);
-    const message = error instanceof Error ? error.message : "An unknown error occurred.";
+    await feedback('failed', { error });
+    const message = 'Operation failed. See the feedback log for diagnostic details.';
     return NextResponse.json({ message: "Could not export configuration.", error: message }, { status: 500 });
   }
 }
 
 // POST handler to import combined config
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
     try {
         const data: Partial<BackupData & { ad: ADConfig }> = await request.json();
 
@@ -76,6 +80,9 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: "Invalid backup file format. It must contain settings, emails, staff, tumourSites, and ad config." }, { status: 400 });
         }
         
+        if (!appSchema.safeParse(data.settings).success || !adSchema.partial().safeParse(data.ad).success || !staffSchema.safeParse(data.staff).success || !namedItemsSchema.safeParse(data.tumourSites).success || !emailsSchema.safeParse(data.emails).success) {
+            return NextResponse.json({ message: 'Invalid values in backup.' }, { status: 400 });
+        }
         const emailsJsonData = JSON.stringify(data.emails, null, 2);
         const staffJsonData = JSON.stringify(data.staff, null, 2);
         const tumourSitesJsonData = JSON.stringify(data.tumourSites, null, 2);
@@ -111,8 +118,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: "Full application configuration imported successfully." });
 
     } catch (error) {
-        console.error("Failed to write config files on import:", error);
-        const message = error instanceof Error ? error.message : "An unknown error occurred.";
+        await feedback('failed', { error });
+        const message = 'Operation failed. See the feedback log for diagnostic details.';
         return NextResponse.json({ message: "Could not import configuration.", error: message }, { status: 500 });
     }
 }
+
+export const GET = api('backup', 'full', handleGET, true);
+
+export const POST = api('backup', 'full', handlePOST, true);

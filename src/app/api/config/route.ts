@@ -1,22 +1,27 @@
+import { appSchema } from '@/lib/config-schemas';
+import { feedback } from '@/lib/diagnostics';
+import { api } from '@/lib/authorization';
 
 import { NextResponse } from 'next/server';
-import { AppConfig, readAppConfig, updateAppConfig } from '@/lib/app-config';
+import { readAppConfig, updateAppConfig } from '@/lib/app-config';
 
 // GET handler to fetch the current configuration
-export async function GET() {
+async function handleGET() {
   try {
     const config = await readAppConfig();
     return NextResponse.json(config);
   } catch (error) {
-    console.error("Failed to read app config file:", error);
+    await feedback('failed', { error });
     return NextResponse.json({ message: "Could not load app configuration." }, { status: 500 });
   }
 }
 
 // POST handler to update the configuration
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
     try {
-        const updates: Partial<AppConfig> = await request.json();
+        const parsed = appSchema.partial().safeParse(await request.json());
+        if (!parsed.success) return NextResponse.json({ message: "Invalid configuration values." }, { status: 400 });
+        const updates = parsed.data;
 
         if (typeof updates.rcrConsentFormsUrl === 'string' && !updates.rcrConsentFormsUrl) {
              return NextResponse.json({ message: "URL cannot be empty." }, { status: 400 });
@@ -28,8 +33,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: "Configuration updated successfully.", newConfig: updatedConfig });
 
     } catch (error) {
-        console.error("Failed to write app config file:", error);
-        const message = error instanceof Error ? error.message : "An unknown error occurred.";
+        await feedback('failed', { error });
+        const message = 'Operation failed. See the feedback log for diagnostic details.';
         return NextResponse.json({ message: "Could not update configuration.", error: message }, { status: 500 });
     }
 }
+
+export const GET = api('config', 'read', handleGET, true);
+
+export const POST = api('config', 'change', handlePOST, true);

@@ -1,5 +1,9 @@
-
 'use server';
+import { feedback, trace } from '@/lib/diagnostics';
+
+
+import { requireAccess } from '@/lib/authorization';
+import { remoteContent } from '@/lib/remote-content';
 /**
  * @fileOverview A flow for scraping RCR consent forms from their website.
  *
@@ -10,7 +14,7 @@
 import * as cheerio from 'cheerio';
 import { readAppConfig } from '@/lib/app-config';
 import { ConsentForm, ConsentFormCategory } from '@/lib/types';
-import { updateCache } from '@/ai/util/cache';
+
 
 export interface ScrapeRcrFormsOutput {
   success: boolean;
@@ -20,14 +24,11 @@ export interface ScrapeRcrFormsOutput {
 }
 
 
-export async function scrapeRcrForms(url: string): Promise<ScrapeRcrFormsOutput> {
+async function scrapeRcrFormsInternal(url: string): Promise<ScrapeRcrFormsOutput> {
   try {
+    await requireAccess('read', true);
     const config = await readAppConfig();
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch the page. Status: ${response.status}`);
-    }
-    const html = await response.text();
+    const html = (await remoteContent(url, 5 * 1024 * 1024)).toString('utf8');
     const $ = cheerio.load(html);
 
     const categories: { [key: string]: ConsentForm[] } = {};
@@ -94,12 +95,16 @@ export async function scrapeRcrForms(url: string): Promise<ScrapeRcrFormsOutput>
     // We no longer automatically save to JSON here. That's handled by a separate flow.
     // await saveFormsToJson(formCategories);
     
-    updateCache(formCategories);
+
 
     return { success: true, formCount: totalForms, newData: formCategories };
   } catch (error) {
-    console.error('Scraping failed:', error);
-    const message = error instanceof Error ? error.message : 'An unknown error occurred during scraping.';
+    await feedback('failed', { error });
+    const message = 'Operation failed. See the feedback log for diagnostic details.';
     return { success: false, error: message };
   }
+}
+
+export async function scrapeRcrForms(url: string): Promise<ScrapeRcrFormsOutput> {
+  return trace('scrape', () => scrapeRcrFormsInternal(url));
 }
